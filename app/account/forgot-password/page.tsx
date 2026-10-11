@@ -35,8 +35,14 @@ export default function ForgotPasswordPage() {
         setLoading(false);
         return;
       }
-      setMessage(data.message || "If that account exists, instructions were sent.");
-      if (data.note) setMessage((m) => `${data.message || m}\n${data.note}`);
+      const parts = [
+        data.message || "If that account exists, instructions were sent.",
+        data.note,
+        data.emailStatus ? `Status: ${data.emailStatus}` : null,
+        data.emailError ? `Resend: ${data.emailError}` : null,
+        data.emailFrom ? `From: ${data.emailFrom}` : null,
+      ].filter(Boolean);
+      setMessage(parts.join("\n"));
       if (data.debugResetPath) setDebugPath(data.debugResetPath);
     } catch {
       setError("Network error");
