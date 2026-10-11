@@ -4,32 +4,55 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+function roleLabel(role: string): string {
+  const map: Record<string, string> = {
+    PLATFORM_ADMIN: "Platform admin",
+    ADMIN: "Admin",
+    IT: "IT",
+    PRINCIPAL: "Principal",
+    SECRETARY: "Secretary",
+    ACCOUNTANT: "Accountant",
+    TEACHER: "Teacher",
+    STUDENT: "Student",
+    PARENT: "Parent",
+  };
+  return map[role] || role.replace(/_/g, " ");
+}
+
 /**
- * Header account menu: profile, change password, sign out.
- * Loads email from /api/auth/me when not passed by the page.
+ * Header account menu: role badge, profile, change password, sign out.
  */
-export function UserMenu({ email: emailProp }: { email?: string }) {
+export function UserMenu({
+  email: emailProp,
+  role: roleProp,
+}: {
+  email?: string;
+  role?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState(emailProp || "");
+  const [role, setRole] = useState(roleProp || "");
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (emailProp) {
-      setEmail(emailProp);
-      return;
-    }
+    if (emailProp) setEmail(emailProp);
+    if (roleProp) setRole(roleProp);
+    if (emailProp && roleProp) return;
+
     let cancelled = false;
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!cancelled && d?.email) setEmail(d.email);
+        if (cancelled || !d) return;
+        if (d.email) setEmail(d.email);
+        if (d.role) setRole(d.role);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [emailProp]);
+  }, [emailProp, roleProp]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -46,18 +69,18 @@ export function UserMenu({ email: emailProp }: { email?: string }) {
     router.refresh();
   }
 
-  const label = email ? email.split("@")[0] : "Account";
+  const buttonLabel = role ? roleLabel(role) : email ? email.split("@")[0] : "Account";
 
   return (
     <div className="relative shrink-0" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-xs sm:text-sm border border-line bg-white px-2.5 py-1.5 text-ink/80 hover:border-navy max-w-[10rem] sm:max-w-[14rem]"
+        className="flex items-center gap-1.5 text-xs sm:text-sm border border-line bg-white px-2.5 py-1.5 text-ink/80 hover:border-navy max-w-[11rem] sm:max-w-[14rem]"
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        <span className="truncate">{label}</span>
+        <span className="truncate font-medium">{buttonLabel}</span>
         <span className="text-ink/40" aria-hidden>
           ▾
         </span>
@@ -65,10 +88,15 @@ export function UserMenu({ email: emailProp }: { email?: string }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-1 w-52 bg-white border border-line shadow-lg z-50 py-1 text-sm"
+          className="absolute right-0 mt-1 w-56 bg-white border border-line shadow-lg z-50 py-1 text-sm"
         >
           {email && (
             <p className="px-3 py-2 text-[11px] text-ink/50 border-b border-line break-all">{email}</p>
+          )}
+          {role && (
+            <p className="px-3 py-1.5 text-[11px] text-navy/80 border-b border-line">
+              Role: <strong>{roleLabel(role)}</strong>
+            </p>
           )}
           <Link
             href="/account/profile"
