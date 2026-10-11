@@ -20,13 +20,36 @@ const CreateStudentSchema = z.object({
   forceAdmit: z.boolean().optional(),
 });
 
-async function generateAdmissionNumber(): Promise<string> {
+/** Per-school sequence: TEST/2026/0001, KMS/2026/0001, etc. */
+async function generateAdmissionNumber(schoolId: string | null): Promise<string> {
   const year = new Date().getFullYear();
-  const countThisYear = await prisma.student.count({
-    where: { admissionNumber: { startsWith: `KMS/${year}/` } },
+  let tag = "SCH";
+  if (schoolId) {
+    const school = await prisma.school.findUnique({
+      where: { id: schoolId },
+      select: { shortName: true },
+    });
+    tag =
+      (school?.shortName || "SCH")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 6) || "SCH";
+  }
+  const prefix = `${tag}/${year}/`;
+  const last = await prisma.student.findFirst({
+    where: {
+      admissionNumber: { startsWith: prefix },
+      ...(schoolId ? { schoolId } : {}),
+    },
+    orderBy: { admissionNumber: "desc" },
+    select: { admissionNumber: true },
   });
-  const next = String(countThisYear + 1).padStart(4, "0");
-  return `KMS/${year}/${next}`;
+  let next = 1;
+  if (last?.admissionNumber) {
+    const n = parseInt(last.admissionNumber.split("/").pop() || "0", 10);
+    if (!Number.isNaN(n)) next = n + 1;
+  }
+  return `${prefix}${String(next).padStart(4, "0")}`;
 }
 
 export async function GET(req: Request) {
@@ -123,7 +146,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const admissionNumber = await generateAdmissionNumber();
+  const admissionNumber = await generateAdmissionNumber(schoolId);
 
   const student = await prisma.student.create({
     data: {
@@ -144,6 +167,7 @@ export async function POST(req: Request) {
 
   await logAudit({
     userId: session.userId,
+    schoolId: schoolId ?? undefined,
     action: "CREATE_STUDENT",
     entity: "Student",
     entityId: student.id,
