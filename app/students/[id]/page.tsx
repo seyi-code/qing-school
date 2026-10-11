@@ -106,6 +106,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
               guardianPhone: student.guardianPhone ?? "",
               armId: student.armId ?? "",
               status: student.status,
+              admissionNumber: student.admissionNumber,
             }}
           />
           <StudentLifecycleActions
