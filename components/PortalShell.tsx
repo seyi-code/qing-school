@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Role } from "@prisma/client";
 import { Sidebar } from "./Sidebar";
 import { UserMenu } from "./UserMenu";
@@ -10,23 +10,51 @@ export function PortalShell({
   title,
   subtitle,
   email,
+  schoolName: schoolNameProp,
+  schoolShortName: schoolShortProp,
   actions,
   children,
 }: {
   role: Role;
   title: string;
   subtitle?: string;
-  /** Session email for account menu */
   email?: string;
+  /** Active tenant label — preferred for multi-school context */
+  schoolName?: string;
+  schoolShortName?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [schoolName, setSchoolName] = useState(schoolNameProp || "");
+  const [schoolShort, setSchoolShort] = useState(schoolShortProp || "");
+
+  useEffect(() => {
+    if (schoolNameProp) {
+      setSchoolName(schoolNameProp);
+      setSchoolShort(schoolShortProp || "");
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d) return;
+        if (d.schoolName) setSchoolName(d.schoolName);
+        if (d.schoolShortName) setSchoolShort(d.schoolShortName);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [schoolNameProp, schoolShortProp]);
+
+  const tenantLabel = schoolShort || schoolName;
 
   return (
     <div className="flex min-h-screen bg-paper">
       <div className="hidden lg:flex lg:shrink-0 lg:h-screen lg:sticky lg:top-0">
-        <Sidebar role={role} />
+        <Sidebar role={role} schoolLabel={tenantLabel} schoolName={schoolName} />
       </div>
 
       {mobileOpen && (
@@ -38,7 +66,12 @@ export function PortalShell({
             onClick={() => setMobileOpen(false)}
           />
           <div className="relative z-10 h-full max-h-dvh w-[min(18rem,85vw)] shadow-xl">
-            <Sidebar role={role} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar
+              role={role}
+              schoolLabel={tenantLabel}
+              schoolName={schoolName}
+              onNavigate={() => setMobileOpen(false)}
+            />
           </div>
         </div>
       )}
@@ -60,6 +93,14 @@ export function PortalShell({
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
+                  {schoolName && (
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-navy/70 font-medium mb-0.5 truncate">
+                      {schoolName}
+                      {schoolShort && schoolShort !== schoolName ? (
+                        <span className="text-ink/40 normal-case tracking-normal"> · {schoolShort}</span>
+                      ) : null}
+                    </p>
+                  )}
                   <h1 className="font-serif text-xl sm:text-2xl text-ink leading-tight break-words">
                     {title}
                   </h1>
