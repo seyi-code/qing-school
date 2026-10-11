@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { formatNaira } from "@/lib/format";
 import { can } from "@/lib/permissions";
+import { resolveSchoolId } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { PayrollRunner } from "./PayrollRunner";
 
@@ -12,14 +13,22 @@ export default async function PayrollPage() {
   const session = await requireSession();
   if (!can(session.role, "MANAGE_PAYROLL")) redirect("/dashboard");
 
+  const schoolId = await resolveSchoolId(session);
+
   const payslips = await prisma.payslip.findMany({
+    where: schoolId ? { staff: { schoolId } } : undefined,
     include: { staff: true },
     orderBy: { generatedAt: "desc" },
     take: 50,
   });
 
   return (
-    <PortalShell role={session.role} title="Payroll" subtitle="Salary structure, deductions, payslip generation">
+    <PortalShell
+      role={session.role}
+      title="Payroll"
+      subtitle="Salary structure, deductions, payslip generation"
+      email={session.email}
+    >
       <PayrollRunner />
 
       <section className="ledger-block !p-0 overflow-x-auto mt-6">
@@ -39,7 +48,9 @@ export default async function PayrollPage() {
           <tbody>
             {payslips.map((p) => (
               <tr key={p.id}>
-                <td>{p.staff.lastName}, {p.staff.firstName}</td>
+                <td>
+                  {p.staff.lastName}, {p.staff.firstName}
+                </td>
                 <td>{p.month}</td>
                 <td>{formatNaira(p.gross)}</td>
                 <td>{formatNaira(p.deductions)}</td>
@@ -48,7 +59,9 @@ export default async function PayrollPage() {
             ))}
             {payslips.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-ink/50 py-8">No payslips generated yet.</td>
+                <td colSpan={5} className="text-center text-ink/50 py-8">
+                  No payslips for this school yet.
+                </td>
               </tr>
             )}
           </tbody>
