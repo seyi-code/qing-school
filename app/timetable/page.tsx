@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { can, homeRouteForRole } from "@/lib/permissions";
+import { resolveSchoolId } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { TimetableEditor } from "./TimetableEditor";
 
@@ -13,10 +14,13 @@ export default async function TimetablePage({
   searchParams: { armId?: string };
 }) {
   const session = await requireSession();
-  const allowed = ["ADMIN", "IT", "TEACHER", "PRINCIPAL"];
+  const allowed = ["ADMIN", "IT", "TEACHER", "PRINCIPAL", "PLATFORM_ADMIN"];
   if (!allowed.includes(session.role)) redirect(homeRouteForRole(session.role));
 
+  const schoolId = await resolveSchoolId(session);
+
   const arms = await prisma.arm.findMany({
+    where: schoolId ? { schoolClass: { schoolId } } : undefined,
     include: {
       schoolClass: true,
       subjects: { include: { subject: true } },
@@ -24,7 +28,9 @@ export default async function TimetablePage({
     orderBy: [{ schoolClass: { order: "asc" } }, { name: "asc" }],
   });
 
-  const armId = searchParams.armId || arms[0]?.id;
+  const requested = searchParams.armId;
+  const armId =
+    (requested && arms.some((a) => a.id === requested) ? requested : null) || arms[0]?.id;
   const selected = arms.find((a) => a.id === armId) || arms[0];
 
   const slots = selected
@@ -37,7 +43,12 @@ export default async function TimetablePage({
   const canEdit = can(session.role, "MANAGE_CLASSES");
 
   return (
-    <PortalShell role={session.role} title="Timetable" subtitle="Weekly class periods (Mon–Fri)">
+    <PortalShell
+      role={session.role}
+      title="Timetable"
+      subtitle="Weekly class periods (Mon–Fri)"
+      email={session.email}
+    >
       {!selected ? (
         <p className="text-ink/50 text-sm">Create a class and arm under Classes first.</p>
       ) : (

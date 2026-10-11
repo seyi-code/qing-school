@@ -5,9 +5,12 @@ import { AttendanceForm } from "./AttendanceForm";
 import { ArmPicker } from "./ArmPicker";
 import { redirect } from "next/navigation";
 import { homeRouteForRole } from "@/lib/permissions";
+import { resolveSchoolId } from "@/lib/tenant-scope";
 import Link from "next/link";
 
 const ALLOWED_ROLES = ["PLATFORM_ADMIN", "ADMIN", "TEACHER", "IT"];
+
+export const dynamic = "force-dynamic";
 
 export default async function AttendancePage({
   searchParams,
@@ -17,7 +20,10 @@ export default async function AttendancePage({
   const session = await requireSession();
   if (!ALLOWED_ROLES.includes(session.role)) redirect(homeRouteForRole(session.role));
 
+  const schoolId = await resolveSchoolId(session);
+
   const arms = await prisma.arm.findMany({
+    where: schoolId ? { schoolClass: { schoolId } } : undefined,
     include: {
       schoolClass: true,
       _count: { select: { students: { where: { status: "ACTIVE" } } } },
@@ -25,10 +31,18 @@ export default async function AttendancePage({
     orderBy: [{ schoolClass: { order: "asc" } }, { name: "asc" }],
   });
 
-  const selectedArmId = searchParams.armId ?? arms[0]?.id;
+  // Only allow armId if it belongs to this school
+  const requested = searchParams.armId;
+  const selectedArmId =
+    (requested && arms.some((a) => a.id === requested) ? requested : null) ?? arms[0]?.id;
+
   const students = selectedArmId
     ? await prisma.student.findMany({
-        where: { armId: selectedArmId, status: "ACTIVE" },
+        where: {
+          armId: selectedArmId,
+          status: "ACTIVE",
+          ...(schoolId ? { schoolId } : {}),
+        },
         orderBy: [{ lastName: "asc" }],
       })
     : [];
@@ -36,14 +50,25 @@ export default async function AttendancePage({
   const todayIso = new Date().toISOString().slice(0, 10);
   const todaysMarks = selectedArmId
     ? await prisma.attendance.findMany({
-        where: { date: new Date(todayIso), student: { armId: selectedArmId } },
+        where: {
+          date: new Date(todayIso),
+          student: {
+            armId: selectedArmId,
+            ...(schoolId ? { schoolId } : {}),
+          },
+        },
       })
     : [];
   const marksByStudent = Object.fromEntries(todaysMarks.map((m) => [m.studentId, m.status]));
   const selectedArm = arms.find((a) => a.id === selectedArmId);
 
   return (
-    <PortalShell role={session.role} title="Attendance" subtitle="Mark today's attendance for a class">
+    <PortalShell
+      role={session.role}
+      title="Attendance"
+      subtitle="Mark today's attendance for a class"
+      email={session.email}
+    >
       <ArmPicker
         arms={arms.map((a) => ({
           id: a.id,
@@ -52,7 +77,11 @@ export default async function AttendancePage({
         selectedArmId={selectedArmId}
       />
 
-      {selectedArmId && students.length === 0 ? (
+      {arms.length === 0 ? (
+        <div className="ledger-block text-sm text-ink/70">
+          <p>No classes/arms for this school yet. Create them under Classes first.</p>
+        </div>
+      ) : selectedArmId && students.length === 0 ? (
         <div className="ledger-block text-sm text-ink/70 space-y-2">
           <p>
             <strong>
@@ -63,14 +92,11 @@ export default async function AttendancePage({
             has <strong>0 active students</strong> assigned.
           </p>
           <p>
-            That is why the list is empty — not a bug in the attendance module. Assign students under{" "}
+            Assign students under{" "}
             <Link href="/students" className="text-navy underline">
               Students
             </Link>{" "}
-            (open student → set class/arm to JSS 2 A), or admit new students into this arm.
-          </p>
-          <p className="text-xs text-ink/50">
-            JSS 1 A works on Scores because those three students are already in that arm.
+            or admit new students into this arm.
           </p>
         </div>
       ) : selectedArmId ? (
@@ -80,12 +106,11 @@ export default async function AttendancePage({
           students={students.map((s) => ({
             id: s.id,
             name: `${s.lastName}, ${s.firstName}`,
-            status: (marksByStudent[s.id] as "PRESENT" | "ABSENT" | "LATE") ?? "PRESENT",
+            admissionNumber: s.admissionNumber,
+            mark: marksByStudent[s.id] || "PRESENT",
           }))}
         />
-      ) : (
-        <p className="text-ink/50">No classes set up yet.</p>
-      )}
+      ) : null}
     </PortalShell>
   );
 }
