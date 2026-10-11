@@ -7,6 +7,7 @@ import { PlatformBillingForm } from "@/components/PlatformBillingForm";
 import { isSubscriptionLive, PLAN_LIMITS } from "@/lib/integrations/subscriptions";
 import { PortalShell } from "@/components/PortalShell";
 import { WorkAsSchoolButton } from "@/components/WorkAsSchoolButton";
+import { IsolationProbeCard } from "@/components/IsolationProbeCard";
 import { getActiveSchoolIdFromCookie } from "@/lib/tenant-scope";
 
 export const dynamic = "force-dynamic";
@@ -145,6 +146,8 @@ export default async function PlatformPage() {
             </tbody>
           </table>
         </section>
+
+        {session.role === "PLATFORM_ADMIN" && <IsolationProbeCard />}
 
         <PlatformBillingForm
           schools={schools.map((s) => ({
