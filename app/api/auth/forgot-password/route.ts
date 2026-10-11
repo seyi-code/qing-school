@@ -25,9 +25,6 @@ const GENERIC = {
     "If an account exists for that email, a reset link has been prepared. Check your email or ask your school admin.",
 };
 
-/**
- * Always prefer a JSON response (never empty 500) so the UI can show a real message.
- */
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
@@ -71,11 +68,11 @@ export async function POST(req: Request) {
         data: { userId: user.id, tokenHash, expiresAt },
       });
     } catch (e) {
-      console.error("[forgot-password] PasswordResetToken table missing or write failed", e);
+      console.error("[forgot-password] PasswordResetToken write failed", e);
       return NextResponse.json(
         {
           error:
-            "Password reset is not fully set up on this database. Ask the platform admin to run: CREATE TABLE for PasswordResetToken (see docs), or prisma db push on the preview DB.",
+            "Password reset table missing. Run PasswordResetToken SQL on Neon preview (see docs/PASSWORD_RESET_TABLE.sql).",
           code: "RESET_TOKEN_TABLE",
         },
         { status: 503 }
@@ -89,6 +86,9 @@ export async function POST(req: Request) {
     const resetUrl = base ? `${base}${resetPath}` : resetPath;
 
     let emailStatus = "LOGGED_NO_PROVIDER";
+    let emailError: string | undefined;
+    let emailFrom: string | undefined;
+
     if (isEmailConfigured()) {
       const textBody = [
         "You requested a password reset for Qing School.",
@@ -107,9 +107,13 @@ export async function POST(req: Request) {
 <p><a href="${resetUrl}">Reset password</a> (valid 1 hour)</p>
 <p style="color:#666;font-size:12px">If you did not request this, ignore this email.</p>`,
       });
-      emailStatus = sent.ok ? `SENT_${sent.provider}` : `FAIL_${sent.provider || "email"}`;
-      if (!sent.ok) {
-        console.error("[forgot-password] email failed", sent.error);
+      emailFrom = sent.from;
+      if (sent.ok) {
+        emailStatus = `SENT_${sent.provider}`;
+      } else {
+        emailStatus = `FAIL_${sent.provider || "email"}`;
+        emailError = sent.error;
+        console.error("[forgot-password] email failed", sent.error, sent.from);
       }
     }
 
@@ -119,7 +123,7 @@ export async function POST(req: Request) {
           channel: "EMAIL",
           recipient: email,
           body: `Password reset link (valid 1 hour): ${resetUrl}`,
-          status: emailStatus,
+          status: emailStatus + (emailError ? `:${emailError}` : ""),
         },
       });
     } catch (e) {
@@ -133,13 +137,12 @@ export async function POST(req: Request) {
         action: "PASSWORD_RESET_REQUEST",
         entity: "User",
         entityId: user.id,
-        details: { emailStatus },
+        details: { emailStatus, emailError, emailFrom },
       });
     } catch (e) {
       console.error("[forgot-password] audit failed", e);
     }
 
-    // Staging convenience: always return path when email did not send
     const exposePath =
       process.env.RESET_DEBUG === "true" ||
       process.env.NODE_ENV === "development" ||
@@ -151,10 +154,11 @@ export async function POST(req: Request) {
         ...GENERIC,
         debugResetPath: resetPath,
         emailStatus,
-        note:
-          emailStatus.startsWith("SENT_")
-            ? undefined
-            : "Email not delivered yet — use the debug link below, or check Resend (domain/recipient limits).",
+        emailError,
+        emailFrom,
+        note: emailStatus.startsWith("SENT_")
+          ? "Email sent — check inbox/spam."
+          : "Email not delivered — use the debug link, or fix EMAIL_FROM / Resend (see emailError).",
       });
     }
 
