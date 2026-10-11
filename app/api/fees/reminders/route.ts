@@ -3,18 +3,27 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { sendSms } from "@/lib/integrations/messaging";
 import { formatNaira } from "@/lib/format";
-import { SCHOOL } from "@/lib/school-config";
 import { extractPhone } from "@/lib/phone";
 import { toMoney } from "@/lib/money";
+import { resolveSchoolId } from "@/lib/tenant-scope";
 
 export async function POST() {
   const session = await getSession();
-  if (!session || !["ADMIN", "ACCOUNTANT", "SECRETARY"].includes(session.role)) {
+  if (!session || !["ADMIN", "ACCOUNTANT", "SECRETARY", "PLATFORM_ADMIN"].includes(session.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const schoolId = await resolveSchoolId(session);
+  const school = schoolId
+    ? await prisma.school.findUnique({ where: { id: schoolId }, select: { shortName: true } })
+    : null;
+  const tag = school?.shortName || "School";
+
   const unpaid = await prisma.invoice.findMany({
-    where: { status: { in: ["UNPAID", "PARTIAL"] } },
+    where: {
+      status: { in: ["UNPAID", "PARTIAL"] },
+      ...(schoolId ? { student: { schoolId } } : {}),
+    },
     include: { student: true },
     take: 100,
   });
@@ -30,7 +39,7 @@ export async function POST() {
       continue;
     }
     const bal = toMoney(toMoney(inv.totalAmount) - toMoney(inv.amountPaid));
-    const body = `${SCHOOL.shortName}: Fee reminder for ${inv.student.firstName}. Balance ${formatNaira(bal)}. Please pay at the office or online portal.`;
+    const body = `${tag}: Fee reminder for ${inv.student.firstName}. Balance ${formatNaira(bal)}. Please pay at the office or online portal.`;
     const result = await sendSms({ to: phone, body });
     if (result.ok) sent++;
     else skipped++;
