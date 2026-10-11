@@ -60,8 +60,23 @@ model School {
   transportRoutes TransportRoute[]
   cbtExams        CbtExam[]
   expenses        ExpenseRecord[]
+  branches        Branch[]
 
   @@index([isActive])
+}
+
+model Branch {
+  id        String    @id @default(cuid())
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  code      String
+  name      String
+  isDefault Boolean   @default(false)
+  students  Student[]
+  createdAt DateTime  @default(now())
+
+  @@unique([schoolId, code])
+  @@index([schoolId])
 }
 
 model User {
@@ -216,6 +231,8 @@ model Student {
   id               String                @id @default(cuid())
   schoolId         String?
   school           School?               @relation(fields: [schoolId], references: [id])
+  branchId         String?
+  branch           Branch?               @relation(fields: [branchId], references: [id])
   admissionNumber  String                @unique
   user             User?                 @relation(fields: [userId], references: [id])
   userId           String?               @unique
@@ -244,6 +261,7 @@ model Student {
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
   @@index([schoolId])
+  @@index([branchId])
 }
 
 model Document {
