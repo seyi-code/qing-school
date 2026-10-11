@@ -69,17 +69,19 @@ export async function POST(req: Request) {
 
   let emailStatus = "LOGGED_NO_PROVIDER";
   if (isEmailConfigured()) {
+    const textBody = [
+      "You requested a password reset for Qing School.",
+      "",
+      "Open this link within 1 hour:",
+      resetUrl,
+      "",
+      "If you did not request this, ignore this email.",
+    ].join("\n");
+
     const sent = await sendEmail({
       to: email,
       subject: "Reset your Qing School password",
-      text: [
-        "You requested a password reset for Qing School.",
-        "",
-        `Open this link within 1 hour:",
-        resetUrl,
-        "",
-        "If you did not request this, ignore this email.",
-      ].join("\n"),
+      text: textBody,
       html: `<p>You requested a password reset for <strong>Qing School</strong>.</p>
 <p><a href="${resetUrl}">Reset password</a> (valid 1 hour)</p>
 <p style="color:#666;font-size:12px">If you did not request this, ignore this email.</p>`,
