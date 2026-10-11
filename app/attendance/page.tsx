@@ -31,7 +31,6 @@ export default async function AttendancePage({
     orderBy: [{ schoolClass: { order: "asc" } }, { name: "asc" }],
   });
 
-  // Only allow armId if it belongs to this school
   const requested = searchParams.armId;
   const selectedArmId =
     (requested && arms.some((a) => a.id === requested) ? requested : null) ?? arms[0]?.id;
@@ -106,8 +105,7 @@ export default async function AttendancePage({
           students={students.map((s) => ({
             id: s.id,
             name: `${s.lastName}, ${s.firstName}`,
-            admissionNumber: s.admissionNumber,
-            mark: marksByStudent[s.id] || "PRESENT",
+            status: (marksByStudent[s.id] as "PRESENT" | "ABSENT" | "LATE") || "PRESENT",
           }))}
         />
       ) : null}
