@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { homeRouteForRole } from "@/lib/permissions";
+import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { CmsEditor } from "./CmsEditor";
 
@@ -9,14 +10,21 @@ export const dynamic = "force-dynamic";
 
 export default async function CmsPage() {
   const session = await requireSession();
-  if (!["ADMIN", "IT", "SECRETARY"].includes(session.role)) {
+  if (!["ADMIN", "IT", "SECRETARY", "PLATFORM_ADMIN"].includes(session.role)) {
     redirect(homeRouteForRole(session.role));
   }
 
+  const schoolId = await resolveSchoolId(session);
+  const sw = schoolWhere(schoolId);
+
   const [pages, themeRow, media] = await Promise.all([
-    prisma.cmsPage.findMany({ orderBy: { updatedAt: "desc" } }),
+    prisma.cmsPage.findMany({ where: sw, orderBy: { updatedAt: "desc" } }),
     prisma.siteTheme.findFirst(),
-    prisma.mediaAsset.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    prisma.mediaAsset.findMany({
+      where: schoolId ? { schoolId } : undefined,
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
   ]);
 
   const theme = themeRow
@@ -27,7 +35,8 @@ export default async function CmsPage() {
     <PortalShell
       role={session.role}
       title="Website CMS"
-      subtitle="Drag blocks · rich text · media · SEO · schedule · history"
+      subtitle="Pages, media, SEO for this school"
+      email={session.email}
     >
       <CmsEditor
         theme={theme}
