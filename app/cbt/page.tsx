@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { homeRouteForRole } from "@/lib/permissions";
+import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CbtStaffPanel } from "./CbtStaffPanel";
@@ -10,11 +11,14 @@ export const dynamic = "force-dynamic";
 
 export default async function CbtPage() {
   const session = await requireSession();
+  const schoolId = await resolveSchoolId(session);
 
   if (session.role === "STUDENT") {
-    const student = await prisma.student.findUnique({ where: { userId: session.userId } });
+    const student = await prisma.student.findFirst({
+      where: { userId: session.userId },
+    });
     const exams = await prisma.cbtExam.findMany({
-      where: { isOpen: true },
+      where: { isOpen: true, ...schoolWhere(schoolId) },
       orderBy: { createdAt: "desc" },
     });
     const attempts = student
@@ -27,7 +31,7 @@ export default async function CbtPage() {
     const attempted = new Set(attempts.map((a) => a.examId));
 
     return (
-      <PortalShell role={session.role} title="CBT / Tests" subtitle="Open computer-based tests">
+      <PortalShell role={session.role} title="CBT / Tests" subtitle="Open computer-based tests" email={session.email}>
         <ul className="space-y-3">
           {exams.map((e) => (
             <li key={e.id} className="ledger-block flex flex-wrap justify-between gap-2 items-center">
@@ -38,10 +42,7 @@ export default async function CbtPage() {
               {attempted.has(e.id) ? (
                 <span className="text-sm text-sage">Submitted</span>
               ) : (
-                <Link
-                  href={`/cbt/${e.id}/take`}
-                  className="text-sm bg-navy text-paper px-3 py-1.5"
-                >
+                <Link href={`/cbt/${e.id}/take`} className="text-sm bg-navy text-paper px-3 py-1.5">
                   Start test
                 </Link>
               )}
@@ -68,19 +69,25 @@ export default async function CbtPage() {
     );
   }
 
-  if (!["ADMIN", "IT", "TEACHER", "PRINCIPAL"].includes(session.role)) {
+  if (!["ADMIN", "IT", "TEACHER", "PRINCIPAL", "PLATFORM_ADMIN"].includes(session.role)) {
     redirect(homeRouteForRole(session.role));
   }
 
   const exams = await prisma.cbtExam.findMany({
+    where: schoolWhere(schoolId),
     include: { _count: { select: { questions: true, attempts: true } } },
     orderBy: { createdAt: "desc" },
   });
 
-  const pendingGrading = await prisma.cbtAttempt.count({ where: { needsGrading: true } });
+  const pendingGrading = await prisma.cbtAttempt.count({
+    where: {
+      needsGrading: true,
+      ...(schoolId ? { student: { schoolId } } : {}),
+    },
+  });
 
   return (
-    <PortalShell role={session.role} title="CBT" subtitle="Create MCQ tests for students">
+    <PortalShell role={session.role} title="CBT" subtitle="Create MCQ tests for students" email={session.email}>
       <div className="mb-4 flex flex-wrap gap-2">
         <Link
           href="/cbt/results"

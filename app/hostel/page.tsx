@@ -2,19 +2,24 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { homeRouteForRole } from "@/lib/permissions";
+import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { HostelClient } from "./HostelClient";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED = ["ADMIN", "IT", "SECRETARY", "PRINCIPAL"];
+const ALLOWED = ["ADMIN", "IT", "SECRETARY", "PRINCIPAL", "PLATFORM_ADMIN"];
 
 export default async function HostelPage() {
   const session = await requireSession();
   if (!ALLOWED.includes(session.role)) redirect(homeRouteForRole(session.role));
 
+  const schoolId = await resolveSchoolId(session);
+  const sw = schoolWhere(schoolId);
+
   const [rooms, students] = await Promise.all([
     prisma.hostelRoom.findMany({
+      where: sw,
       include: {
         allocations: {
           where: { status: "ACTIVE" },
@@ -28,7 +33,7 @@ export default async function HostelPage() {
       orderBy: [{ block: "asc" }, { name: "asc" }],
     }),
     prisma.student.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", ...sw },
       select: { id: true, firstName: true, lastName: true, admissionNumber: true },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       take: 500,
@@ -44,6 +49,7 @@ export default async function HostelPage() {
       role={session.role}
       title="Hostel"
       subtitle={`${occupied}/${beds} beds occupied (${pct}%) · ${rooms.length} rooms`}
+      email={session.email}
     >
       <HostelClient
         rooms={rooms.map((r) => ({
