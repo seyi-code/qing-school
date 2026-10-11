@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { resolveSchoolId, schoolWhere, assertUnderStudentCap } from "@/lib/tenant-scope";
+import { generateAdmissionNumber } from "@/lib/admission";
 
 const CreateStudentSchema = z.object({
   firstName: z.string().min(1),
@@ -17,40 +18,9 @@ const CreateStudentSchema = z.object({
   medicalNotes: z.string().optional(),
   guardianPhone: z.string().optional(),
   armId: z.string().optional(),
+  branchId: z.string().optional(),
   forceAdmit: z.boolean().optional(),
 });
-
-/** Per-school sequence: TEST/2026/0001, KMS/2026/0001, etc. */
-async function generateAdmissionNumber(schoolId: string | null): Promise<string> {
-  const year = new Date().getFullYear();
-  let tag = "SCH";
-  if (schoolId) {
-    const school = await prisma.school.findUnique({
-      where: { id: schoolId },
-      select: { shortName: true },
-    });
-    tag =
-      (school?.shortName || "SCH")
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 6) || "SCH";
-  }
-  const prefix = `${tag}/${year}/`;
-  const last = await prisma.student.findFirst({
-    where: {
-      admissionNumber: { startsWith: prefix },
-      ...(schoolId ? { schoolId } : {}),
-    },
-    orderBy: { admissionNumber: "desc" },
-    select: { admissionNumber: true },
-  });
-  let next = 1;
-  if (last?.admissionNumber) {
-    const n = parseInt(last.admissionNumber.split("/").pop() || "0", 10);
-    if (!Number.isNaN(n)) next = n + 1;
-  }
-  return `${prefix}${String(next).padStart(4, "0")}`;
-}
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -146,11 +116,15 @@ export async function POST(req: Request) {
     }
   }
 
-  const admissionNumber = await generateAdmissionNumber(schoolId);
+  const { admissionNumber, branchId } = await generateAdmissionNumber(
+    schoolId,
+    data.branchId
+  );
 
   const student = await prisma.student.create({
     data: {
       schoolId: schoolId ?? undefined,
+      branchId: branchId ?? undefined,
       admissionNumber,
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
