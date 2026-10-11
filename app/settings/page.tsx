@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const session = await requireSession();
-  if (!can(session.role, "MANAGE_SETTINGS") && session.role !== "IT" && session.role !== "PLATFORM_ADMIN") {
+  if (!can(session.role, "MANAGE_SYSTEM_SETTINGS")) {
     redirect(homeRouteForRole(session.role));
   }
 
@@ -31,7 +31,15 @@ export default async function SettingsPage() {
           take: 30,
           include: { user: { select: { email: true } } },
         })
-      : Promise.resolve([]),
+      : Promise.resolve(
+          [] as {
+            id: string;
+            createdAt: Date;
+            action: string;
+            entity: string;
+            user: { email: string } | null;
+          }[]
+        ),
   ]);
 
   return (
