@@ -188,10 +188,23 @@ function rolePortalLabel(role: Role): string {
   }
 }
 
-export function Sidebar({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
+export function Sidebar({
+  role,
+  onNavigate,
+  schoolLabel,
+  schoolName,
+}: {
+  role: Role;
+  onNavigate?: () => void;
+  /** Short name or full name for sidebar brand */
+  schoolLabel?: string;
+  schoolName?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const visible = NAV_ITEMS.filter((item) => item.roles.includes(role));
+
+  const brand = schoolLabel || schoolName || "Qing School";
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -204,9 +217,11 @@ export function Sidebar({ role, onNavigate }: { role: Role; onNavigate?: () => v
       <div className="px-5 py-4 border-b border-paper/10 flex items-start justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="KMS" className="w-10 h-10 object-contain shrink-0" />
+          <img src="/logo.svg" alt="" className="w-10 h-10 object-contain shrink-0" />
           <div className="min-w-0">
-            <p className="font-serif text-lg leading-tight">KMS</p>
+            <p className="font-serif text-lg leading-tight truncate" title={schoolName || brand}>
+              {brand}
+            </p>
             <p className="text-[11px] text-paper/50 truncate">{rolePortalLabel(role)}</p>
           </div>
         </div>
@@ -243,6 +258,11 @@ export function Sidebar({ role, onNavigate }: { role: Role; onNavigate?: () => v
       </nav>
 
       <div className="shrink-0 p-4 border-t border-paper/10 bg-navy space-y-2">
+        {schoolName && (
+          <p className="text-[10px] text-paper/40 text-center truncate px-1" title={schoolName}>
+            {schoolName}
+          </p>
+        )}
         <Link
           href="/account/profile"
           onClick={onNavigate}
