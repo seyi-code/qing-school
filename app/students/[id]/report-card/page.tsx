@@ -35,14 +35,19 @@ export default async function ReportCardPage({ params }: { params: { id: string 
         school: { select: { name: true, shortName: true } },
         arm: { include: { schoolClass: true } },
         scores: {
-          include: { armSubject: { include: { subject: true } }, term: true },
-          orderBy: { armSubject: { subject: { name: "asc" } } },
+          include: {
+            armSubject: { include: { subject: true } },
+            term: true,
+          },
         },
         attendances: true,
       },
     }),
     prisma.reportCardTemplate.findFirst({ orderBy: { updatedAt: "desc" } }),
-    prisma.term.findFirst({ where: { isCurrent: true } }).catch(() => null),
+    prisma.term.findFirst({
+      where: { isCurrent: true },
+      include: { session: true },
+    }),
   ]);
 
   if (!student) notFound();
@@ -51,7 +56,6 @@ export default async function ReportCardPage({ params }: { params: { id: string 
     ? (JSON.parse(tpl.configJson) as TemplateConfig)
     : {};
 
-  // Brand: prefer deep navy / gold (sample). Ignore washed-out template blues.
   const headerBg =
     cfg.headerBg && !isHarshBlue(cfg.headerBg) ? cfg.headerBg : "#0f2748";
   const accent = cfg.accentColor || SCHOOL.colors.gold;
@@ -67,16 +71,18 @@ export default async function ReportCardPage({ params }: { params: { id: string 
 
   const sessionLabel =
     cfg.sessionLabel ||
-    (term ? `${term.sessionYear || ""}`.trim() : "") ||
+    term?.session?.name ||
     "2025 / 2026";
   const termLabel =
     cfg.termLabel ||
     (term?.name ? `${term.name.toUpperCase()} REPORT CARD` : "TERMINAL REPORT CARD");
 
-  const totalScore = student.scores.reduce((s, sc) => s + sc.total, 0);
-  const average = student.scores.length
-    ? (totalScore / student.scores.length).toFixed(1)
-    : "—";
+  const scores = [...student.scores].sort((a, b) =>
+    a.armSubject.subject.name.localeCompare(b.armSubject.subject.name)
+  );
+
+  const totalScore = scores.reduce((s, sc) => s + sc.total, 0);
+  const average = scores.length ? (totalScore / scores.length).toFixed(1) : "—";
   const presentDays = student.attendances.filter((a) => a.status === "PRESENT").length;
   const totalDays = student.attendances.length;
   const attendanceRate =
@@ -98,9 +104,7 @@ export default async function ReportCardPage({ params }: { params: { id: string 
           <PrintButton />
         </div>
 
-        {/* Card shell */}
         <article className="bg-white shadow-lg print:shadow-none overflow-hidden rounded-sm border border-black/5">
-          {/* Header — deep navy, centered brand */}
           <header
             className="relative text-center text-white px-5 pt-7 pb-6 sm:px-10 sm:pt-9 sm:pb-7"
             style={{ background: headerBg }}
@@ -141,7 +145,6 @@ export default async function ReportCardPage({ params }: { params: { id: string 
               {termLabel}
               {sessionLabel ? ` · ${sessionLabel}` : ""}
             </p>
-            {/* Gold rule */}
             <div
               className="absolute bottom-0 left-0 right-0 h-[3px]"
               style={{ background: accent }}
@@ -149,7 +152,6 @@ export default async function ReportCardPage({ params }: { params: { id: string 
           </header>
 
           <div className="px-4 sm:px-8 py-5 sm:py-7">
-            {/* Student identity */}
             <div className="grid grid-cols-[1fr_auto] gap-4 mb-6 pb-5 border-b border-line">
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
                 <Dt>Name</Dt>
@@ -184,17 +186,15 @@ export default async function ReportCardPage({ params }: { params: { id: string 
               </div>
             </div>
 
-            {/* Cognitive domain */}
             <section className="mb-6">
               <h2 className="font-serif text-base sm:text-lg text-navy mb-1">Cognitive Domain</h2>
               <div className="h-0.5 w-full bg-navy mb-3" />
 
-              {/* Mobile cards */}
               <div className="sm:hidden space-y-2 print:hidden">
-                {student.scores.length === 0 ? (
+                {scores.length === 0 ? (
                   <EmptyScores />
                 ) : (
-                  student.scores.map((s) => (
+                  scores.map((s) => (
                     <div key={s.id} className="border border-line rounded-md p-3 text-sm">
                       <p className="font-medium text-navy mb-2">{s.armSubject.subject.name}</p>
                       <div className="grid grid-cols-4 gap-2 text-center text-xs">
@@ -215,7 +215,6 @@ export default async function ReportCardPage({ params }: { params: { id: string 
                 )}
               </div>
 
-              {/* Desktop / print table */}
               <div className="hidden sm:block print:block overflow-x-auto">
                 <table className="w-full text-sm border-collapse">
                   <thead>
@@ -230,7 +229,7 @@ export default async function ReportCardPage({ params }: { params: { id: string 
                     </tr>
                   </thead>
                   <tbody>
-                    {student.scores.map((s, i) => (
+                    {scores.map((s, i) => (
                       <tr
                         key={s.id}
                         className={`border-b border-line ${i % 2 === 1 ? "bg-paper/40" : ""}`}
@@ -244,7 +243,7 @@ export default async function ReportCardPage({ params }: { params: { id: string 
                         <td className="px-3 text-ink/70">{s.remark ?? "—"}</td>
                       </tr>
                     ))}
-                    {student.scores.length === 0 && (
+                    {scores.length === 0 && (
                       <tr>
                         <td colSpan={7} className="text-center text-ink/45 py-10">
                           No scores entered for this student yet.
@@ -256,7 +255,6 @@ export default async function ReportCardPage({ params }: { params: { id: string 
               </div>
             </section>
 
-            {/* Summary strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               <Summary label="Days recorded" value={String(totalDays)} />
               <Summary label="Times present" value={String(presentDays)} />
@@ -264,14 +262,17 @@ export default async function ReportCardPage({ params }: { params: { id: string 
               <Summary label="Average score" value={String(average)} />
             </div>
 
-            {/* Remarks */}
-            <p className="text-sm italic text-ink/75 mb-8 border-l-2 pl-3" style={{ borderColor: accent }}>
+            <p
+              className="text-sm italic text-ink/75 mb-8 border-l-2 pl-3"
+              style={{ borderColor: accent }}
+            >
               Keep working hard. {motto}.
             </p>
 
-            {/* Signatures */}
             <div className="grid grid-cols-2 gap-8 sm:gap-16 mt-4 text-sm">
-              <div className="border-t border-ink/80 pt-2 text-center font-medium">{principalTitle}</div>
+              <div className="border-t border-ink/80 pt-2 text-center font-medium">
+                {principalTitle}
+              </div>
               <div className="border-t border-ink/80 pt-2 text-center font-medium">Class teacher</div>
             </div>
 
@@ -288,9 +289,9 @@ export default async function ReportCardPage({ params }: { params: { id: string 
 
 function isHarshBlue(hex: string): boolean {
   const h = hex.replace("#", "").toLowerCase();
-  if (h === "0000ff" || h === "00f" || h === "0066ff" || h === "0066cc") return true;
-  // pure/high-sat blue without navy depth
-  if (/^0{0,2}[0-9a-f]{0,2}ff$/i.test(h) && h.length <= 6) return true;
+  if (h === "0000ff" || h === "00f" || h === "0066ff" || h === "0066cc" || h === "1e40af")
+    return true;
+  if (h === "2563eb" || h === "3b82f6") return true;
   return false;
 }
 
