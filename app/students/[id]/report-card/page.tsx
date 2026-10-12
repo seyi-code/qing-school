@@ -267,9 +267,6 @@ export default async function ReportCardPage({ params }: { params: { id: string 
               style={{ color: accent }}
             >
               {termLabel} Report Card
-              {student.scores[0]?.term?.session
-                ? ` · ${String((student.scores[0] as { term?: { session?: { name?: string } } }).term?.session?.name ?? "")}`
-                : ""}
             </p>
           </header>
         )}
@@ -558,8 +555,8 @@ export default async function ReportCardPage({ params }: { params: { id: string 
                 Remarks
               </h2>
               <div className="space-y-3">
-                <RemarkBox who="Class Teacher&apos;s Remark" text={teacherRemark} />
-                <RemarkBox who={`${principalTitle}&apos;s Remark`} text={principalRemark} />
+                <RemarkBox who="Class Teacher's Remark" text={teacherRemark} />
+                <RemarkBox who={`${principalTitle}'s Remark`} text={principalRemark} />
               </div>
             </section>
           )}
@@ -685,7 +682,7 @@ function RemarkBox({ who, text }: { who: string; text: string }) {
   return (
     <div className="border border-line rounded-sm p-3 bg-[#faf8f3] text-sm">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-navy mb-1">
-        {who.replace(/&apos;/g, "'")}
+        {who}
       </p>
       <p className="text-ink/80 leading-relaxed">{text}</p>
       <div className="mt-3 pt-2 border-t border-dashed border-line flex justify-between text-[11px] text-ink/50">
