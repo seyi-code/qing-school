@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
-import { PortalShell, StatBlock } from "@/components/PortalShell";
+import { PortalShell } from "@/components/PortalShell";
 import { can, homeRouteForRole } from "@/lib/permissions";
 import { formatNaira, formatDateTime } from "@/lib/format";
 import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
@@ -76,147 +76,180 @@ export default async function DashboardPage() {
   const isPrincipal = session.role === "PRINCIPAL";
   const isSecretary = session.role === "SECRETARY";
 
+  const attention: { href: string; label: string; tone?: "warn" | "info" }[] = [];
+  if (pendingAdmissions > 0) {
+    attention.push({
+      href: "/students?status=APPLIED",
+      label: `${pendingAdmissions} pending admission${pendingAdmissions === 1 ? "" : "s"}`,
+      tone: "warn",
+    });
+  }
+  if (showFinancials && outstanding > 0) {
+    attention.push({
+      href: "/fees",
+      label: `${formatNaira(outstanding)} fees outstanding`,
+      tone: "warn",
+    });
+  }
+  if (leavePending > 0) {
+    attention.push({
+      href: "/leave",
+      label: `${leavePending} leave request${leavePending === 1 ? "" : "s"} pending`,
+      tone: "info",
+    });
+  }
+  if (attendancePct === null) {
+    attention.push({ href: "/attendance", label: "Attendance not taken today", tone: "info" });
+  }
+
+  const actions: { href: string; label: string; primary?: boolean }[] = [];
+  if (can(session.role, "MANAGE_STUDENTS")) {
+    actions.push({ href: "/students/new", label: "Admit student", primary: true });
+  }
+  if (showFinancials || isSecretary) {
+    actions.push({ href: "/fees", label: "Collect fees" });
+  }
+  if (["ADMIN", "IT", "PLATFORM_ADMIN"].includes(session.role)) {
+    actions.push({ href: "/attendance", label: "Attendance" });
+  }
+  if (["ADMIN", "PRINCIPAL", "SECRETARY", "IT", "PLATFORM_ADMIN"].includes(session.role)) {
+    actions.push({ href: "/notices", label: "Post notice" });
+  }
+  if (isAccounts) {
+    actions.push({ href: "/expenses", label: "Expense" });
+    actions.push({ href: "/payroll", label: "Payroll" });
+  }
+  if (isPrincipal) {
+    actions.push({ href: "/reports", label: "Reports" });
+  }
+  if (session.role === "PLATFORM_ADMIN") {
+    actions.push({ href: "/platform", label: "Platform" });
+  }
+
   return (
     <PortalShell
       role={session.role}
       title="Dashboard"
-      subtitle={`Welcome back, ${session.email}`}
+      subtitle={`Welcome back · ${session.email}`}
       email={session.email}
     >
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <StatBlock label="Active Students" value={studentCount.toLocaleString()} />
-        <StatBlock label="Staff on Roll" value={staffCount.toLocaleString()} />
-        <StatBlock label="Classes" value={classCount.toLocaleString()} />
-        <StatBlock
-          label="Attendance Today"
-          value={attendancePct !== null ? `${attendancePct}%` : "Not taken"}
-          sublabel={
+      {/* KPIs */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+        <Kpi label="Active students" value={studentCount.toLocaleString()} />
+        <Kpi label="Staff on roll" value={staffCount.toLocaleString()} />
+        <Kpi label="Classes" value={classCount.toLocaleString()} />
+        <Kpi
+          label="Attendance today"
+          value={attendancePct !== null ? `${attendancePct}%` : "—"}
+          sub={
             todayAttendance.length
-              ? `${presentToday}/${todayAttendance.length} marked present`
-              : undefined
+              ? `${presentToday}/${todayAttendance.length} present`
+              : "Not taken"
           }
         />
       </div>
 
       {showFinancials && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <StatBlock label="Fees collected" value={formatNaira(collected)} />
-          <StatBlock label="Outstanding" value={formatNaira(outstanding)} />
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+          <Kpi label="Fees collected" value={formatNaira(collected)} valueClass="text-sage" />
+          <Kpi
+            label="Outstanding"
+            value={formatNaira(outstanding)}
+            valueClass={outstanding > 0 ? "text-brick" : "text-ink"}
+          />
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-        <section className="ledger-block">
-          <h2 className="font-serif text-base sm:text-lg mb-3">Needs attention</h2>
-          <ul className="text-sm space-y-2 text-ink/80">
-            {pendingAdmissions > 0 && (
-              <li>
-                <Link href="/students?status=APPLIED" className="text-navy underline">
-                  {pendingAdmissions} pending admission{pendingAdmissions === 1 ? "" : "s"}
-                </Link>
-              </li>
-            )}
-            {showFinancials && outstanding > 0 && (
-              <li>
-                <Link href="/fees" className="text-navy underline">
-                  {formatNaira(outstanding)} in outstanding fees
-                </Link>
-              </li>
-            )}
-            {leavePending > 0 && (
-              <li>
-                <Link href="/leave" className="text-navy underline">
-                  {leavePending} staff leave request{leavePending === 1 ? "" : "s"}
-                </Link>
-              </li>
-            )}
-            {attendancePct === null && (
-              <li>
-                <Link href="/attendance" className="text-navy underline">
-                  Today&apos;s attendance not taken
-                </Link>
-              </li>
-            )}
-            {pendingAdmissions === 0 &&
-              leavePending === 0 &&
-              attendancePct !== null &&
-              !(showFinancials && outstanding > 0) && (
-                <li className="text-ink/50">Nothing urgent right now.</li>
-              )}
-          </ul>
+      {/* Primary actions */}
+      {actions.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
+          {actions.map((a) => (
+            <Link
+              key={a.href + a.label}
+              href={a.href}
+              className={
+                a.primary
+                  ? "inline-flex items-center rounded-lg bg-navy px-3.5 py-2 text-xs font-medium text-paper hover:bg-navy-light"
+                  : "inline-flex items-center rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-medium text-ink hover:border-navy/40"
+              }
+            >
+              {a.label}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
+        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
+          <h2 className="text-sm font-semibold text-ink mb-3">Needs attention</h2>
+          {attention.length === 0 ? (
+            <p className="text-sm text-ink/40 py-4 text-center">Nothing urgent right now.</p>
+          ) : (
+            <ul className="space-y-2">
+              {attention.map((item) => (
+                <li key={item.href + item.label}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm hover:border-navy/30 ${
+                      item.tone === "warn"
+                        ? "border-brick/20 bg-brick/5 text-brick"
+                        : "border-line bg-paper text-ink/80"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    <span className="text-xs opacity-60">Open →</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
-        <section className="ledger-block">
-          <h2 className="font-serif text-base sm:text-lg mb-3">Quick actions</h2>
-          <div className="flex flex-col gap-2 text-sm">
-            {(session.role === "ADMIN" ||
-              session.role === "IT" ||
-              session.role === "SECRETARY" ||
-              session.role === "PLATFORM_ADMIN") && (
-              <Link href="/students/new" className="text-navy underline hover:text-gold py-1">
-                Admit a new student
-              </Link>
-            )}
-            {(showFinancials || isSecretary) && (
-              <Link href="/fees" className="text-navy underline hover:text-gold py-1">
-                Collect a fee payment
-              </Link>
-            )}
-            {(session.role === "ADMIN" ||
-              session.role === "IT" ||
-              session.role === "PLATFORM_ADMIN") && (
-              <Link href="/attendance" className="text-navy underline hover:text-gold py-1">
-                Take today&apos;s attendance
-              </Link>
-            )}
-            {(session.role === "ADMIN" ||
-              session.role === "PRINCIPAL" ||
-              session.role === "SECRETARY" ||
-              session.role === "IT" ||
-              session.role === "PLATFORM_ADMIN") && (
-              <Link href="/notices" className="text-navy underline hover:text-gold py-1">
-                Post a notice
-              </Link>
-            )}
-            {isAccounts && (
-              <>
-                <Link href="/expenses" className="text-navy underline hover:text-gold py-1">
-                  Record an expense
-                </Link>
-                <Link href="/payroll" className="text-navy underline hover:text-gold py-1">
-                  Open payroll
-                </Link>
-              </>
-            )}
-            {isPrincipal && (
-              <Link href="/reports" className="text-navy underline hover:text-gold py-1">
-                View reports
-              </Link>
-            )}
-            {session.role === "PLATFORM_ADMIN" && (
-              <Link href="/platform" className="text-navy underline hover:text-gold py-1">
-                Platform control plane
-              </Link>
-            )}
-          </div>
+        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
+          <h2 className="text-sm font-semibold text-ink mb-3">Recent activity</h2>
+          {recentAudit.length === 0 ? (
+            <p className="text-sm text-ink/40 py-4 text-center">No activity yet.</p>
+          ) : (
+            <ul className="divide-y divide-line/80">
+              {recentAudit.map((log) => (
+                <li key={log.id} className="py-2.5 text-sm">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-ink/70 truncate max-w-[60%]">
+                      {log.user?.email ?? "System"}
+                    </span>
+                    <span className="font-mono text-[11px] text-navy/80">{log.action}</span>
+                  </div>
+                  <p className="text-[11px] text-ink/40 mt-0.5">{formatDateTime(log.createdAt)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
-
-      <section className="ledger-block">
-        <h2 className="font-serif text-base sm:text-lg mb-3">Recent activity</h2>
-        <ul className="text-sm space-y-2">
-          {recentAudit.length === 0 && (
-            <li className="text-ink/50">No activity recorded yet.</li>
-          )}
-          {recentAudit.map((log) => (
-            <li key={log.id} className="border-b border-line pb-2 last:border-0">
-              <span className="text-ink/70 break-all">{log.user?.email ?? "System"}</span>{" "}
-              <span className="font-mono text-xs">{log.action}</span>
-              <span className="block text-xs text-ink/40">{formatDateTime(log.createdAt)}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
     </PortalShell>
+  );
+}
+
+function Kpi({
+  label,
+  value,
+  sub,
+  valueClass = "text-ink",
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-line bg-white px-3.5 py-3 sm:px-4 sm:py-3.5">
+      <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/45">
+        {label}
+      </p>
+      <p className={`mt-1 text-lg sm:text-xl font-semibold tracking-tight tabular-nums ${valueClass}`}>
+        {value}
+      </p>
+      {sub ? <p className="text-[11px] text-ink/40 mt-0.5">{sub}</p> : null}
+    </div>
   );
 }
