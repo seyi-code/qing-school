@@ -3,10 +3,11 @@
 export function PrintButton() {
   return (
     <button
+      type="button"
       onClick={() => window.print()}
-      className="border border-navy text-navy text-sm px-4 py-2 hover:bg-navy hover:text-paper"
+      className="rounded-lg bg-navy text-paper text-sm font-medium px-4 py-2 hover:bg-navy-light shadow-sm"
     >
-      Print / Save as PDF
+      Print / Save PDF
     </button>
   );
 }
