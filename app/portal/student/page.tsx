@@ -20,7 +20,6 @@ export default async function StudentPortalPage() {
       invoices: { orderBy: { createdAt: "desc" } },
       scores: {
         include: { armSubject: { include: { subject: true } } },
-        orderBy: { createdAt: "desc" },
         take: 8,
       },
       attendances: { orderBy: { date: "desc" }, take: 8 },
@@ -54,7 +53,6 @@ export default async function StudentPortalPage() {
       subtitle={`${classLabel} · ${student.admissionNumber}`}
       email={session.email}
     >
-      {/* KPI strip — tight mobile grid */}
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
         <Kpi
           label="Fee balance"
@@ -70,7 +68,6 @@ export default async function StudentPortalPage() {
         />
       </div>
 
-      {/* Quick actions — button style, not bare links */}
       <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
         <Action href={`/students/${student.id}`} label="My record" />
         <Action href={`/students/${student.id}/report-card`} label="Report card" primary />
@@ -99,7 +96,7 @@ export default async function StudentPortalPage() {
                       {inv.status}
                     </p>
                   </div>
-                  <PayOnlineButton invoiceId={inv.id} amount={bal} />
+                  <PayOnlineButton invoiceId={inv.id} maxAmount={bal} />
                 </li>
               );
             })}
@@ -109,9 +106,7 @@ export default async function StudentPortalPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-ink">Recent scores</h2>
-          </div>
+          <h2 className="text-sm font-semibold text-ink mb-3">Recent scores</h2>
           {student.scores.length === 0 ? (
             <Empty text="No scores yet." />
           ) : (
@@ -127,9 +122,7 @@ export default async function StudentPortalPage() {
         </section>
 
         <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-ink">Recent attendance</h2>
-          </div>
+          <h2 className="text-sm font-semibold text-ink mb-3">Recent attendance</h2>
           {student.attendances.length === 0 ? (
             <Empty text="No attendance recorded yet." />
           ) : (
@@ -214,7 +207,9 @@ function Status({ status }: { status: string }) {
           ? "bg-brick/10 text-brick border-brick/25"
           : "bg-ink/5 text-ink/60 border-line";
   return (
-    <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border ${tone}`}>
+    <span
+      className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border ${tone}`}
+    >
       {status}
     </span>
   );
