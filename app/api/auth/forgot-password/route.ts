@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
+import { SCHOOL } from "@/lib/school-config";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -43,11 +44,21 @@ export async function POST(req: Request) {
       );
     }
 
-    let user: { id: string; schoolId: string | null; isActive: boolean } | null = null;
+    let user: {
+      id: string;
+      schoolId: string | null;
+      isActive: boolean;
+      school: { name: string; shortName: string } | null;
+    } | null = null;
     try {
       user = await prisma.user.findUnique({
         where: { email },
-        select: { id: true, schoolId: true, isActive: true },
+        select: {
+          id: true,
+          schoolId: true,
+          isActive: true,
+          school: { select: { name: true, shortName: true } },
+        },
       });
     } catch (e) {
       console.error("[forgot-password] user lookup failed", e);
@@ -57,6 +68,13 @@ export async function POST(req: Request) {
     if (!user || !user.isActive) {
       return NextResponse.json(GENERIC);
     }
+
+    const brand =
+      user.school?.shortName?.trim() ||
+      user.school?.name?.trim() ||
+      SCHOOL.shortName ||
+      "KMS";
+    const brandFull = user.school?.name?.trim() || SCHOOL.name || brand;
 
     const rawToken = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
@@ -72,7 +90,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "Password reset table missing. Run PasswordResetToken SQL on Neon preview (see docs/PASSWORD_RESET_TABLE.sql).",
+            "Password reset table missing. Run PasswordResetToken SQL on Neon preview.",
           code: "RESET_TOKEN_TABLE",
         },
         { status: 503 }
@@ -91,7 +109,7 @@ export async function POST(req: Request) {
 
     if (isEmailConfigured()) {
       const textBody = [
-        "You requested a password reset for Qing School.",
+        `You requested a password reset for ${brandFull} (${brand}).`,
         "",
         "Open this link within 1 hour:",
         resetUrl,
@@ -101,9 +119,9 @@ export async function POST(req: Request) {
 
       const sent = await sendEmail({
         to: email,
-        subject: "Reset your Qing School password",
+        subject: `Reset your ${brand} password`,
         text: textBody,
-        html: `<p>You requested a password reset for <strong>Qing School</strong>.</p>
+        html: `<p>You requested a password reset for <strong>${brandFull}</strong> (${brand}).</p>
 <p><a href="${resetUrl}">Reset password</a> (valid 1 hour)</p>
 <p style="color:#666;font-size:12px">If you did not request this, ignore this email.</p>`,
       });
@@ -137,7 +155,7 @@ export async function POST(req: Request) {
         action: "PASSWORD_RESET_REQUEST",
         entity: "User",
         entityId: user.id,
-        details: { emailStatus, emailError, emailFrom },
+        details: { emailStatus, emailError, emailFrom, brand },
       });
     } catch (e) {
       console.error("[forgot-password] audit failed", e);
@@ -158,7 +176,7 @@ export async function POST(req: Request) {
         emailFrom,
         note: emailStatus.startsWith("SENT_")
           ? "Email sent — check inbox/spam."
-          : "Email not delivered — use the debug link, or fix EMAIL_FROM / Resend (see emailError).",
+          : "Email not delivered — use the debug link, or fix EMAIL_FROM / Resend.",
       });
     }
 
