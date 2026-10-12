@@ -5,6 +5,7 @@ import { StudentDocuments } from "@/components/StudentDocuments";
 import { ApproveStudentButton } from "@/components/ApproveStudentButton";
 import { StudentEditForm } from "@/components/StudentEditForm";
 import { StudentLifecycleActions } from "@/components/StudentLifecycleActions";
+import { EnableStudentPortalButton } from "@/components/EnableStudentPortalButton";
 import { can } from "@/lib/permissions";
 import { formatNaira, formatDate } from "@/lib/format";
 import { toMoney } from "@/lib/money";
@@ -89,6 +90,10 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
     >
       {canManage && (
         <div className="mb-6 max-w-2xl space-y-4">
+          <EnableStudentPortalButton
+            studentId={student.id}
+            hasPortal={Boolean(student.userId)}
+          />
           <StudentEditForm
             studentId={student.id}
             arms={arms.map((a) => ({
