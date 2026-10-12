@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ensureDefaultSchool, backfillSchoolIds } from "@/lib/tenant";
 import { PlatformBillingForm } from "@/components/PlatformBillingForm";
+import { PlatformTrialForm } from "@/components/PlatformTrialForm";
 import { isSubscriptionLive, PLAN_LIMITS } from "@/lib/integrations/subscriptions";
 import { PortalShell } from "@/components/PortalShell";
 import { WorkAsSchoolButton } from "@/components/WorkAsSchoolButton";
@@ -140,6 +141,17 @@ export default async function PlatformPage() {
         </section>
 
         {session.role === "PLATFORM_ADMIN" && <IsolationProbeCard />}
+
+        <PlatformTrialForm
+          schools={schools.map((s) => ({
+            id: s.id,
+            name: s.name,
+            slug: s.slug,
+            plan: s.plan,
+            subscriptionStatus: s.subscriptionStatus || "NONE",
+            planRenewsAt: s.planRenewsAt ? s.planRenewsAt.toISOString() : null,
+          }))}
+        />
 
         <PlatformBillingForm
           schools={schools.map((s) => ({
