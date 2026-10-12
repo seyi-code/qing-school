@@ -9,6 +9,7 @@ import {
   PLAN_LIMITS,
   type SaaSPlan,
 } from "@/lib/integrations/subscriptions";
+import { getTrialDays, trialEndsAt } from "@/lib/trial";
 
 const SetPlanSchema = z.object({
   action: z.literal("set_plan").optional(),
@@ -88,6 +89,93 @@ export async function POST(req: Request) {
       const message = e instanceof Error ? e.message : String(e);
       return NextResponse.json({ error: message }, { status: 400 });
     }
+  }
+
+  if (body?.action === "start_trial" || body?.action === "extend_trial" || body?.action === "end_trial") {
+    if (session.role !== "PLATFORM_ADMIN" && session.role !== "IT") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const schoolId = typeof body.schoolId === "string" ? body.schoolId : "";
+    if (!schoolId) return NextResponse.json({ error: "schoolId required" }, { status: 400 });
+    const school = await prisma.school.findUnique({ where: { id: schoolId } });
+    if (!school) return NextResponse.json({ error: "School not found" }, { status: 404 });
+
+    if (body.action === "start_trial") {
+      const days =
+        typeof body.days === "number" && body.days > 0 ? Math.min(90, Math.floor(body.days)) : getTrialDays();
+      const ends = trialEndsAt(new Date(), days);
+      const updated = await prisma.school.update({
+        where: { id: schoolId },
+        data: {
+          subscriptionStatus: "TRIAL",
+          planRenewsAt: ends,
+          isActive: true,
+        },
+      });
+      await logAudit({
+        userId: session.userId,
+        action: "START_TRIAL",
+        entity: "School",
+        entityId: schoolId,
+        details: { days, planRenewsAt: ends.toISOString() },
+      });
+      return NextResponse.json({
+        ok: true,
+        message: `Trial started/reset for ${updated.name} — ends ${ends.toISOString().slice(0, 10)} (${days} days).`,
+        school: updated,
+      });
+    }
+
+    if (body.action === "extend_trial") {
+      const days =
+        typeof body.days === "number" && body.days > 0 ? Math.min(90, Math.floor(body.days)) : 14;
+      const base =
+        school.planRenewsAt && school.planRenewsAt.getTime() > Date.now()
+          ? school.planRenewsAt
+          : new Date();
+      const ends = trialEndsAt(base, days);
+      const updated = await prisma.school.update({
+        where: { id: schoolId },
+        data: {
+          subscriptionStatus: "TRIAL",
+          planRenewsAt: ends,
+          isActive: true,
+        },
+      });
+      await logAudit({
+        userId: session.userId,
+        action: "EXTEND_TRIAL",
+        entity: "School",
+        entityId: schoolId,
+        details: { days, planRenewsAt: ends.toISOString() },
+      });
+      return NextResponse.json({
+        ok: true,
+        message: `Trial extended by ${days} day(s) for ${updated.name} — now ends ${ends.toISOString().slice(0, 10)}.`,
+        school: updated,
+      });
+    }
+
+    const updated = await prisma.school.update({
+      where: { id: schoolId },
+      data: {
+        subscriptionStatus: "MANUAL",
+        planRenewsAt: null,
+        isActive: true,
+      },
+    });
+    await logAudit({
+      userId: session.userId,
+      action: "END_TRIAL",
+      entity: "School",
+      entityId: schoolId,
+      details: { subscriptionStatus: "MANUAL" },
+    });
+    return NextResponse.json({
+      ok: true,
+      message: `Trial ended for ${updated.name}. Status MANUAL — no trial expiry. School remains active.`,
+      school: updated,
+    });
   }
 
   const parsed = SetPlanSchema.safeParse(body);
