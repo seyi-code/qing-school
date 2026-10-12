@@ -17,6 +17,7 @@ const CreateStudentSchema = z.object({
   previousSchool: z.string().optional(),
   medicalNotes: z.string().optional(),
   guardianPhone: z.string().optional(),
+  guardianEmail: z.string().email().optional().or(z.literal("")),
   armId: z.string().optional(),
   branchId: z.string().optional(),
   forceAdmit: z.boolean().optional(),
@@ -121,6 +122,12 @@ export async function POST(req: Request) {
     data.branchId
   );
 
+  const emailNote =
+    data.guardianEmail && String(data.guardianEmail).trim()
+      ? `Guardian email: ${String(data.guardianEmail).trim().toLowerCase()}`
+      : null;
+  const medicalNotes = [data.medicalNotes, emailNote].filter(Boolean).join(" | ") || undefined;
+
   const student = await prisma.student.create({
     data: {
       schoolId: schoolId ?? undefined,
@@ -133,9 +140,10 @@ export async function POST(req: Request) {
       dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
       address: data.address,
       previousSchool: data.previousSchool,
-      medicalNotes: data.medicalNotes,
+      medicalNotes,
       guardianPhone: data.guardianPhone,
       armId: data.armId || undefined,
+      status: "ACTIVE",
     },
   });
 
