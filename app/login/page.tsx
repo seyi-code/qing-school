@@ -10,6 +10,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextParam = searchParams.get("next");
+  const resetOk = searchParams.get("reset") === "ok";
   const { toast } = useToast();
 
   const [email, setEmail] = useState("");
@@ -70,6 +71,11 @@ function LoginForm() {
         </div>
 
         <form onSubmit={onSubmit} className="ledger-block space-y-4">
+          {resetOk && (
+            <p className="text-sm text-sage border border-sage/40 bg-sage/10 px-3 py-2">
+              Password updated successfully. Sign in with your new password.
+            </p>
+          )}
           {error && (
             <p className="text-sm text-brick border border-brick/30 bg-brick/5 px-3 py-2 whitespace-pre-wrap">
               {error}
@@ -119,7 +125,7 @@ function LoginForm() {
         </form>
 
         <p className="text-center text-xs text-ink/40 mt-6 space-y-1">
-          <span className="block">Staff, parent &amp; student portal only.</span>
+          <span className="block">Staff, parent & student portal only.</span>
           <Link href="/" className="underline hover:text-navy">
             Public school website →
           </Link>
