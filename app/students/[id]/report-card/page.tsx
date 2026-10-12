@@ -5,6 +5,7 @@ import { PrintButton } from "./PrintButton";
 import { SCHOOL } from "@/lib/school-config";
 import Link from "next/link";
 import { ReportCardHeader } from "./ReportCardHeader";
+import { DomainSection } from "./DomainSection";
 
 export const dynamic = "force-dynamic";
 
@@ -21,29 +22,8 @@ type TemplateConfig = {
   termLabel?: string;
   teacherRemark?: string;
   principalRemark?: string;
+  domainsMode?: "auto" | "primary" | "secondary" | "hidden";
 };
-
-const PSYCHOMOTOR = [
-  "Handling of Tools",
-  "Drawing / Painting",
-  "Handwriting",
-  "Public Speaking",
-  "French Fluency",
-  "Sports & Games",
-];
-
-const AFFECTIVE = [
-  "Attentiveness",
-  "Honesty",
-  "Neatness",
-  "Politeness",
-  "Punctuality",
-  "Self Control",
-  "Obedience",
-  "Reliability",
-  "Responsibility",
-  "Relationship with others",
-];
 
 const GRADE_SCALE = [
   { grade: "A1", range: "90 – 100", remark: "Excellent" },
@@ -373,17 +353,7 @@ export default async function ReportCardPage({ params }: { params: { id: string 
             </div>
           </div>
 
-          <div className="rc-domains">
-            <DomainCard title="Psychomotor Domain" items={PSYCHOMOTOR} />
-            <DomainCard title="Affective Domain" items={AFFECTIVE} />
-          </div>
-          <p className="rc-rating-key">
-            <strong>Rating key:</strong> 5 = Excellent · 4 = High · 3 = Acceptable · 2 = Minimal · 1 =
-            Needs improvement
-            <span className="block mt-1 opacity-70">
-              (Fill ratings in office records — shown blank until domain scoring is enabled.)
-            </span>
-          </p>
+          <DomainSection classLabel={classLabel} domainsMode={cfg.domainsMode} />
 
           <section className="rc-section" style={{ paddingBottom: 0 }}>
             <h2 className="rc-section-title">Attendance Summary</h2>
@@ -466,27 +436,5 @@ export default async function ReportCardPage({ params }: { params: { id: string 
         </article>
       </div>
     </>
-  );
-}
-
-function DomainCard({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div className="rc-domain-card">
-      <h3>{title}</h3>
-      <div className="rc-domain-list">
-        {items.map((label) => (
-          <div key={label} className="rc-domain-row">
-            <span>{label}</span>
-            <div className="rc-rating" aria-label={`${label} rating blank`}>
-              {[5, 4, 3, 2, 1].map((n) => (
-                <span key={n} className="rc-dot">
-                  {n}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
