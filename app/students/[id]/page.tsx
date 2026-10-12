@@ -66,6 +66,18 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
     ? `${student.arm.schoolClass.name} ${student.arm.name}`
     : "Unassigned";
 
+  const photoDoc = student.documents.find((d) =>
+    /photo|passport|picture|portrait|image/i.test(d.label)
+  );
+  const photoUrl = photoDoc?.fileUrl ?? null;
+
+  const avgScore =
+    student.scores.length > 0
+      ? (
+          student.scores.reduce((s, sc) => s + sc.total, 0) / student.scores.length
+        ).toFixed(1)
+      : null;
+
   return (
     <PortalShell
       role={session.role}
@@ -75,7 +87,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         <div className="flex flex-wrap gap-2">
           <a
             href={`/students/${student.id}/report-card`}
-            className="text-xs sm:text-sm border border-navy text-navy px-3 py-1.5 hover:bg-navy hover:text-paper"
+            className="text-xs sm:text-sm border border-navy text-navy px-3 py-1.5 hover:bg-navy hover:text-paper transition-colors"
           >
             Report card
           </a>
@@ -116,6 +128,35 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
           />
         </div>
       )}
+
+      {/* Identity strip with photo */}
+      <div className="ledger-block mb-4 flex gap-4 items-start">
+        <div className="shrink-0 w-16 h-20 sm:w-20 sm:h-24 border border-line bg-white overflow-hidden rounded-sm flex items-center justify-center">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[10px] text-ink/40 text-center px-1">No photo</span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-serif text-lg text-navy leading-tight">
+            {student.lastName}, {student.firstName}
+            {student.otherNames ? ` ${student.otherNames}` : ""}
+          </p>
+          <p className="text-sm text-ink/60 mt-0.5">{student.admissionNumber}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-ink/70">
+            <span>{classLabel}</span>
+            <span>{student.gender ?? "—"}</span>
+            <span className="status-pill text-ink/60">{student.status}</span>
+            {avgScore && (
+              <span>
+                Avg score: <strong className="text-navy">{avgScore}</strong>
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <section className="ledger-block">
@@ -197,8 +238,14 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
       />
 
       <section className="ledger-block mt-6 !p-0 overflow-x-auto">
-        <div className="p-4 pb-0">
+        <div className="p-4 pb-0 flex items-center justify-between gap-3">
           <h2 className="font-serif text-lg">Results (all terms)</h2>
+          <a
+            href={`/students/${student.id}/report-card`}
+            className="text-xs text-navy border border-navy px-2.5 py-1 hover:bg-navy hover:text-paper transition-colors no-print"
+          >
+            Open report card →
+          </a>
         </div>
         <table className="ledger mt-3">
           <thead>
