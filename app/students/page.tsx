@@ -68,34 +68,25 @@ export default async function StudentsPage({
       actions={
         canAdmit ? (
           <div className="flex flex-wrap gap-2">
-            <a
-              href={`/api/students/export?status=${statusFilter}`}
-              className="border border-navy text-navy text-sm px-3 py-2 hover:bg-navy hover:text-paper"
-            >
+            <a href={`/api/students/export?status=${statusFilter}`} className="btn-ghost">
               Export CSV
             </a>
-            <Link
-              href="/students/new"
-              className="bg-navy text-paper text-sm px-4 py-2 hover:bg-navy-light"
-            >
+            <Link href="/students/new" className="btn-primary">
               + Admit Student
             </Link>
           </div>
         ) : undefined
       }
     >
-      <div className="flex flex-wrap gap-2 mb-4 text-sm">
-        {tabs.map((t) => (
+      <div className="tab-bar">
+        {tabs.map((tab) => (
           <Link
-            key={t.key}
-            href={`/students?status=${t.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-            className={`px-3 py-1.5 border ${
-              statusFilter === t.key
-                ? "border-navy bg-navy text-paper"
-                : "border-line text-ink/70 hover:border-navy"
-            }`}
+            key={tab.key}
+            href={`/students?status=${tab.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            className="tab-pill"
+            data-active={statusFilter === tab.key ? "true" : "false"}
           >
-            {t.label}
+            {tab.label}
           </Link>
         ))}
       </div>
@@ -107,9 +98,9 @@ export default async function StudentsPage({
           name="q"
           defaultValue={q}
           placeholder="Search by name or admission number..."
-          className="border border-line px-3 py-2 text-sm w-full sm:w-72 bg-white"
+          className="border border-line rounded-lg px-3 py-2 text-sm w-full sm:w-72 bg-white"
         />
-        <button className="border border-navy text-navy text-sm px-4 hover:bg-navy hover:text-paper">
+        <button type="submit" className="btn-ghost">
           Search
         </button>
       </form>
@@ -135,7 +126,7 @@ export default async function StudentsPage({
           description="Admit a student or switch the status tab above."
           action={
             canAdmit ? (
-              <Link href="/students/new" className="bg-navy text-paper text-sm px-4 py-2">
+              <Link href="/students/new" className="btn-primary">
                 + Admit student
               </Link>
             ) : undefined
@@ -148,7 +139,7 @@ export default async function StudentsPage({
           <Link
             key={s.id}
             href={`/students/${s.id}`}
-            className="block ledger-block !p-3 hover:border-navy"
+            className="block ledger-block !p-3 hover:border-navy/40 transition-colors"
           >
             <div className="flex justify-between gap-2">
               <span className="font-medium text-sm">
@@ -195,7 +186,7 @@ export default async function StudentsPage({
                 <td className="space-x-2 whitespace-nowrap">
                   <Link
                     href={`/students/${s.id}`}
-                    className="text-navy underline text-sm hover:text-gold"
+                    className="text-navy text-sm font-medium hover:underline"
                   >
                     {canAdmit && !s.arm ? "Assign class" : "View"}
                   </Link>
