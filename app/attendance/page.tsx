@@ -60,14 +60,52 @@ export default async function AttendancePage({
     : [];
   const marksByStudent = Object.fromEntries(todaysMarks.map((m) => [m.studentId, m.status]));
   const selectedArm = arms.find((a) => a.id === selectedArmId);
+  const presentCount = todaysMarks.filter((m) => m.status === "PRESENT").length;
+  const absentCount = todaysMarks.filter((m) => m.status === "ABSENT").length;
+  const lateCount = todaysMarks.filter((m) => m.status === "LATE").length;
+  const markedCount = todaysMarks.length;
+  const classSize = students.length;
+  const presentRate =
+    markedCount > 0 ? Math.round((presentCount / markedCount) * 100) : null;
 
   return (
     <PortalShell
       role={session.role}
       title="Attendance"
-      subtitle="Mark today's attendance for a class"
+      subtitle={
+        selectedArm
+          ? `Mark today · ${selectedArm.schoolClass.name} ${selectedArm.name}`
+          : "Mark today's attendance for a class"
+      }
       email={session.email}
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <div className="ledger-block !p-3">
+          <p className="text-[10px] uppercase tracking-wide text-ink/50">In class</p>
+          <p className="ledger-number text-xl text-navy mt-0.5">{classSize}</p>
+        </div>
+        <div className="ledger-block !p-3">
+          <p className="text-[10px] uppercase tracking-wide text-ink/50">Present today</p>
+          <p className="ledger-number text-xl text-sage mt-0.5">{presentCount}</p>
+        </div>
+        <div className="ledger-block !p-3">
+          <p className="text-[10px] uppercase tracking-wide text-ink/50">Absent / late</p>
+          <p className="ledger-number text-xl text-brick mt-0.5">
+            {absentCount}
+            {lateCount ? ` / ${lateCount}L` : ""}
+          </p>
+        </div>
+        <div className="ledger-block !p-3">
+          <p className="text-[10px] uppercase tracking-wide text-ink/50">Marked</p>
+          <p className="ledger-number text-xl text-navy mt-0.5">
+            {markedCount}
+            {presentRate != null ? (
+              <span className="text-sm font-sans text-ink/50 ml-1">{presentRate}%</span>
+            ) : null}
+          </p>
+        </div>
+      </div>
+
       <ArmPicker
         arms={arms.map((a) => ({
           id: a.id,
@@ -77,11 +115,11 @@ export default async function AttendancePage({
       />
 
       {arms.length === 0 ? (
-        <div className="ledger-block text-sm text-ink/70">
+        <div className="ledger-block text-sm text-ink/70 mt-3">
           <p>No classes/arms for this school yet. Create them under Classes first.</p>
         </div>
       ) : selectedArmId && students.length === 0 ? (
-        <div className="ledger-block text-sm text-ink/70 space-y-2">
+        <div className="ledger-block text-sm text-ink/70 space-y-2 mt-3">
           <p>
             <strong>
               {selectedArm
@@ -92,22 +130,24 @@ export default async function AttendancePage({
           </p>
           <p>
             Assign students under{" "}
-            <Link href="/students" className="text-navy underline">
+            <Link href="/students" className="text-navy font-medium hover:underline">
               Students
             </Link>{" "}
             or admit new students into this arm.
           </p>
         </div>
       ) : selectedArmId ? (
-        <AttendanceForm
-          armId={selectedArmId}
-          date={todayIso}
-          students={students.map((s) => ({
-            id: s.id,
-            name: `${s.lastName}, ${s.firstName}`,
-            status: (marksByStudent[s.id] as "PRESENT" | "ABSENT" | "LATE") || "PRESENT",
-          }))}
-        />
+        <div className="mt-3">
+          <AttendanceForm
+            armId={selectedArmId}
+            date={todayIso}
+            students={students.map((s) => ({
+              id: s.id,
+              name: `${s.lastName}, ${s.firstName}`,
+              status: (marksByStudent[s.id] as "PRESENT" | "ABSENT" | "LATE") || "PRESENT",
+            }))}
+          />
+        </div>
       ) : null}
     </PortalShell>
   );
