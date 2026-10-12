@@ -45,6 +45,21 @@ function gradeFromTotal(total: number): { grade: string; remark: string; pill: s
   return { grade: "F9", remark: "Fail", pill: "g-f" };
 }
 
+function ordinal(n: number): string {
+  const v = n % 100;
+  if (v >= 11 && v <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
 export default async function ReportCardPage({ params }: { params: { id: string } }) {
   await requireSession();
 
@@ -168,6 +183,37 @@ export default async function ReportCardPage({ params }: { params: { id: string 
     /photo|passport|portrait|picture|image/i.test(d.label)
   );
   const photoUrl = photoDoc?.fileUrl || null;
+
+  let positionLabel = "—";
+  if (student.armId && rows.length > 0) {
+    const termIds = [...new Set(scores.map((s) => s.termId).filter(Boolean))];
+    const termIdFilter = termIds.length === 1 ? termIds[0] : term?.id ?? undefined;
+    const classmates = await prisma.student.findMany({
+      where: {
+        armId: student.armId,
+        status: "ACTIVE",
+        ...(student.schoolId ? { schoolId: student.schoolId } : {}),
+      },
+      select: {
+        id: true,
+        scores: {
+          where: termIdFilter ? { termId: termIdFilter } : undefined,
+          select: { total: true },
+        },
+      },
+    });
+    const ranked = classmates
+      .map((c) => ({
+        id: c.id,
+        total: c.scores.reduce((sum, sc) => sum + (sc.total || 0), 0),
+      }))
+      .filter((c) => c.total > 0)
+      .sort((a, b) => b.total - a.total);
+    const rank = ranked.findIndex((c) => c.id === student.id) + 1;
+    if (rank > 0) {
+      positionLabel = `${ordinal(rank)} of ${ranked.length}`;
+    }
+  }
 
   return (
     <>
@@ -299,7 +345,7 @@ export default async function ReportCardPage({ params }: { params: { id: string 
             </div>
             <div className="rc-meta-item">
               <span>Position in Class</span>
-              <strong>—</strong>
+              <strong>{positionLabel}</strong>
             </div>
           </div>
 
