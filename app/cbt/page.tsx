@@ -34,7 +34,10 @@ export default async function CbtPage() {
       <PortalShell role={session.role} title="CBT / Tests" subtitle="Open computer-based tests" email={session.email}>
         <ul className="space-y-3">
           {exams.map((e) => (
-            <li key={e.id} className="ledger-block flex flex-wrap justify-between gap-2 items-center">
+            <li
+              key={e.id}
+              className="rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 shadow-sm flex flex-wrap justify-between gap-2 items-center"
+            >
               <div>
                 <p className="font-medium">{e.title}</p>
                 <p className="text-xs text-ink/50">{e.durationMinutes} minutes</p>
@@ -42,7 +45,7 @@ export default async function CbtPage() {
               {attempted.has(e.id) ? (
                 <span className="text-sm text-sage">Submitted</span>
               ) : (
-                <Link href={`/cbt/${e.id}/take`} className="text-sm bg-navy text-paper px-3 py-1.5">
+                <Link href={`/cbt/${e.id}/take`} className="btn-primary text-sm">
                   Start test
                 </Link>
               )}
@@ -51,13 +54,13 @@ export default async function CbtPage() {
           {exams.length === 0 && <p className="text-sm text-ink/50">No open tests right now.</p>}
         </ul>
         {attempts.length > 0 && (
-          <section className="ledger-block mt-6">
-            <h2 className="font-serif text-lg mb-2">Your results</h2>
+          <section className="rounded-xl border border-violet-200/70 bg-gradient-to-br from-violet-50/50 to-white p-4 mt-6 shadow-sm">
+            <h2 className="font-serif text-lg text-navy mb-2">Your results</h2>
             <ul className="text-sm space-y-1">
               {attempts.map((a) => (
-                <li key={a.id} className="flex justify-between border-b border-line py-1">
+                <li key={a.id} className="flex justify-between border-b border-line py-1.5">
                   <span className="text-ink/60">{a.submittedAt.toLocaleString()}</span>
-                  <span>
+                  <span className="font-medium tabular-nums">
                     {a.score}/{a.total} ({a.percent}%)
                   </span>
                 </li>
@@ -89,13 +92,22 @@ export default async function CbtPage() {
   return (
     <PortalShell role={session.role} title="CBT" subtitle="Create MCQ tests for students" email={session.email}>
       <div className="mb-4 flex flex-wrap gap-2">
-        <Link
-          href="/cbt/results"
-          className="text-sm border border-navy text-navy px-3 py-1.5 hover:bg-navy hover:text-paper"
-        >
+        <Link href="/cbt/results" className="btn-ghost text-sm">
           Results & essay grading
           {pendingGrading > 0 ? ` (${pendingGrading} pending)` : ""}
         </Link>
+      </div>
+      <div className="grid grid-cols-2 gap-2.5 mb-4">
+        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Exams</p>
+          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{exams.length}</p>
+        </div>
+        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Questions (all)</p>
+          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">
+            {exams.reduce((n, e) => n + e._count.questions, 0)}
+          </p>
+        </div>
       </div>
       <CbtStaffPanel
         exams={exams.map((e) => ({
