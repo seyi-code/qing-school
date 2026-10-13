@@ -21,6 +21,7 @@ export default async function DashboardPage() {
   const sw = schoolWhere(schoolId);
 
   const [
+    school,
     studentCount,
     pendingAdmissions,
     staffCount,
@@ -30,6 +31,12 @@ export default async function DashboardPage() {
     recentAudit,
     leavePending,
   ] = await Promise.all([
+    schoolId
+      ? prisma.school.findUnique({
+          where: { id: schoolId },
+          select: { name: true, shortName: true },
+        })
+      : Promise.resolve(null),
     prisma.student.count({ where: { status: "ACTIVE", ...sw } }),
     prisma.student.count({ where: { status: "APPLIED", ...sw } }),
     prisma.staff.count({ where: { isActive: true, ...sw } }),
@@ -126,15 +133,18 @@ export default async function DashboardPage() {
     actions.push({ href: "/platform", label: "Platform" });
   }
 
+  const schoolLabel = school
+    ? `${school.name}${school.shortName ? ` · ${school.shortName}` : ""}`
+    : "School workspace";
+
   return (
     <PortalShell
       role={session.role}
       title="Dashboard"
-      subtitle={`Welcome back · ${session.email}`}
+      subtitle={schoolLabel}
       email={session.email}
     >
-      {/* KPIs */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
         <Kpi label="Active students" value={studentCount.toLocaleString()} />
         <Kpi label="Staff on roll" value={staffCount.toLocaleString()} />
         <Kpi label="Classes" value={classCount.toLocaleString()} />
@@ -146,11 +156,20 @@ export default async function DashboardPage() {
               ? `${presentToday}/${todayAttendance.length} present`
               : "Not taken"
           }
+          valueClass={
+            attendancePct === null
+              ? "text-ink/40"
+              : attendancePct >= 80
+                ? "text-sage"
+                : attendancePct >= 50
+                  ? "text-navy"
+                  : "text-brick"
+          }
         />
       </div>
 
       {showFinancials && (
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+        <div className="grid grid-cols-2 gap-3 mb-5">
           <Kpi label="Fees collected" value={formatNaira(collected)} valueClass="text-sage" />
           <Kpi
             label="Outstanding"
@@ -160,18 +179,13 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Primary actions */}
       {actions.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
+        <div className="flex flex-wrap gap-2 mb-5">
           {actions.map((a) => (
             <Link
               key={a.href + a.label}
               href={a.href}
-              className={
-                a.primary
-                  ? "inline-flex items-center rounded-lg bg-navy px-3.5 py-2 text-xs font-medium text-paper hover:bg-navy-light"
-                  : "inline-flex items-center rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-medium text-ink hover:border-navy/40"
-              }
+              className={a.primary ? "btn-primary" : "btn-ghost"}
             >
               {a.label}
             </Link>
@@ -179,25 +193,25 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">Needs attention</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+        <section className="ledger-block">
+          <h2 className="font-serif text-lg text-navy mb-3">Needs attention</h2>
           {attention.length === 0 ? (
-            <p className="text-sm text-ink/40 py-4 text-center">Nothing urgent right now.</p>
+            <p className="text-sm text-ink/40 py-6 text-center">Nothing urgent right now.</p>
           ) : (
             <ul className="space-y-2">
               {attention.map((item) => (
                 <li key={item.href + item.label}>
                   <Link
                     href={item.href}
-                    className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm hover:border-navy/30 ${
+                    className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition-colors hover:border-navy/30 ${
                       item.tone === "warn"
-                        ? "border-brick/20 bg-brick/5 text-brick"
+                        ? "border-brick/25 bg-brick/5 text-brick"
                         : "border-line bg-paper text-ink/80"
                     }`}
                   >
                     <span>{item.label}</span>
-                    <span className="text-xs opacity-60">Open →</span>
+                    <span className="text-[11px] opacity-55 font-medium">Open →</span>
                   </Link>
                 </li>
               ))}
@@ -205,19 +219,21 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">Recent activity</h2>
+        <section className="ledger-block">
+          <h2 className="font-serif text-lg text-navy mb-3">Recent activity</h2>
           {recentAudit.length === 0 ? (
-            <p className="text-sm text-ink/40 py-4 text-center">No activity yet.</p>
+            <p className="text-sm text-ink/40 py-6 text-center">No activity yet.</p>
           ) : (
             <ul className="divide-y divide-line/80">
               {recentAudit.map((log) => (
                 <li key={log.id} className="py-2.5 text-sm">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="text-ink/70 truncate max-w-[60%]">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-ink/70 truncate max-w-[55%]">
                       {log.user?.email ?? "System"}
                     </span>
-                    <span className="font-mono text-[11px] text-navy/80">{log.action}</span>
+                    <span className="status-pill text-navy border-navy/25 bg-navy/5 !normal-case !tracking-normal !font-mono !text-[10px]">
+                      {log.action}
+                    </span>
                   </div>
                   <p className="text-[11px] text-ink/40 mt-0.5">{formatDateTime(log.createdAt)}</p>
                 </li>
@@ -234,7 +250,7 @@ function Kpi({
   label,
   value,
   sub,
-  valueClass = "text-ink",
+  valueClass = "text-navy",
 }: {
   label: string;
   value: string;
@@ -242,14 +258,12 @@ function Kpi({
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-white px-3.5 py-3 sm:px-4 sm:py-3.5">
-      <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/45">
-        {label}
-      </p>
-      <p className={`mt-1 text-lg sm:text-xl font-semibold tracking-tight tabular-nums ${valueClass}`}>
+    <div className="ledger-block !p-3 sm:!p-3.5">
+      <p className="text-[10px] uppercase tracking-wide text-ink/50">{label}</p>
+      <p className={`ledger-number text-xl sm:text-2xl mt-0.5 tabular-nums ${valueClass}`}>
         {value}
       </p>
-      {sub ? <p className="text-[11px] text-ink/40 mt-0.5">{sub}</p> : null}
+      {sub ? <p className="text-[11px] text-ink/45 mt-0.5">{sub}</p> : null}
     </div>
   );
 }
