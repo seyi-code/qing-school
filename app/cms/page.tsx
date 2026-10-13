@@ -51,7 +51,6 @@ export default async function CmsPage() {
     theme = safeTheme(themeRow?.configJson);
   } catch (err) {
     console.error("[cms] load failed", err);
-    // Fall through with empty editor so Admin still sees the page
   }
 
   return (
@@ -61,6 +60,22 @@ export default async function CmsPage() {
       subtitle="Pages, media, SEO for this school"
       email={session.email}
     >
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Pages</p>
+          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{pages.length}</p>
+        </div>
+        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Published</p>
+          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">
+            {pages.filter((p) => p.published).length}
+          </p>
+        </div>
+        <div className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-3.5 py-3 shadow-sm col-span-2 sm:col-span-1">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-amber-800/70">Media</p>
+          <p className="mt-1 text-xl font-semibold text-amber-900 tabular-nums">{media.length}</p>
+        </div>
+      </div>
       <CmsEditor
         theme={theme}
         media={media.map((m) => ({ id: m.id, url: m.url, filename: m.filename }))}

@@ -27,7 +27,7 @@ export default async function NewStudentPage() {
       subtitle="Online / offline admission form"
       email={session.email}
     >
-      <div className="max-w-2xl">
+      <div className="max-w-2xl rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/80 to-white p-4 sm:p-5 shadow-sm">
         <AdmissionForm
           arms={arms.map((a) => ({ id: a.id, label: `${a.schoolClass.name} ${a.name}` }))}
         />
