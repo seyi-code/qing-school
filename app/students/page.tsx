@@ -26,7 +26,7 @@ export default async function StudentsPage({
   const statusFilter = searchParams.status || "ACTIVE";
   const canAdmit = can(session.role, "MANAGE_STUDENTS");
 
-  const [students, appliedCount, arms] = await Promise.all([
+  const [students, appliedCount, activeCount, unassignedCount, arms] = await Promise.all([
     prisma.student.findMany({
       where: {
         status: statusFilter,
@@ -46,6 +46,10 @@ export default async function StudentsPage({
       take: 200,
     }),
     prisma.student.count({ where: { status: "APPLIED", ...(schoolId ? { schoolId } : {}) } }),
+    prisma.student.count({ where: { status: "ACTIVE", ...(schoolId ? { schoolId } : {}) } }),
+    prisma.student.count({
+      where: { status: "ACTIVE", armId: null, ...(schoolId ? { schoolId } : {}) },
+    }),
     prisma.arm.findMany({
       where: schoolId ? { schoolClass: { schoolId } } : undefined,
       include: { schoolClass: true },
@@ -65,6 +69,7 @@ export default async function StudentsPage({
       role={session.role}
       title="Students"
       subtitle={`${students.length} shown`}
+      email={session.email}
       actions={
         canAdmit ? (
           <div className="flex flex-wrap gap-2">
@@ -78,6 +83,25 @@ export default async function StudentsPage({
         ) : undefined
       }
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
+        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Active</p>
+          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{activeCount}</p>
+        </div>
+        <div className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-amber-800/70">Applications</p>
+          <p className="mt-1 text-xl font-semibold text-amber-900 tabular-nums">{appliedCount}</p>
+        </div>
+        <div className="rounded-xl border border-rose-200/90 bg-gradient-to-br from-rose-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-rose-700/70">Unassigned</p>
+          <p className="mt-1 text-xl font-semibold text-rose-800 tabular-nums">{unassignedCount}</p>
+        </div>
+        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">In this list</p>
+          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">{students.length}</p>
+        </div>
+      </div>
+
       <div className="tab-bar">
         {tabs.map((tab) => (
           <Link
@@ -139,7 +163,7 @@ export default async function StudentsPage({
           <Link
             key={s.id}
             href={`/students/${s.id}`}
-            className="block ledger-block !p-3 hover:border-navy/40 transition-colors"
+            className="block rounded-xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/40 p-3 shadow-sm hover:border-navy/30 transition-colors"
           >
             <div className="flex justify-between gap-2">
               <span className="font-medium text-sm">
