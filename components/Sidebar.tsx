@@ -12,6 +12,7 @@ interface NavItem {
 
 /**
  * Role-based navigation.
+ * IT = technical co-admin (ops, data, settings) — not fee collection.
  * Password lives under header account menu (Profile), not duplicated here.
  */
 const NAV_ITEMS: NavItem[] = [
@@ -87,7 +88,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/fees",
     label: "Fees",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY", "IT"],
+    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY"],
   },
   {
     href: "/fees/structure",
@@ -196,13 +197,11 @@ export function Sidebar({
 }: {
   role: Role;
   onNavigate?: () => void;
-  /** Short name or full name for sidebar brand */
   schoolLabel?: string;
   schoolName?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  /** When working as a school, hide pure platform SaaS links so ops stay school-scoped. */
   const workingAsSchool = Boolean(schoolLabel);
   const visible = NAV_ITEMS.filter((item) => {
     if (!item.roles.includes(role)) return false;
@@ -243,7 +242,6 @@ export function Sidebar({
             &times;
           </button>
         )}
-
       </div>
 
       <nav className="flex-1 min-h-0 py-2 overflow-y-auto overscroll-contain">
