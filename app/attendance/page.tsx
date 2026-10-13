@@ -79,28 +79,28 @@ export default async function AttendancePage({
       }
       email={session.email}
     >
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-        <div className="ledger-block !p-3">
-          <p className="text-[10px] uppercase tracking-wide text-ink/50">In class</p>
-          <p className="ledger-number text-xl text-navy mt-0.5">{classSize}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">In class</p>
+          <p className="mt-1.5 text-xl font-semibold tabular-nums text-blue-900">{classSize}</p>
         </div>
-        <div className="ledger-block !p-3">
-          <p className="text-[10px] uppercase tracking-wide text-ink/50">Present today</p>
-          <p className="ledger-number text-xl text-sage mt-0.5">{presentCount}</p>
+        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Present today</p>
+          <p className="mt-1.5 text-xl font-semibold tabular-nums text-emerald-800">{presentCount}</p>
         </div>
-        <div className="ledger-block !p-3">
-          <p className="text-[10px] uppercase tracking-wide text-ink/50">Absent / late</p>
-          <p className="ledger-number text-xl text-brick mt-0.5">
+        <div className="rounded-xl border border-rose-200/90 bg-gradient-to-br from-rose-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-rose-700/70">Absent / late</p>
+          <p className="mt-1.5 text-xl font-semibold tabular-nums text-rose-800">
             {absentCount}
             {lateCount ? ` / ${lateCount}L` : ""}
           </p>
         </div>
-        <div className="ledger-block !p-3">
-          <p className="text-[10px] uppercase tracking-wide text-ink/50">Marked</p>
-          <p className="ledger-number text-xl text-navy mt-0.5">
+        <div className="rounded-xl border border-violet-200/90 bg-gradient-to-br from-violet-50 to-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-violet-700/70">Marked</p>
+          <p className="mt-1.5 text-xl font-semibold tabular-nums text-violet-900">
             {markedCount}
             {presentRate != null ? (
-              <span className="text-sm font-sans text-ink/50 ml-1">{presentRate}%</span>
+              <span className="text-sm font-normal text-violet-700/60 ml-1">{presentRate}%</span>
             ) : null}
           </p>
         </div>
@@ -133,7 +133,7 @@ export default async function AttendancePage({
             <Link href="/students" className="text-navy font-medium hover:underline">
               Students
             </Link>{" "}
-            or admit new students into this arm.
+            (edit student → class/arm), then return here to mark attendance.
           </p>
         </div>
       ) : selectedArmId ? (
