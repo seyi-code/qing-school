@@ -31,6 +31,9 @@ export default async function ClassesPage() {
       subtitle="Manage class structure and promote students"
       email={session.email}
     >
+      <div className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white px-3.5 py-3 text-sm text-sky-900/80 shadow-sm">
+        Create classes and arms first, add subjects, then assign subjects to arms so teachers can enter scores.
+      </div>
       <ClassManager
         classes={classes.map((c) => ({
           id: c.id,
