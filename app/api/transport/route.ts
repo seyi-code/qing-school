@@ -190,11 +190,25 @@ export async function POST(req: Request) {
     if (!term) {
       return NextResponse.json({ error: "No current term set" }, { status: 400 });
     }
+    const lineName = `Transport: ${en.route.name}`;
+    const existingInv = await prisma.invoice.findFirst({
+      where: {
+        studentId: en.studentId,
+        termId: term.id,
+        lineItems: { contains: lineName },
+      },
+    });
+    if (existingInv) {
+      return NextResponse.json(
+        { error: "Transport fee invoice already exists for this term", invoice: existingInv },
+        { status: 409 }
+      );
+    }
     const inv = await prisma.invoice.create({
       data: {
         studentId: en.studentId,
         termId: term.id,
-        lineItems: JSON.stringify([{ name: `Transport: ${en.route.name}`, amount: fee }]),
+        lineItems: JSON.stringify([{ name: lineName, amount: fee }]),
         totalAmount: fee,
         status: "UNPAID",
       },
