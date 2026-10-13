@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/format";
 import { redirect } from "next/navigation";
 import { NoticeForm } from "./NoticeForm";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SCHOOL } from "@/lib/school";
+import { SCHOOL } from "@/lib/school-config";
 
 export const dynamic = "force-dynamic";
 
