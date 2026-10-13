@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_ROLES = ["ADMIN", "IT", "SECRETARY", "PRINCIPAL", "TEACHER"];
+const ALLOWED_ROLES = ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL", "TEACHER"];
 
 export default async function StudentsPage({
   searchParams,
@@ -65,6 +65,7 @@ export default async function StudentsPage({
       role={session.role}
       title="Students"
       subtitle={`${students.length} shown`}
+      email={session.email}
       actions={
         canAdmit ? (
           <div className="flex flex-wrap gap-2">
@@ -72,33 +73,35 @@ export default async function StudentsPage({
               Export CSV
             </a>
             <Link href="/students/new" className="btn-primary">
-              + Admit Student
+              + Admit student
             </Link>
           </div>
         ) : undefined
       }
     >
-      <div className="tab-bar">
+      <div className="flex flex-wrap gap-2 mb-4 tab-bar">
         {tabs.map((tab) => (
           <Link
             key={tab.key}
             href={`/students?status=${tab.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-            className="tab-pill"
-            data-active={statusFilter === tab.key ? "true" : "false"}
+            className={
+              statusFilter === tab.key
+                ? "tab-pill tab-pill-active"
+                : "tab-pill"
+            }
           >
             {tab.label}
           </Link>
         ))}
       </div>
 
-      <form className="mb-4 flex flex-wrap gap-2" method="GET">
+      <form method="get" className="mb-4 flex flex-wrap gap-2">
         <input type="hidden" name="status" value={statusFilter} />
         <input
-          type="text"
           name="q"
-          defaultValue={q}
-          placeholder="Search by name or admission number..."
-          className="border border-line rounded-lg px-3 py-2 text-sm w-full sm:w-72 bg-white"
+          defaultValue={q || ""}
+          placeholder="Search name or admission no."
+          className="border border-line rounded-lg px-3 py-2 text-sm flex-1 min-w-[12rem] bg-white"
         />
         <button type="submit" className="btn-ghost">
           Search
@@ -114,8 +117,7 @@ export default async function StudentsPage({
           students={students.map((s) => ({
             id: s.id,
             name: `${s.lastName}, ${s.firstName}`,
-            admissionNumber: s.admissionNumber,
-            unassigned: !s.armId,
+            armId: s.armId,
           }))}
         />
       )}
@@ -123,7 +125,7 @@ export default async function StudentsPage({
       {students.length === 0 && (
         <EmptyState
           title="No students in this list"
-          description="Admit a student or switch the status tab above."
+          description="Try another tab or admit a new student."
           action={
             canAdmit ? (
               <Link href="/students/new" className="btn-primary">
@@ -134,34 +136,35 @@ export default async function StudentsPage({
         />
       )}
 
-      <div className="md:hidden space-y-2 mb-4">
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-2">
         {students.map((s) => (
           <Link
             key={s.id}
             href={`/students/${s.id}`}
-            className="block ledger-block !p-3 hover:border-navy/40 transition-colors"
+            className="ledger-block !p-3 block"
           >
-            <div className="flex justify-between gap-2">
-              <span className="font-medium text-sm">
-                {s.lastName}, {s.firstName}
-              </span>
-              <span className="status-pill text-[10px]">{s.status}</span>
-            </div>
-            <p className="text-xs font-mono text-ink/50 mt-1">{s.admissionNumber}</p>
-            <p className="text-xs text-ink/60 mt-0.5">
-              {s.arm ? `${s.arm.schoolClass.name} ${s.arm.name}` : "Unassigned"}
+            <p className="font-medium text-ink">
+              {s.lastName}, {s.firstName}
             </p>
+            <p className="text-xs text-ink/50 font-mono mt-0.5">{s.admissionNumber}</p>
+            <p className="text-xs text-ink/60 mt-1">
+              {s.arm
+                ? `${s.arm.schoolClass.name} ${s.arm.name}`
+                : "Unassigned"}
+            </p>
+            <span className="status-pill text-xs mt-2 inline-block">{s.status}</span>
           </Link>
         ))}
       </div>
 
-      <div className="hidden md:block ledger-block !p-0 overflow-x-auto">
+      <div className="hidden sm:block table-wrap">
         <table className="ledger">
           <thead>
             <tr>
-              <th>Admission No.</th>
               <th>Name</th>
-              <th>Class / Arm</th>
+              <th>Admission</th>
+              <th>Class</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -169,10 +172,10 @@ export default async function StudentsPage({
           <tbody>
             {students.map((s) => (
               <tr key={s.id}>
-                <td className="font-mono text-xs">{s.admissionNumber}</td>
-                <td>
-                  {s.lastName}, {s.firstName} {s.otherNames ?? ""}
+                <td className="font-medium">
+                  {s.lastName}, {s.firstName}
                 </td>
+                <td className="font-mono text-xs">{s.admissionNumber}</td>
                 <td>
                   {s.arm ? (
                     `${s.arm.schoolClass.name} ${s.arm.name}`
