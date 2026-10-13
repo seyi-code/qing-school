@@ -34,6 +34,9 @@ export default async function FeeStructurePage() {
     }),
   ]);
 
+  const totalCatalogue = items.reduce((s, i) => s + toMoney(i.amount), 0);
+  const compulsory = items.filter((i) => i.compulsory).length;
+
   return (
     <PortalShell
       role={session.role}
@@ -41,13 +44,21 @@ export default async function FeeStructurePage() {
       subtitle="Define class/term fees and generate student invoices"
       email={session.email}
       actions={
-        <Link href="/fees" className="text-sm border border-navy text-navy px-3 py-1.5">
+        <Link href="/fees" className="btn-ghost text-sm">
           Back to Fees
         </Link>
       }
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+        <Kpi label="Arms" value={String(arms.length)} tone="navy" />
+        <Kpi label="Terms" value={String(terms.length)} tone="sky" />
+        <Kpi label="Fee items" value={String(items.length)} tone="gold" />
+        <Kpi label="Compulsory" value={String(compulsory)} tone="sage" />
+      </div>
       {arms.length === 0 ? (
-        <p className="text-sm text-ink/50">Create classes and arms first under Classes.</p>
+        <p className="text-sm text-ink/50 rounded-xl border border-line bg-white px-4 py-6 text-center">
+          Create classes and arms first under Classes.
+        </p>
       ) : (
         <FeeStructureClient
           arms={arms.map((a) => ({
@@ -69,6 +80,30 @@ export default async function FeeStructurePage() {
           }))}
         />
       )}
+      {items.length > 0 && (
+        <p className="text-xs text-ink/45 mt-3">
+          Catalogue total across all arms/terms:{" "}
+          <span className="font-semibold text-navy tabular-nums">
+            ₦{totalCatalogue.toLocaleString()}
+          </span>
+        </p>
+      )}
     </PortalShell>
+  );
+}
+
+const TONE: Record<string, string> = {
+  navy: "from-[#1a3a6e]/[12%] to-white border-navy/15",
+  sky: "from-sky-500/[12%] to-white border-sky-500/20",
+  sage: "from-emerald-500/[12%] to-white border-emerald-500/20",
+  gold: "from-amber-500/[12%] to-white border-amber-500/25",
+};
+
+function Kpi({ label, value, tone }: { label: string; value: string; tone: keyof typeof TONE }) {
+  return (
+    <div className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 shadow-sm ${TONE[tone]}`}>
+      <p className="text-[10px] font-medium uppercase tracking-wide text-ink/50">{label}</p>
+      <p className="mt-1 text-lg sm:text-xl font-semibold text-ink tabular-nums">{value}</p>
+    </div>
   );
 }
