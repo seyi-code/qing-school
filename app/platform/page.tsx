@@ -72,26 +72,26 @@ export default async function PlatformPage() {
     >
       <div className="space-y-5">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="ledger-block !p-3">
-            <p className="text-[10px] uppercase tracking-wide text-ink/50">Schools</p>
-            <p className="ledger-number text-xl text-navy mt-0.5">{schools.length}</p>
+          <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Schools</p>
+            <p className="mt-1.5 text-xl font-semibold tabular-nums text-blue-900">{schools.length}</p>
           </div>
-          <div className="ledger-block !p-3">
-            <p className="text-[10px] uppercase tracking-wide text-ink/50">Active</p>
-            <p className="ledger-number text-xl text-sage mt-0.5">{activeCount}</p>
+          <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Active</p>
+            <p className="mt-1.5 text-xl font-semibold tabular-nums text-emerald-800">{activeCount}</p>
           </div>
-          <div className="ledger-block !p-3">
-            <p className="text-[10px] uppercase tracking-wide text-ink/50">On trial</p>
-            <p className="ledger-number text-xl text-navy mt-0.5">{trialCount}</p>
+          <div className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-3.5 py-3 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide font-medium text-amber-800/70">On trial</p>
+            <p className="mt-1.5 text-xl font-semibold tabular-nums text-amber-900">{trialCount}</p>
           </div>
-          <div className="ledger-block !p-3">
-            <p className="text-[10px] uppercase tracking-wide text-ink/50">Students (all)</p>
-            <p className="ledger-number text-xl text-navy mt-0.5">{totalStudents}</p>
+          <div className="rounded-xl border border-violet-200/90 bg-gradient-to-br from-violet-50 to-white px-3.5 py-3 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide font-medium text-violet-700/70">Students (all)</p>
+            <p className="mt-1.5 text-xl font-semibold tabular-nums text-violet-900">{totalStudents}</p>
           </div>
         </div>
 
         {session.role === "PLATFORM_ADMIN" && (
-          <div className="ledger-block text-sm flex flex-wrap items-center justify-between gap-3">
+          <div className="rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50/90 to-white px-4 py-3 text-sm shadow-sm flex flex-wrap items-center justify-between gap-3">
             <p className="text-ink/70">
               Working as:{" "}
               <strong className="text-navy">
@@ -101,7 +101,7 @@ export default async function PlatformPage() {
                 ({activeSchool?.slug ?? "kms"})
               </span>
             </p>
-            <p className="text-[11px] text-ink/45">
+            <p className="text-[11px] text-sky-800/70">
               Switch tenant with &quot;Work as this school&quot; before Students / Fees.
             </p>
           </div>
