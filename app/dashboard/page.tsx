@@ -21,7 +21,6 @@ export default async function DashboardPage() {
   const sw = schoolWhere(schoolId);
 
   const [
-    school,
     studentCount,
     pendingAdmissions,
     staffCount,
@@ -31,12 +30,6 @@ export default async function DashboardPage() {
     recentAudit,
     leavePending,
   ] = await Promise.all([
-    schoolId
-      ? prisma.school.findUnique({
-          where: { id: schoolId },
-          select: { name: true, shortName: true },
-        })
-      : Promise.resolve(null),
     prisma.student.count({ where: { status: "ACTIVE", ...sw } }),
     prisma.student.count({ where: { status: "APPLIED", ...sw } }),
     prisma.staff.count({ where: { isActive: true, ...sw } }),
@@ -133,9 +126,14 @@ export default async function DashboardPage() {
     actions.push({ href: "/platform", label: "Platform" });
   }
 
-  const schoolLabel = school
-    ? `${school.name}${school.shortName ? ` · ${school.shortName}` : ""}`
-    : "School workspace";
+  const welcome =
+    session.role === "PLATFORM_ADMIN"
+      ? "Working as selected tenant · use sidebar for school ops"
+      : session.role === "ACCOUNTANT"
+        ? "Finance overview"
+        : session.role === "PRINCIPAL"
+          ? "School operations overview"
+          : "Welcome back";
 
   const attTone =
     attendancePct === null
@@ -147,12 +145,7 @@ export default async function DashboardPage() {
           : "brick";
 
   return (
-    <PortalShell
-      role={session.role}
-      title="Dashboard"
-      subtitle={schoolLabel}
-      email={session.email}
-    >
+    <PortalShell role={session.role} title="Dashboard" subtitle={welcome} email={session.email}>
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
         <Kpi label="Active students" value={studentCount.toLocaleString()} tone="navy" icon="🎓" />
         <Kpi label="Staff on roll" value={staffCount.toLocaleString()} tone="violet" icon="👥" />
@@ -185,11 +178,7 @@ export default async function DashboardPage() {
       {actions.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-5">
           {actions.map((a) => (
-            <Link
-              key={a.href + a.label}
-              href={a.href}
-              className={a.primary ? "btn-primary" : "btn-ghost"}
-            >
+            <Link key={a.href + a.label} href={a.href} className={a.primary ? "btn-primary" : "btn-ghost"}>
               {a.label}
             </Link>
           ))}
@@ -199,15 +188,11 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
         <section className="rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white p-4 sm:p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-sm">
-              ⚠
-            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-sm">⚠</span>
             <h2 className="font-serif text-lg text-navy">Needs attention</h2>
           </div>
           {attention.length === 0 ? (
-            <p className="text-sm text-sage py-6 text-center font-medium">
-              All clear — nothing urgent right now.
-            </p>
+            <p className="text-sm text-sage py-6 text-center font-medium">All clear — nothing urgent right now.</p>
           ) : (
             <ul className="space-y-2">
               {attention.map((item) => (
@@ -231,9 +216,7 @@ export default async function DashboardPage() {
 
         <section className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-white p-4 sm:p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-sm">
-              ⏱
-            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-sm">⏱</span>
             <h2 className="font-serif text-lg text-navy">Recent activity</h2>
           </div>
           {recentAudit.length === 0 ? (
@@ -243,9 +226,7 @@ export default async function DashboardPage() {
               {recentAudit.map((log) => (
                 <li key={log.id} className="py-2.5 text-sm">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="text-ink/75 truncate max-w-[55%]">
-                      {log.user?.email ?? "System"}
-                    </span>
+                    <span className="text-ink/75 truncate max-w-[55%]">{log.user?.email ?? "System"}</span>
                     <span className="inline-flex items-center rounded-md bg-indigo-100/90 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-indigo-800">
                       {log.action}
                     </span>
@@ -263,10 +244,7 @@ export default async function DashboardPage() {
 
 type KpiTone = "navy" | "violet" | "gold" | "sage" | "brick" | "sky" | "slate";
 
-const TONE: Record<
-  KpiTone,
-  { card: string; label: string; value: string; badge: string }
-> = {
+const TONE: Record<KpiTone, { card: string; label: string; value: string; badge: string }> = {
   navy: {
     card: "border-blue-200/90 bg-gradient-to-br from-blue-50 to-white",
     label: "text-blue-700/70",
@@ -330,16 +308,12 @@ function Kpi({
       <div className="flex items-start justify-between gap-2">
         <p className={`text-[10px] uppercase tracking-wide font-medium ${t.label}`}>{label}</p>
         {icon ? (
-          <span
-            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold ${t.badge}`}
-          >
+          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold ${t.badge}`}>
             {icon}
           </span>
         ) : null}
       </div>
-      <p className={`mt-1.5 text-xl sm:text-2xl font-semibold tracking-tight tabular-nums ${t.value}`}>
-        {value}
-      </p>
+      <p className={`mt-1.5 text-xl sm:text-2xl font-semibold tracking-tight tabular-nums ${t.value}`}>{value}</p>
       {sub ? <p className={`text-[11px] mt-0.5 ${t.label}`}>{sub}</p> : null}
     </div>
   );
