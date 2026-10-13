@@ -4,7 +4,6 @@ import { useState, FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
-import { SCHOOL } from "@/lib/school-config";
 
 function LoginForm() {
   const router = useRouter();
@@ -55,34 +54,40 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+    <main className="min-h-screen bg-gradient-to-b from-[#eef2f8] via-paper to-paper flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-7">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.svg"
-            alt={SCHOOL.name}
-            className="w-20 h-20 object-contain mx-auto mb-3"
+            alt=""
+            className="w-16 h-16 object-contain mx-auto mb-3 rounded-full bg-white shadow-sm border border-line/60 p-1.5"
           />
-          <h1 className="font-serif text-2xl sm:text-3xl text-ink">{SCHOOL.name}</h1>
-          <p className="text-sm text-ink/60 mt-1">
-            Portal sign in · {SCHOOL.motto}
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-navy/60 mb-1.5">
+            School ERP · Multi-tenant
+          </p>
+          <h1 className="font-serif text-2xl sm:text-3xl text-navy tracking-tight">Portal sign in</h1>
+          <p className="text-sm text-ink/55 mt-1.5">
+            Staff, parent & student access for your school
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="ledger-block space-y-4">
+        <form
+          onSubmit={onSubmit}
+          className="rounded-2xl border border-line/80 bg-white shadow-sm shadow-navy/5 p-5 sm:p-6 space-y-4"
+        >
           {resetOk && (
-            <p className="text-sm text-sage border border-sage/40 bg-sage/10 px-3 py-2">
-              Password updated successfully. Sign in with your new password.
+            <p className="text-sm text-sage rounded-xl border border-sage/30 bg-sage/10 px-3 py-2.5">
+              Password updated. Sign in with your new password.
             </p>
           )}
           {error && (
-            <p className="text-sm text-brick border border-brick/30 bg-brick/5 px-3 py-2 whitespace-pre-wrap">
+            <p className="text-sm text-brick rounded-xl border border-brick/25 bg-brick/5 px-3 py-2.5 whitespace-pre-wrap">
               {error}
             </p>
           )}
           <div>
-            <label className="block text-xs uppercase tracking-wide text-ink/50 mb-1" htmlFor="email">
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink/50 mb-1.5" htmlFor="email">
               Email
             </label>
             <input
@@ -92,12 +97,12 @@ function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@kms.sch.ng"
-              className="w-full border border-line bg-white px-3 py-2.5 text-sm focus:border-navy outline-none"
+              placeholder="you@school.edu.ng"
+              className="w-full rounded-xl border border-line bg-paper/40 px-3.5 py-2.5 text-sm focus:border-navy focus:bg-white outline-none transition-colors"
             />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-wide text-ink/50 mb-1" htmlFor="password">
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink/50 mb-1.5" htmlFor="password">
               Password
             </label>
             <input
@@ -107,28 +112,34 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-line bg-white px-3 py-2.5 text-sm focus:border-navy outline-none"
+              className="w-full rounded-xl border border-line bg-paper/40 px-3.5 py-2.5 text-sm focus:border-navy focus:bg-white outline-none transition-colors"
             />
           </div>
-          <p className="text-right text-xs">
-            <Link href="/account/forgot-password" className="text-navy underline hover:text-gold">
+          <p className="text-right text-xs -mt-1">
+            <Link href="/account/forgot-password" className="text-navy font-medium hover:text-gold no-underline">
               Forgot password?
             </Link>
           </p>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-navy text-paper py-2.5 text-sm font-medium hover:bg-navy-light disabled:opacity-60"
+            className="w-full rounded-xl bg-navy text-paper py-3 text-sm font-semibold hover:bg-navy-light disabled:opacity-60 shadow-sm transition-colors"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-ink/40 mt-6 space-y-1">
-          <span className="block">Staff, parent & student portal only.</span>
-          <Link href="/" className="underline hover:text-navy">
-            Public school website →
+        <p className="text-center text-xs text-ink/45 mt-6 space-y-1.5">
+          <span className="block">One login for every school on this platform.</span>
+          <Link href="/" className="text-navy/80 hover:text-navy font-medium">
+            Public marketing site →
           </Link>
+          <span className="block">
+            New school?{" "}
+            <Link href="/onboarding" className="text-navy font-medium hover:underline">
+              Start free trial
+            </Link>
+          </span>
         </p>
       </div>
     </main>
