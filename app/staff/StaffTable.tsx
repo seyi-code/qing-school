@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import { passwordPolicyHint } from "@/lib/password-policy";
 
@@ -85,7 +85,100 @@ export function StaffTable({ rows }: { rows: StaffRow[] }) {
           {msg}
         </p>
       )}
-      <div className="ledger-block !p-0 overflow-x-auto">
+
+      <div className="md:hidden space-y-2">
+        {rows.map((s) => (
+          <div key={s.id} className="ledger-block !p-3 space-y-2">
+            <div className="flex justify-between gap-2">
+              <div>
+                <p className="font-medium text-sm">
+                  {s.lastName}, {s.firstName}
+                </p>
+                <p className="text-xs font-mono text-ink/50">{s.staffId}</p>
+                <p className="text-xs text-ink/50">{s.email}</p>
+              </div>
+              <span className={`status-pill text-[10px] h-fit ${s.isActive ? "text-sage" : "text-brick"}`}>
+                {s.isActive ? "ACTIVE" : "INACTIVE"}
+              </span>
+            </div>
+            <p className="text-xs text-ink/70">
+              {s.designation ?? "—"} · {s.category === "TEACHING" ? "Teaching" : "Non-teaching"} · {s.role}
+            </p>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <button
+                type="button"
+                className="btn-ghost !py-1 !px-2.5 !text-xs"
+                onClick={() => setEditingId(editingId === s.id ? null : s.id)}
+              >
+                {editingId === s.id ? "Cancel" : "Edit"}
+              </button>
+              <button
+                type="button"
+                className="btn-ghost !py-1 !px-2.5 !text-xs"
+                disabled={busy}
+                onClick={() => resetPassword(s.id)}
+              >
+                Reset password
+              </button>
+            </div>
+            {editingId === s.id && (
+              <form onSubmit={(e) => save(e, s.id)} className="grid grid-cols-2 gap-2 pt-2 border-t border-line">
+                <label className="text-xs">
+                  First name
+                  <input name="firstName" required defaultValue={s.firstName} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white" />
+                </label>
+                <label className="text-xs">
+                  Last name
+                  <input name="lastName" required defaultValue={s.lastName} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white" />
+                </label>
+                <label className="text-xs col-span-2">
+                  Designation
+                  <input name="designation" defaultValue={s.designation ?? ""} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white" />
+                </label>
+                <label className="text-xs">
+                  Phone
+                  <input name="phone" defaultValue={s.phone ?? ""} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white" />
+                </label>
+                <label className="text-xs">
+                  Category
+                  <select name="category" defaultValue={s.category} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white">
+                    <option value="TEACHING">Teaching</option>
+                    <option value="NON_TEACHING">Non-teaching</option>
+                  </select>
+                </label>
+                <label className="text-xs">
+                  Role
+                  <select name="role" defaultValue={s.role} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white">
+                    {ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs">
+                  Monthly salary
+                  <input name="monthlySalary" type="number" min={0} step="0.01" defaultValue={s.monthlySalary ?? ""} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white" />
+                </label>
+                <label className="text-xs col-span-2">
+                  Status
+                  <select name="isActive" defaultValue={s.isActive ? "true" : "false"} className="block w-full border border-line rounded-lg px-2 py-1.5 bg-white">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </label>
+                <div className="col-span-2">
+                  <button type="submit" disabled={busy} className="btn-primary disabled:opacity-50">
+                    {busy ? "Saving…" : "Save staff"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block ledger-block !p-0 overflow-x-auto">
         <table className="ledger">
           <thead>
             <tr>
@@ -100,8 +193,8 @@ export function StaffTable({ rows }: { rows: StaffRow[] }) {
           </thead>
           <tbody>
             {rows.map((s) => (
-              <>
-                <tr key={s.id}>
+              <Fragment key={s.id}>
+                <tr>
                   <td className="font-mono text-xs">{s.staffId}</td>
                   <td>
                     {s.lastName}, {s.firstName}
@@ -111,21 +204,21 @@ export function StaffTable({ rows }: { rows: StaffRow[] }) {
                   <td>{s.category === "TEACHING" ? "Teaching" : "Non-teaching"}</td>
                   <td>{s.role}</td>
                   <td>
-                    <span className={s.isActive ? "text-sage" : "text-brick"}>
+                    <span className={`status-pill text-[10px] ${s.isActive ? "text-sage" : "text-brick"}`}>
                       {s.isActive ? "ACTIVE" : "INACTIVE"}
                     </span>
                   </td>
                   <td className="text-xs whitespace-nowrap space-x-2">
-                    <button type="button" className="underline text-navy" onClick={() => setEditingId(editingId === s.id ? null : s.id)}>
+                    <button type="button" className="text-navy font-medium hover:underline" onClick={() => setEditingId(editingId === s.id ? null : s.id)}>
                       {editingId === s.id ? "Cancel" : "Edit"}
                     </button>
-                    <button type="button" className="underline" disabled={busy} onClick={() => resetPassword(s.id)}>
+                    <button type="button" className="text-ink/60 hover:underline" disabled={busy} onClick={() => resetPassword(s.id)}>
                       Reset password
                     </button>
                   </td>
                 </tr>
                 {editingId === s.id && (
-                  <tr key={`${s.id}-edit`}>
+                  <tr>
                     <td colSpan={7} className="bg-navy/5">
                       <form onSubmit={(e) => save(e, s.id)} className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3 text-sm">
                         <label className="text-xs">
@@ -173,7 +266,7 @@ export function StaffTable({ rows }: { rows: StaffRow[] }) {
                           </select>
                         </label>
                         <div className="col-span-2 md:col-span-4">
-                          <button type="submit" disabled={busy} className="bg-navy text-paper text-sm px-4 py-2 disabled:opacity-50">
+                          <button type="submit" disabled={busy} className="btn-primary disabled:opacity-50">
                             {busy ? "Saving…" : "Save staff"}
                           </button>
                         </div>
@@ -181,7 +274,7 @@ export function StaffTable({ rows }: { rows: StaffRow[] }) {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
