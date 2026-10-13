@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ReportTemplatePage() {
   const session = await requireSession();
-  if (!["ADMIN", "IT", "PRINCIPAL"].includes(session.role)) {
+  if (!["ADMIN", "IT", "PRINCIPAL", "PLATFORM_ADMIN"].includes(session.role)) {
     redirect(homeRouteForRole(session.role));
   }
 

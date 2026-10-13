@@ -30,34 +30,34 @@ export default async function OpsPage() {
       subtitle="SMS production keys, backup, and production hygiene"
       email={session.email}
       actions={
-        <Link href="/settings" className="btn-ghost">
-          Admin settings
+        <Link href="/settings" className="text-sm border border-navy text-navy px-3 py-1.5">
+          Back to Settings
         </Link>
       }
     >
-      <div className="space-y-5 max-w-2xl">
-        <section className="ledger-block">
-          <h2 className="font-serif text-lg text-navy mb-3">Environment health</h2>
-          <ul className="space-y-2 text-sm">
-            <li className="flex justify-between gap-2 border-b border-line/60 pb-2">
+      <div className="space-y-6 max-w-2xl">
+        <section className="ledger-block space-y-3">
+          <h2 className="font-serif text-lg">Environment health</h2>
+          <ul className="text-sm space-y-2">
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
               <span>SESSION_SECRET</span>
               <span className={sessionSecretOk ? "text-sage font-medium" : "text-brick font-medium"}>
                 {sessionSecretOk ? "OK" : "Missing / short"}
               </span>
             </li>
-            <li className="flex justify-between gap-2 border-b border-line/60 pb-2">
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
               <span>DATABASE_URL</span>
               <span className={databaseUrl ? "text-sage font-medium" : "text-brick font-medium"}>
                 {databaseUrl ? "Set" : "Missing"}
               </span>
             </li>
-            <li className="flex justify-between gap-2 border-b border-line/60 pb-2">
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
               <span>Termii SMS API</span>
               <span className={termiiKey ? "text-sage font-medium" : "text-ink/50"}>
                 {termiiKey ? `Key set · sender ${sender}` : "Not configured"}
               </span>
             </li>
-            <li className="flex justify-between gap-2 border-b border-line/60 pb-2">
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
               <span>SMS last 7 days</span>
               <span className="tabular-nums font-medium">{recentSms}</span>
             </li>
@@ -70,15 +70,33 @@ export default async function OpsPage() {
           </ul>
         </section>
 
-        <section className="ledger-block text-sm text-ink/70 space-y-2">
-          <h2 className="font-serif text-lg text-navy">Backup</h2>
-          <p>
-            Use your Neon / Postgres dashboard for automated backups. Export critical tables via Reports
-            CSV before large schema changes.
-          </p>
-          <Link href="/reports" className="btn-ghost inline-flex">
-            Open reports
-          </Link>
+        <section className="ledger-block space-y-3">
+          <h2 className="font-serif text-lg">Backup</h2>
+          <div className="text-xs text-ink/60 space-y-2">
+            <p className="font-medium text-ink">Backup story (product requirement):</p>
+            <ol className="list-decimal pl-4 space-y-1">
+              <li>
+                <strong>Primary:</strong> Use your Postgres host automated backups (Neon / Supabase
+                / Railway point-in-time recovery). Enable daily snapshots minimum.
+              </li>
+              <li>
+                <strong>Weekly export:</strong> From provider dashboard export a logical dump, or
+                use pg_dump into encrypted off-site storage.
+              </li>
+              <li>
+                <strong>App data:</strong> Report logos and uploads live on Vercel Blob / storage -
+                keep the same retention policy.
+              </li>
+              <li>
+                <strong>Before major changes:</strong> Snapshot DB, then deploy. Keep
+                ALLOW_SETUP_SEED=false in production.
+              </li>
+              <li>
+                <strong>Restore drill:</strong> Once a term, restore a backup to a staging branch
+                and verify login + student counts.
+              </li>
+            </ol>
+          </div>
         </section>
       </div>
     </PortalShell>
