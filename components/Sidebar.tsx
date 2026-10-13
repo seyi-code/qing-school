@@ -50,7 +50,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/leave",
     label: "Staff Leave",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL", "TEACHER", "ACCOUNTANT", "SECRETARY"],
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL", "TEACHER", "SECRETARY"],
   },
 
   {
@@ -202,7 +202,15 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const visible = NAV_ITEMS.filter((item) => item.roles.includes(role));
+  /** When working as a school, hide pure platform SaaS links so ops stay school-scoped. */
+  const workingAsSchool = Boolean(schoolLabel);
+  const visible = NAV_ITEMS.filter((item) => {
+    if (!item.roles.includes(role)) return false;
+    if (workingAsSchool && (item.href === "/platform" || item.href === "/onboarding")) {
+      return false;
+    }
+    return true;
+  });
 
   const brand = schoolLabel || schoolName || "Qing School";
 
@@ -235,6 +243,7 @@ export function Sidebar({
             &times;
           </button>
         )}
+
       </div>
 
       <nav className="flex-1 min-h-0 py-2 overflow-y-auto overscroll-contain">
@@ -262,6 +271,15 @@ export function Sidebar({
           <p className="text-[10px] text-paper/40 text-center truncate px-1" title={schoolName}>
             {schoolName}
           </p>
+        )}
+        {role === "PLATFORM_ADMIN" && workingAsSchool && (
+          <Link
+            href="/platform"
+            onClick={onNavigate}
+            className="block w-full text-center border border-gold/40 text-gold text-xs py-2 hover:bg-gold/10"
+          >
+            ← Platform admin
+          </Link>
         )}
         <Link
           href="/account/profile"
