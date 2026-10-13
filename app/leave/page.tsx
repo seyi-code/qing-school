@@ -30,6 +30,10 @@ export default async function LeavePage() {
         })
       : [];
 
+  const pending = requests.filter((r) => r.status === "PENDING").length;
+  const approved = requests.filter((r) => r.status === "APPROVED").length;
+  const rejected = requests.filter((r) => r.status === "REJECTED").length;
+
   return (
     <PortalShell
       role={session.role}
@@ -37,10 +41,17 @@ export default async function LeavePage() {
       subtitle={isManager ? "Review leave requests" : "Request time off"}
       email={session.email}
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+        <Kpi label="Total" value={String(requests.length)} tone="navy" />
+        <Kpi label="Pending" value={String(pending)} tone={pending ? "gold" : "sage"} />
+        <Kpi label="Approved" value={String(approved)} tone="sage" />
+        <Kpi label="Rejected" value={String(rejected)} tone="rose" />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {!isManager && (
-          <section className="ledger-block">
-            <h2 className="font-serif text-lg mb-3">New request</h2>
+          <section className="rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 sm:p-5 shadow-sm">
+            <h2 className="font-serif text-lg text-navy mb-3">New request</h2>
             {staff ? (
               <LeaveForm />
             ) : (
@@ -49,51 +60,90 @@ export default async function LeavePage() {
           </section>
         )}
 
-        <section className={`ledger-block !p-0 overflow-x-auto ${isManager ? "lg:col-span-3" : "lg:col-span-2"}`}>
-          <div className="p-4">
-            <h2 className="font-serif text-lg">{isManager ? "All requests" : "My requests"}</h2>
+        <section
+          className={`rounded-xl border border-violet-200/70 bg-gradient-to-br from-violet-50/40 to-white shadow-sm overflow-hidden ${
+            isManager ? "lg:col-span-3" : "lg:col-span-2"
+          }`}
+        >
+          <div className="p-4 pb-2">
+            <h2 className="font-serif text-lg text-navy">{isManager ? "All requests" : "My requests"}</h2>
           </div>
-          <table className="ledger">
-            <thead>
-              <tr>
-                {isManager && <th>Staff</th>}
-                <th>From</th>
-                <th>To</th>
-                <th>Reason</th>
-                <th>Status</th>
-                {isManager && <th>Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((r) => (
-                <tr key={r.id}>
-                  {isManager && (
-                    <td>
-                      {r.staff.firstName} {r.staff.lastName}
-                    </td>
-                  )}
-                  <td className="text-xs whitespace-nowrap">{formatDate(r.startDate)}</td>
-                  <td className="text-xs whitespace-nowrap">{formatDate(r.endDate)}</td>
-                  <td className="max-w-xs">{r.reason}</td>
-                  <td>
-                    <span className="status-pill text-xs">{r.status}</span>
-                  </td>
-                  {isManager && (
-                    <td>{r.status === "PENDING" && <LeaveReviewButtons id={r.id} />}</td>
-                  )}
-                </tr>
-              ))}
-              {requests.length === 0 && (
-                <tr>
-                  <td colSpan={isManager ? 6 : 4} className="text-center text-ink/50 py-8">
-                    No leave requests for this school.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          {requests.length === 0 ? (
+            <p className="text-sm text-ink/50 text-center py-12 px-4">
+              No leave requests for this school.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="ledger">
+                <thead>
+                  <tr>
+                    {isManager && <th>Staff</th>}
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    {isManager && <th>Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map((r) => (
+                    <tr key={r.id}>
+                      {isManager && (
+                        <td className="font-medium">
+                          {r.staff.lastName}, {r.staff.firstName}
+                        </td>
+                      )}
+                      <td className="tabular-nums text-sm">{formatDate(r.startDate)}</td>
+                      <td className="tabular-nums text-sm">{formatDate(r.endDate)}</td>
+                      <td className="text-sm max-w-[12rem] truncate" title={r.reason}>
+                        {r.reason}
+                      </td>
+                      <td>
+                        <span
+                          className={`status-pill text-[10px] ${
+                            r.status === "APPROVED"
+                              ? "text-sage"
+                              : r.status === "PENDING"
+                                ? "text-gold-dark"
+                                : "text-brick"
+                          }`}
+                        >
+                          {r.status}
+                        </span>
+                      </td>
+                      {isManager && (
+                        <td>
+                          {r.status === "PENDING" ? (
+                            <LeaveReviewButtons id={r.id} />
+                          ) : (
+                            <span className="text-xs text-ink/40">—</span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </div>
     </PortalShell>
+  );
+}
+
+const TONE: Record<string, string> = {
+  navy: "from-[#1a3a6e]/[12%] to-white border-navy/15",
+  sage: "from-emerald-500/[12%] to-white border-emerald-500/20",
+  rose: "from-rose-500/[12%] to-white border-rose-500/20",
+  gold: "from-amber-500/[12%] to-white border-amber-500/25",
+};
+
+function Kpi({ label, value, tone }: { label: string; value: string; tone: keyof typeof TONE }) {
+  return (
+    <div className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 shadow-sm ${TONE[tone]}`}>
+      <p className="text-[10px] font-medium uppercase tracking-wide text-ink/50">{label}</p>
+      <p className="mt-1 text-lg sm:text-xl font-semibold text-ink tabular-nums">{value}</p>
+    </div>
   );
 }
