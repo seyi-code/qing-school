@@ -91,23 +91,23 @@ export default async function DashboardPage() {
       tone: "warn",
     });
   }
-  if (leavePending > 0) {
+  if (leavePending > 0 && !isAccounts) {
     attention.push({
       href: "/leave",
       label: `${leavePending} leave request${leavePending === 1 ? "" : "s"} pending`,
       tone: "info",
     });
   }
-  if (attendancePct === null) {
+  if (attendancePct === null && !isAccounts) {
     attention.push({ href: "/attendance", label: "Attendance not taken today", tone: "info" });
   }
 
   const actions: { href: string; label: string; primary?: boolean }[] = [];
-  if (can(session.role, "MANAGE_STUDENTS")) {
+  if (can(session.role, "MANAGE_STUDENTS") && !isAccounts) {
     actions.push({ href: "/students/new", label: "Admit student", primary: true });
   }
-  if (showFinancials || isSecretary) {
-    actions.push({ href: "/fees", label: "Collect fees" });
+  if (showFinancials || isSecretary || isAccounts) {
+    actions.push({ href: "/fees", label: "Collect fees", primary: isAccounts });
   }
   if (["ADMIN", "IT", "PLATFORM_ADMIN"].includes(session.role)) {
     actions.push({ href: "/attendance", label: "Attendance" });
@@ -144,27 +144,22 @@ export default async function DashboardPage() {
           ? "sky"
           : "brick";
 
+  const unpaidCount = invoices.filter((i) => i.status === "UNPAID" || i.status === "PARTIAL").length;
+
   return (
     <PortalShell role={session.role} title="Dashboard" subtitle={welcome} email={session.email}>
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
-        <Kpi label="Active students" value={studentCount.toLocaleString()} tone="navy" icon="🎓" />
-        <Kpi label="Staff on roll" value={staffCount.toLocaleString()} tone="violet" icon="👥" />
-        <Kpi label="Classes" value={classCount.toLocaleString()} tone="gold" icon="📚" />
-        <Kpi
-          label="Attendance today"
-          value={attendancePct !== null ? `${attendancePct}%` : "—"}
-          sub={
-            todayAttendance.length
-              ? `${presentToday}/${todayAttendance.length} present`
-              : "Not taken"
-          }
-          tone={attTone}
-          icon="✓"
-        />
-      </div>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy/50 mb-2">
+        {isAccounts
+          ? "Accounts command centre"
+          : isPrincipal
+            ? "Principal command centre"
+            : isSecretary
+              ? "Front office command centre"
+              : "School command centre"}
+      </p>
 
-      {showFinancials && (
-        <div className="grid grid-cols-2 gap-3 mb-5">
+      {isAccounts ? (
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
           <Kpi label="Fees collected" value={formatNaira(collected)} tone="sage" icon="₦" />
           <Kpi
             label="Outstanding"
@@ -172,7 +167,87 @@ export default async function DashboardPage() {
             tone={outstanding > 0 ? "brick" : "sage"}
             icon="!"
           />
+          <Kpi label="Open invoices" value={unpaidCount.toLocaleString()} tone="gold" icon="#" />
+          <Kpi label="Active students" value={studentCount.toLocaleString()} tone="navy" icon="🎓" />
         </div>
+      ) : isPrincipal ? (
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+          <Kpi label="Active students" value={studentCount.toLocaleString()} tone="navy" icon="🎓" />
+          <Kpi label="Staff on roll" value={staffCount.toLocaleString()} tone="violet" icon="👥" />
+          <Kpi
+            label="Attendance today"
+            value={attendancePct !== null ? `${attendancePct}%` : "—"}
+            sub={
+              todayAttendance.length
+                ? `${presentToday}/${todayAttendance.length} present`
+                : "Not taken"
+            }
+            tone={attTone}
+            icon="✓"
+          />
+          <Kpi
+            label="Leave pending"
+            value={leavePending.toLocaleString()}
+            tone={leavePending ? "gold" : "sage"}
+            icon="…"
+          />
+        </div>
+      ) : isSecretary ? (
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+          <Kpi label="Active students" value={studentCount.toLocaleString()} tone="navy" icon="🎓" />
+          <Kpi
+            label="Pending admissions"
+            value={pendingAdmissions.toLocaleString()}
+            tone={pendingAdmissions ? "gold" : "sage"}
+            icon="+"
+          />
+          {showFinancials ? (
+            <Kpi
+              label="Outstanding"
+              value={formatNaira(outstanding)}
+              tone={outstanding > 0 ? "brick" : "sage"}
+              icon="!"
+            />
+          ) : (
+            <Kpi label="Classes" value={classCount.toLocaleString()} tone="gold" icon="📚" />
+          )}
+          <Kpi
+            label="Attendance today"
+            value={attendancePct !== null ? `${attendancePct}%` : "—"}
+            tone={attTone}
+            icon="✓"
+          />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+            <Kpi label="Active students" value={studentCount.toLocaleString()} tone="navy" icon="🎓" />
+            <Kpi label="Staff on roll" value={staffCount.toLocaleString()} tone="violet" icon="👥" />
+            <Kpi label="Classes" value={classCount.toLocaleString()} tone="gold" icon="📚" />
+            <Kpi
+              label="Attendance today"
+              value={attendancePct !== null ? `${attendancePct}%` : "—"}
+              sub={
+                todayAttendance.length
+                  ? `${presentToday}/${todayAttendance.length} present`
+                  : "Not taken"
+              }
+              tone={attTone}
+              icon="✓"
+            />
+          </div>
+          {showFinancials && (
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <Kpi label="Fees collected" value={formatNaira(collected)} tone="sage" icon="₦" />
+              <Kpi
+                label="Outstanding"
+                value={formatNaira(outstanding)}
+                tone={outstanding > 0 ? "brick" : "sage"}
+                icon="!"
+              />
+            </div>
+          )}
+        </>
       )}
 
       {actions.length > 0 && (
