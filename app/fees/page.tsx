@@ -4,6 +4,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { formatNaira } from "@/lib/format";
 import { toMoney } from "@/lib/money";
 import { CollectPaymentForm } from "./CollectPaymentForm";
+import { VoidInvoiceButton } from "./VoidInvoiceButton";
 import { FeeReminderButton } from "./FeeReminderButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { redirect } from "next/navigation";
@@ -32,7 +33,9 @@ export default async function FeesPage({
     prisma.invoice.findMany({
       where: {
         ...invWhere,
-        ...(statusFilter !== "ALL" ? { status: statusFilter } : {}),
+        ...(statusFilter !== "ALL"
+          ? { status: statusFilter }
+          : { NOT: { status: "VOIDED" } }),
         ...(q
           ? {
               student: {
@@ -57,11 +60,12 @@ export default async function FeesPage({
     prisma.invoice.findMany({ where: invWhere }),
   ]);
 
-  const outstanding = allInvoices.reduce(
+  const liveInvoices = allInvoices.filter((i) => i.status !== "VOIDED");
+  const outstanding = liveInvoices.reduce(
     (s, i) => s + (toMoney(i.totalAmount) - toMoney(i.amountPaid)),
     0
   );
-  const debtors = allInvoices.filter((i) => i.status !== "PAID");
+  const debtors = liveInvoices.filter((i) => i.status !== "PAID");
 
   const tabs = [
     { key: "ALL", label: "All" },
@@ -198,8 +202,11 @@ export default async function FeesPage({
                       </p>
                     </div>
                   </div>
-                  {inv.status !== "PAID" && (
-                    <CollectPaymentForm invoiceId={inv.id} maxAmount={bal} />
+                  {inv.status !== "PAID" && inv.status !== "VOIDED" && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <CollectPaymentForm invoiceId={inv.id} maxAmount={bal} />
+                      {toMoney(inv.amountPaid) === 0 && <VoidInvoiceButton invoiceId={inv.id} />}
+                    </div>
                   )}
                 </div>
               );
@@ -251,8 +258,13 @@ export default async function FeesPage({
                         </span>
                       </td>
                       <td>
-                        {inv.status !== "PAID" && (
-                          <CollectPaymentForm invoiceId={inv.id} maxAmount={bal} />
+                        {inv.status !== "PAID" && inv.status !== "VOIDED" && (
+                          <div className="flex flex-col gap-1 items-start">
+                            <CollectPaymentForm invoiceId={inv.id} maxAmount={bal} />
+                            {toMoney(inv.amountPaid) === 0 && (
+                              <VoidInvoiceButton invoiceId={inv.id} />
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
