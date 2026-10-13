@@ -16,6 +16,7 @@ export default async function StudentPortalPage() {
   const student = await prisma.student.findUnique({
     where: { userId: session.userId },
     include: {
+      school: { select: { name: true, shortName: true } },
       arm: { include: { schoolClass: true } },
       invoices: { orderBy: { createdAt: "desc" } },
       scores: {
@@ -30,7 +31,7 @@ export default async function StudentPortalPage() {
     return (
       <PortalShell role={session.role} title="My Portal" email={session.email}>
         <div className="rounded-xl border border-line bg-white p-5 text-sm text-ink/70">
-          Your login isn&apos;t linked to a student profile yet. Ask the school office to enable
+          Your login isn't linked to a student profile yet. Ask the school office to enable
           portal access on your student record.
         </div>
       </PortalShell>
@@ -45,6 +46,8 @@ export default async function StudentPortalPage() {
   const classLabel = student.arm
     ? `${student.arm.schoolClass.name} ${student.arm.name}`
     : "Class unassigned";
+  const schoolName = student.school?.name || "";
+  const schoolShort = student.school?.shortName || "";
 
   return (
     <PortalShell
@@ -52,20 +55,22 @@ export default async function StudentPortalPage() {
       title={`Hi, ${student.firstName}`}
       subtitle={`${classLabel} · ${student.admissionNumber}`}
       email={session.email}
+      schoolName={schoolName}
+      schoolShortName={schoolShort}
     >
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
         <Kpi
           label="Fee balance"
           value={formatNaira(balance)}
-          valueClass={balance > 0 ? "text-brick" : "text-sage"}
+          tone={balance > 0 ? "rose" : "sage"}
         />
-        <Kpi label="Subjects scored" value={String(student.scores.length)} />
+        <Kpi label="Subjects scored" value={String(student.scores.length)} tone="sky" />
         <Kpi
-          label="Admission no."
-          value={student.admissionNumber}
-          className="col-span-2"
-          mono
+          label="Unpaid invoices"
+          value={String(unpaid.length)}
+          tone={unpaid.length ? "gold" : "sage"}
         />
+        <Kpi label="Admission no." value={student.admissionNumber} tone="navy" mono />
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
@@ -79,22 +84,24 @@ export default async function StudentPortalPage() {
       </div>
 
       {unpaid.length > 0 && (
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5 mb-4 sm:mb-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">Pay fees</h2>
+        <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 mb-4 sm:mb-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-navy mb-3">Pay fees</h2>
           <ul className="space-y-3">
             {unpaid.map((inv) => {
               const bal = toMoney(inv.totalAmount) - toMoney(inv.amountPaid);
               return (
                 <li
                   key={inv.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm border-b border-line/80 pb-3 last:border-0 last:pb-0"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm border-b border-line/60 pb-3 last:border-0 last:pb-0"
                 >
                   <div>
-                    <p className="font-medium">{formatNaira(bal)} due</p>
-                    <p className="text-xs text-ink/50">
-                      Total {formatNaira(inv.totalAmount)} · Paid {formatNaira(inv.amountPaid)} ·{" "}
-                      {inv.status}
+                    <p className="font-semibold text-ink">{formatNaira(bal)} due</p>
+                    <p className="text-xs text-ink/50 mt-0.5">
+                      Total {formatNaira(inv.totalAmount)} · Paid {formatNaira(inv.amountPaid)}
                     </p>
+                    <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border bg-brick/10 text-brick border-brick/25">
+                      {inv.status}
+                    </span>
                   </div>
                   <PayOnlineButton invoiceId={inv.id} maxAmount={bal} />
                 </li>
@@ -105,30 +112,30 @@ export default async function StudentPortalPage() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">Recent scores</h2>
+        <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-navy mb-3">Recent scores</h2>
           {student.scores.length === 0 ? (
             <Empty text="No scores yet." />
           ) : (
-            <ul className="divide-y divide-line/80">
+            <ul className="divide-y divide-line/70">
               {student.scores.map((s) => (
-                <li key={s.id} className="flex justify-between py-2 text-sm">
+                <li key={s.id} className="flex justify-between py-2.5 text-sm">
                   <span className="text-ink/80 truncate pr-2">{s.armSubject.subject.name}</span>
-                  <span className="font-semibold tabular-nums">{s.total}</span>
+                  <span className="font-semibold tabular-nums text-navy">{s.total}</span>
                 </li>
               ))}
             </ul>
           )}
         </section>
 
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">Recent attendance</h2>
+        <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-navy mb-3">Recent attendance</h2>
           {student.attendances.length === 0 ? (
             <Empty text="No attendance recorded yet." />
           ) : (
-            <ul className="divide-y divide-line/80">
+            <ul className="divide-y divide-line/70">
               {student.attendances.map((a) => (
-                <li key={a.id} className="flex justify-between items-center py-2 text-sm">
+                <li key={a.id} className="flex justify-between items-center py-2.5 text-sm">
                   <span className="text-ink/70">{formatDate(a.date)}</span>
                   <Status status={a.status} />
                 </li>
@@ -141,26 +148,34 @@ export default async function StudentPortalPage() {
   );
 }
 
+const TONE: Record<string, string> = {
+  navy: "from-[#1a3a6e]/[12%] to-white border-navy/15",
+  sky: "from-sky-500/[12%] to-white border-sky-500/20",
+  sage: "from-emerald-500/[12%] to-white border-emerald-500/20",
+  rose: "from-rose-500/[12%] to-white border-rose-500/20",
+  gold: "from-amber-500/[12%] to-white border-amber-500/25",
+};
+
 function Kpi({
   label,
   value,
-  valueClass = "text-ink",
-  className = "",
+  tone = "navy",
   mono = false,
 }: {
   label: string;
   value: string;
-  valueClass?: string;
-  className?: string;
+  tone?: keyof typeof TONE;
   mono?: boolean;
 }) {
   return (
-    <div className={`rounded-xl border border-line bg-white px-3.5 py-3 sm:px-4 sm:py-3.5 ${className}`}>
-      <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/45">
+    <div
+      className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 sm:px-4 sm:py-3.5 ${TONE[tone] || TONE.navy}`}
+    >
+      <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/50">
         {label}
       </p>
       <p
-        className={`mt-1 text-lg sm:text-xl font-semibold tracking-tight ${valueClass} ${
+        className={`mt-1 text-lg sm:text-xl font-semibold tracking-tight text-ink ${
           mono ? "font-mono text-base sm:text-lg" : ""
         }`}
       >
@@ -184,8 +199,8 @@ function Action({
       href={href}
       className={
         primary
-          ? "inline-flex items-center rounded-lg bg-navy px-3.5 py-2 text-xs font-medium text-paper hover:bg-navy-light"
-          : "inline-flex items-center rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-medium text-ink hover:border-navy/40"
+          ? "inline-flex items-center rounded-xl bg-navy px-3.5 py-2 text-xs font-semibold text-paper hover:bg-navy-light shadow-sm"
+          : "inline-flex items-center rounded-xl border border-line bg-white px-3.5 py-2 text-xs font-medium text-ink hover:border-navy/40"
       }
     >
       {label}
