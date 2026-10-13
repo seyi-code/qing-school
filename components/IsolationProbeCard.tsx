@@ -56,7 +56,7 @@ export function IsolationProbeCard() {
     <section className="ledger-block space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="font-serif text-lg">Isolation probe (P0)</h2>
+          <h2 className="font-serif text-lg text-navy">Isolation probe</h2>
           <p className="text-xs text-ink/55">
             Per-school counts + orphan check. Run after onboarding a second school.
           </p>
@@ -65,14 +65,16 @@ export function IsolationProbeCard() {
           type="button"
           onClick={run}
           disabled={loading}
-          className="text-sm bg-navy text-paper px-4 py-2 hover:bg-navy-light disabled:opacity-60"
+          className="btn-primary disabled:opacity-60"
         >
           {loading ? "Running…" : "Run isolation probe"}
         </button>
       </div>
 
       {error && (
-        <p className="text-sm text-brick border border-brick/30 bg-brick/5 px-3 py-2">{error}</p>
+        <p className="text-sm text-brick border border-brick/30 bg-brick/5 px-3 py-2 rounded-lg">
+          {error}
+        </p>
       )}
 
       {data && (
@@ -92,7 +94,7 @@ export function IsolationProbeCard() {
             </ul>
           )}
 
-          <div className="overflow-x-auto">
+          <div className="table-wrap">
             <table className="ledger text-xs">
               <thead>
                 <tr>

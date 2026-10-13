@@ -36,7 +36,6 @@ export default function OnboardingPage() {
       setError(data.error || "Could not create school");
       return;
     }
-    // Always portal login — never public marketing homepage
     router.push(data.redirectTo || "/login");
   }
 
@@ -47,44 +46,92 @@ export default function OnboardingPage() {
         <h1 className="font-serif text-3xl text-navy mb-2">Onboard your school</h1>
         <p className="text-sm text-ink/60 mb-6">
           Isolated workspace with its own admin, branding, and data. New schools start with a{" "}
-          <strong>14-day free trial</strong> (configurable). After that, billing or platform approval is required.
+          <strong>14-day free trial</strong> (configurable). After that, billing or platform approval is
+          required.
         </p>
-        <form onSubmit={submit} className="ledger-block space-y-3 text-sm">
-          <label className="block">School full name
-            <input name="schoolName" required className="mt-1 w-full border border-line px-3 py-2" />
+        <form onSubmit={submit} className="ledger-block space-y-3.5 text-sm shadow-sm">
+          <label className="block">
+            School full name
+            <input
+              name="schoolName"
+              required
+              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+            />
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block">Short name
-              <input name="shortName" required placeholder="KMS" maxLength={12} className="mt-1 w-full border border-line px-3 py-2" />
+            <label className="block">
+              Short name
+              <input
+                name="shortName"
+                required
+                placeholder="KMS"
+                maxLength={12}
+                className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+              />
             </label>
-            <label className="block">URL slug
-              <input name="slug" required placeholder="my-school" pattern="[a-z0-9\-]+" className="mt-1 w-full border border-line px-3 py-2 font-mono text-xs" />
+            <label className="block">
+              URL slug
+              <input
+                name="slug"
+                required
+                placeholder="my-school"
+                pattern="[a-z0-9\-]+"
+                className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white font-mono text-xs"
+              />
             </label>
           </div>
-          <label className="block">Plan
-            <select name="plan" className="mt-1 w-full border border-line px-3 py-2 bg-white">
+          <label className="block">
+            Plan
+            <select name="plan" className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white">
               <option value="STARTER">Starter (~300 students)</option>
               <option value="PRO">Pro (~1,500)</option>
               <option value="ENTERPRISE">Enterprise</option>
             </select>
           </label>
-          <label className="block">Admin full name
-            <input name="adminName" required className="mt-1 w-full border border-line px-3 py-2" />
+          <label className="block">
+            Admin full name
+            <input
+              name="adminName"
+              required
+              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+            />
           </label>
-          <label className="block">Admin email
-            <input name="adminEmail" type="email" required className="mt-1 w-full border border-line px-3 py-2" />
+          <label className="block">
+            Admin email
+            <input
+              name="adminEmail"
+              type="email"
+              required
+              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+            />
           </label>
-          <label className="block">Admin password (10+ chars, mixed)
-            <input name="adminPassword" type="password" required minLength={10} className="mt-1 w-full border border-line px-3 py-2" />
+          <label className="block">
+            Admin password (10+ chars, mixed)
+            <input
+              name="adminPassword"
+              type="password"
+              required
+              minLength={10}
+              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+            />
           </label>
-          <label className="block">Phone (optional)
-            <input name="phone" className="mt-1 w-full border border-line px-3 py-2" />
+          <label className="block">
+            Phone (optional)
+            <input name="phone" className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white" />
           </label>
-          <label className="block">Address (optional)
-            <input name="address" className="mt-1 w-full border border-line px-3 py-2" />
+          <label className="block">
+            Address (optional)
+            <input
+              name="address"
+              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+            />
           </label>
           {error && <p className="text-brick text-sm">{error}</p>}
-          <button type="submit" disabled={busy} className="w-full bg-navy text-paper py-2.5 disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={busy}
+            className="btn-primary w-full justify-center py-2.5 disabled:opacity-60"
+          >
             {busy ? "Creating…" : "Create school workspace"}
           </button>
         </form>

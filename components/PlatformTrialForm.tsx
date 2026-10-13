@@ -63,7 +63,7 @@ export function PlatformTrialForm({ schools }: { schools: SchoolOpt[] }) {
 
   return (
     <div className="ledger-block space-y-3 text-sm">
-      <h2 className="font-serif text-lg">Trial period</h2>
+      <h2 className="font-serif text-lg text-navy">Trial period</h2>
       <p className="text-ink/60 text-xs">
         New schools get a trial on onboard. Use this to start, extend, or end trial access without
         Paystack.
@@ -72,7 +72,7 @@ export function PlatformTrialForm({ schools }: { schools: SchoolOpt[] }) {
       <label className="block">
         <span className="text-xs text-ink/50">School</span>
         <select
-          className="w-full border border-line px-3 py-2 mt-1 bg-white rounded-md"
+          className="w-full border border-line px-3 py-2 mt-1 bg-white rounded-lg"
           value={schoolId}
           onChange={(e) => setSchoolId(e.target.value)}
         >
@@ -102,7 +102,7 @@ export function PlatformTrialForm({ schools }: { schools: SchoolOpt[] }) {
           type="number"
           min={1}
           max={90}
-          className="w-full border border-line px-3 py-2 mt-1 rounded-md"
+          className="w-full border border-line px-3 py-2 mt-1 rounded-lg"
           value={extendDays}
           onChange={(e) => setExtendDays(Math.min(90, Math.max(1, Number(e.target.value) || 1)))}
         />
@@ -113,7 +113,7 @@ export function PlatformTrialForm({ schools }: { schools: SchoolOpt[] }) {
           type="button"
           disabled={loading}
           onClick={() => run("start_trial")}
-          className="bg-navy text-paper px-4 py-2 disabled:opacity-60 rounded-md"
+          className="btn-primary disabled:opacity-60"
         >
           {loading ? "Working…" : "Start / reset trial"}
         </button>
@@ -121,7 +121,7 @@ export function PlatformTrialForm({ schools }: { schools: SchoolOpt[] }) {
           type="button"
           disabled={loading}
           onClick={() => run("extend_trial")}
-          className="border border-navy text-navy px-4 py-2 disabled:opacity-60 rounded-md"
+          className="btn-ghost disabled:opacity-60"
         >
           Extend trial
         </button>
@@ -129,7 +129,7 @@ export function PlatformTrialForm({ schools }: { schools: SchoolOpt[] }) {
           type="button"
           disabled={loading}
           onClick={() => run("end_trial")}
-          className="border border-line text-ink/80 px-4 py-2 disabled:opacity-60 rounded-md"
+          className="btn-ghost !text-ink/70 disabled:opacity-60"
           title="Mark as MANUAL (no trial expiry) — school stays active"
         >
           End trial → paid/manual
