@@ -65,7 +65,6 @@ export default async function StudentsPage({
       role={session.role}
       title="Students"
       subtitle={`${students.length} shown`}
-      email={session.email}
       actions={
         canAdmit ? (
           <div className="flex flex-wrap gap-2">
@@ -106,26 +105,25 @@ export default async function StudentsPage({
         </button>
       </form>
 
-      {canAdmit && statusFilter === "ACTIVE" && students.length > 0 && (
-        <div className="mb-4">
-          <BulkAssignClass
-            arms={arms.map((a) => ({
-              id: a.id,
-              label: `${a.schoolClass.name} ${a.name}`,
-            }))}
-            students={students.map((s) => ({
-              id: s.id,
-              name: `${s.lastName}, ${s.firstName}`,
-              armId: s.armId,
-            }))}
-          />
-        </div>
+      {canAdmit && (
+        <BulkAssignClass
+          arms={arms.map((a) => ({
+            id: a.id,
+            label: `${a.schoolClass.name} ${a.name}`,
+          }))}
+          students={students.map((s) => ({
+            id: s.id,
+            name: `${s.lastName}, ${s.firstName}`,
+            admissionNumber: s.admissionNumber,
+            unassigned: !s.armId,
+          }))}
+        />
       )}
 
-      {students.length === 0 ? (
+      {students.length === 0 && (
         <EmptyState
           title="No students in this list"
-          description="Try another tab, clear search, or admit a new student."
+          description="Admit a student or switch the status tab above."
           action={
             canAdmit ? (
               <Link href="/students/new" className="btn-primary">
@@ -134,75 +132,73 @@ export default async function StudentsPage({
             ) : undefined
           }
         />
-      ) : (
-        <>
-          <div className="md:hidden space-y-2 mb-4">
-            {students.map((s) => (
-              <Link
-                key={s.id}
-                href={`/students/${s.id}`}
-                className="block ledger-block !p-3 hover:border-navy/40 transition-colors"
-              >
-                <div className="flex justify-between gap-2">
-                  <span className="font-medium text-sm">
-                    {s.lastName}, {s.firstName}
-                  </span>
-                  <span className="status-pill text-[10px]">{s.status}</span>
-                </div>
-                <p className="text-xs font-mono text-ink/50 mt-1">{s.admissionNumber}</p>
-                <p className="text-xs text-ink/60 mt-0.5">
-                  {s.arm ? `${s.arm.schoolClass.name} ${s.arm.name}` : "Unassigned"}
-                </p>
-              </Link>
-            ))}
-          </div>
-
-          <div className="hidden md:block ledger-block !p-0 overflow-x-auto">
-            <table className="ledger">
-              <thead>
-                <tr>
-                  <th>Admission No.</th>
-                  <th>Name</th>
-                  <th>Class / Arm</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((s) => (
-                  <tr key={s.id}>
-                    <td className="font-mono text-xs">{s.admissionNumber}</td>
-                    <td>
-                      {s.lastName}, {s.firstName} {s.otherNames ?? ""}
-                    </td>
-                    <td>
-                      {s.arm ? (
-                        `${s.arm.schoolClass.name} ${s.arm.name}`
-                      ) : (
-                        <span className="text-ink/40">Unassigned</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className="status-pill text-xs">{s.status}</span>
-                    </td>
-                    <td className="space-x-2 whitespace-nowrap">
-                      <Link
-                        href={`/students/${s.id}`}
-                        className="text-navy text-sm font-medium hover:underline"
-                      >
-                        {canAdmit && !s.arm ? "Assign class" : "View"}
-                      </Link>
-                      {s.status === "APPLIED" && canAdmit && (
-                        <ApproveStudentButton studentId={s.id} />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
       )}
+
+      <div className="md:hidden space-y-2 mb-4">
+        {students.map((s) => (
+          <Link
+            key={s.id}
+            href={`/students/${s.id}`}
+            className="block ledger-block !p-3 hover:border-navy/40 transition-colors"
+          >
+            <div className="flex justify-between gap-2">
+              <span className="font-medium text-sm">
+                {s.lastName}, {s.firstName}
+              </span>
+              <span className="status-pill text-[10px]">{s.status}</span>
+            </div>
+            <p className="text-xs font-mono text-ink/50 mt-1">{s.admissionNumber}</p>
+            <p className="text-xs text-ink/60 mt-0.5">
+              {s.arm ? `${s.arm.schoolClass.name} ${s.arm.name}` : "Unassigned"}
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="hidden md:block ledger-block !p-0 overflow-x-auto">
+        <table className="ledger">
+          <thead>
+            <tr>
+              <th>Admission No.</th>
+              <th>Name</th>
+              <th>Class / Arm</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((s) => (
+              <tr key={s.id}>
+                <td className="font-mono text-xs">{s.admissionNumber}</td>
+                <td>
+                  {s.lastName}, {s.firstName} {s.otherNames ?? ""}
+                </td>
+                <td>
+                  {s.arm ? (
+                    `${s.arm.schoolClass.name} ${s.arm.name}`
+                  ) : (
+                    <span className="text-ink/40">Unassigned</span>
+                  )}
+                </td>
+                <td>
+                  <span className="status-pill text-xs">{s.status}</span>
+                </td>
+                <td className="space-x-2 whitespace-nowrap">
+                  <Link
+                    href={`/students/${s.id}`}
+                    className="text-navy text-sm font-medium hover:underline"
+                  >
+                    {canAdmit && !s.arm ? "Assign class" : "View"}
+                  </Link>
+                  {s.status === "APPLIED" && canAdmit && (
+                    <ApproveStudentButton studentId={s.id} />
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </PortalShell>
   );
 }
