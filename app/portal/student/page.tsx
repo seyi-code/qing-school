@@ -31,7 +31,7 @@ export default async function StudentPortalPage() {
     return (
       <PortalShell role={session.role} title="My Portal" email={session.email}>
         <div className="rounded-xl border border-line bg-white p-5 text-sm text-ink/70">
-          Your login isn't linked to a student profile yet. Ask the school office to enable
+          Your login isn&apos;t linked to a student profile yet. Ask the school office to enable
           portal access on your student record.
         </div>
       </PortalShell>
@@ -70,7 +70,13 @@ export default async function StudentPortalPage() {
           value={String(unpaid.length)}
           tone={unpaid.length ? "gold" : "sage"}
         />
-        <Kpi label="Admission no." value={student.admissionNumber} tone="navy" mono />
+        <Kpi
+          label="Admission no."
+          value={student.admissionNumber}
+          tone="navy"
+          mono
+          className="col-span-2"
+        />
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
@@ -161,23 +167,26 @@ function Kpi({
   value,
   tone = "navy",
   mono = false,
+  className = "",
 }: {
   label: string;
   value: string;
   tone?: keyof typeof TONE;
   mono?: boolean;
+  className?: string;
 }) {
   return (
     <div
-      className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 sm:px-4 sm:py-3.5 ${TONE[tone] || TONE.navy}`}
+      className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 sm:px-4 sm:py-3.5 min-w-0 ${TONE[tone] || TONE.navy} ${className}`}
     >
       <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/50">
         {label}
       </p>
       <p
-        className={`mt-1 text-lg sm:text-xl font-semibold tracking-tight text-ink ${
-          mono ? "font-mono text-base sm:text-lg" : ""
+        className={`mt-1 font-semibold tracking-tight text-ink truncate ${
+          mono ? "font-mono text-xs sm:text-sm" : "text-lg sm:text-xl"
         }`}
+        title={value}
       >
         {value}
       </p>
