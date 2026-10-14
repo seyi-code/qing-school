@@ -21,16 +21,17 @@ const PUBLIC_PATHS = [
   "/result-checker",
   "/pay",
   "/p",
-  "/onboarding",
-  "/api/onboarding",
 ];
 
 /**
  * Path prefixes limited to specific roles.
  * PLATFORM_ADMIN may access school-ops paths (staff, payroll, settings)
  * while working as a tenant, but not student/parent/teacher portals.
+ * Onboarding is platform-only — never public.
  */
 const PORTAL_RULES: Array<{ prefix: string; roles: string[] }> = [
+  { prefix: "/onboarding", roles: ["PLATFORM_ADMIN"] },
+  { prefix: "/platform", roles: ["PLATFORM_ADMIN"] },
   { prefix: "/portal/student", roles: ["STUDENT"] },
   { prefix: "/portal/parent", roles: ["PARENT"] },
   { prefix: "/portal/teacher", roles: ["TEACHER"] },
