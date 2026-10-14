@@ -14,13 +14,21 @@ export default async function ClassesPage() {
 
   const schoolId = await resolveSchoolId(session);
 
-  const [classes, subjects] = await Promise.all([
+  const [classes, subjects, teachers] = await Promise.all([
     prisma.schoolClass.findMany({
       where: schoolWhere(schoolId),
       include: { arms: { include: { students: { where: { status: "ACTIVE" } } } } },
       orderBy: { order: "asc" },
     }),
     prisma.subject.findMany({ orderBy: { name: "asc" } }),
+    prisma.staff.findMany({
+      where: {
+        isActive: true,
+        ...(schoolId ? { schoolId } : {}),
+        OR: [{ category: "TEACHING" }, { user: { role: "TEACHER" } }],
+      },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
   ]);
 
   return (
@@ -47,7 +55,8 @@ export default async function ClassesPage() {
         </div>
       </div>
       <div className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white px-3.5 py-3 text-sm text-sky-900/80 shadow-sm">
-        Create classes and arms first, add subjects, then assign subjects to arms so teachers can enter scores.
+        Create classes and arms first, add subjects, then assign subjects to arms and pick a teacher
+        (optional class teacher). That fills the teacher portal.
       </div>
       <ClassManager
         classes={classes.map((c) => ({
@@ -64,6 +73,10 @@ export default async function ClassesPage() {
           id: s.id,
           name: s.name,
           code: s.code,
+        }))}
+        teachers={teachers.map((s) => ({
+          id: s.id,
+          label: `${s.lastName}, ${s.firstName}`,
         }))}
       />
     </PortalShell>
