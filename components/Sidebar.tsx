@@ -246,7 +246,15 @@ export function Sidebar({
 
       <nav className="flex-1 min-h-0 py-2 overflow-y-auto overscroll-contain">
         {visible.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          // Longest matching href wins so /settings/ops does not also light up /settings
+          const matches = visible.filter(
+            (i) => pathname === i.href || pathname.startsWith(i.href + "/")
+          );
+          const best =
+            matches.length === 0
+              ? null
+              : matches.reduce((a, b) => (a.href.length >= b.href.length ? a : b));
+          const active = best?.href === item.href;
           return (
             <Link
               key={`${item.href}-${item.label}`}
