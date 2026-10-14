@@ -68,10 +68,11 @@ export default async function TransportPage() {
           driverName: r.driverName,
           driverPhone: r.driverPhone,
           feeAmount: toMoney(r.feeAmount),
+          feeLabel: formatNaira(r.feeAmount),
           riders: r.enrollments.map((e) => ({
             id: e.id,
-            studentId: e.student.id,
-            label: `${e.student.lastName}, ${e.student.firstName} (${e.student.admissionNumber})`,
+            studentName: `${e.student.firstName} ${e.student.lastName}`,
+            admissionNumber: e.student.admissionNumber,
           })),
         }))}
         students={students.map((s) => ({

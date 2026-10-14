@@ -1,26 +1,30 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
-import { can, homeRouteForRole } from "@/lib/permissions";
-import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { StaffTable } from "./StaffTable";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
+import { toMoney } from "@/lib/money";
+import { StaffTable } from "./StaffTable";
 import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
 export default async function StaffPage() {
   const session = await requireSession();
-  if (!can(session.role, "MANAGE_STAFF")) redirect(homeRouteForRole(session.role));
-
   const schoolId = await resolveSchoolId(session);
+
+  if (schoolId) {
+    await prisma.staff.updateMany({
+      where: { schoolId: null },
+      data: { schoolId },
+    });
+  }
 
   const staff = await prisma.staff.findMany({
     where: schoolWhere(schoolId),
     include: { user: { select: { email: true, role: true, isActive: true } } },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    orderBy: [{ lastName: "asc" }],
   });
 
   const active = staff.filter((s) => s.isActive && s.user.isActive).length;
@@ -63,12 +67,13 @@ export default async function StaffPage() {
             staffId: s.staffId,
             firstName: s.firstName,
             lastName: s.lastName,
-            category: s.category,
             designation: s.designation,
+            category: s.category,
+            phone: s.phone,
+            monthlySalary: s.monthlySalary == null ? null : toMoney(s.monthlySalary),
+            isActive: s.isActive && s.user.isActive,
             email: s.user.email,
             role: s.user.role,
-            isActive: s.isActive && s.user.isActive,
-            monthlySalary: s.monthlySalary != null ? Number(s.monthlySalary) : null,
           }))}
         />
       )}
