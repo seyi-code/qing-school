@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { NoticeForm } from "./NoticeForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SCHOOL } from "@/lib/school-config";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -59,20 +60,15 @@ export default async function NoticesPage() {
   return (
     <PortalShell role={session.role} title="Communication" subtitle="Notices and public complaints" email={session.email}>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
-        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Notices</p>
-          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{notices.length}</p>
-        </div>
-        <div className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-amber-800/70">Complaints</p>
-          <p className="mt-1 text-xl font-semibold text-amber-900 tabular-nums">{complaints.length}</p>
-        </div>
-        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">On web</p>
-          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">
-            {notices.filter((n) => n.publishToWeb).length}
-          </p>
-        </div>
+        <Kpi label="Notices" value={String(notices.length)} tone="navy" icon="📢" />
+        <Kpi label="Complaints" value={String(complaints.length)} tone="gold" icon="!" />
+        <Kpi
+          label="On web"
+          value={String(notices.filter((n) => n.publishToWeb).length)}
+          tone="sage"
+          icon="🌐"
+          className="col-span-2 sm:col-span-1"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 mb-6">
