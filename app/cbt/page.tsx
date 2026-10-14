@@ -6,6 +6,7 @@ import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CbtStaffPanel } from "./CbtStaffPanel";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -98,16 +99,13 @@ export default async function CbtPage() {
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-2.5 mb-4">
-        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Exams</p>
-          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{exams.length}</p>
-        </div>
-        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Questions (all)</p>
-          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">
-            {exams.reduce((n, e) => n + e._count.questions, 0)}
-          </p>
-        </div>
+        <Kpi label="Exams" value={String(exams.length)} tone="navy" icon="📝" />
+        <Kpi
+          label="Questions (all)"
+          value={String(exams.reduce((n, e) => n + e._count.questions, 0))}
+          tone="sage"
+          icon="#"
+        />
       </div>
       <CbtStaffPanel
         exams={exams.map((e) => ({

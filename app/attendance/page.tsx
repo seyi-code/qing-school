@@ -6,6 +6,7 @@ import { ArmPicker } from "./ArmPicker";
 import { redirect } from "next/navigation";
 import { homeRouteForRole } from "@/lib/permissions";
 import { resolveSchoolId } from "@/lib/tenant-scope";
+import { Kpi } from "@/components/ui/Kpi";
 import Link from "next/link";
 
 const ALLOWED_ROLES = ["PLATFORM_ADMIN", "ADMIN", "TEACHER", "IT"];
@@ -80,30 +81,20 @@ export default async function AttendancePage({
       email={session.email}
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">In class</p>
-          <p className="mt-1.5 text-xl font-semibold tabular-nums text-blue-900">{classSize}</p>
-        </div>
-        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Present today</p>
-          <p className="mt-1.5 text-xl font-semibold tabular-nums text-emerald-800">{presentCount}</p>
-        </div>
-        <div className="rounded-xl border border-rose-200/90 bg-gradient-to-br from-rose-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-rose-700/70">Absent / late</p>
-          <p className="mt-1.5 text-xl font-semibold tabular-nums text-rose-800">
-            {absentCount}
-            {lateCount ? ` / ${lateCount}L` : ""}
-          </p>
-        </div>
-        <div className="rounded-xl border border-violet-200/90 bg-gradient-to-br from-violet-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-violet-700/70">Marked</p>
-          <p className="mt-1.5 text-xl font-semibold tabular-nums text-violet-900">
-            {markedCount}
-            {presentRate != null ? (
-              <span className="text-sm font-normal text-violet-700/60 ml-1">{presentRate}%</span>
-            ) : null}
-          </p>
-        </div>
+        <Kpi label="In class" value={String(classSize)} tone="navy" icon="🏫" />
+        <Kpi label="Present today" value={String(presentCount)} tone="sage" icon="✓" />
+        <Kpi
+          label="Absent / late"
+          value={String(absentCount) + (lateCount ? ` / ${lateCount}L` : "")}
+          tone="rose"
+          icon="!"
+        />
+        <Kpi
+          label="Marked"
+          value={String(markedCount) + (presentRate != null ? ` · ${presentRate}%` : "")}
+          tone="violet"
+          icon="📋"
+        />
       </div>
 
       <ArmPicker
