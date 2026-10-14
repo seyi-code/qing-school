@@ -3,6 +3,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { homeRouteForRole } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Kpi } from "@/components/ui/Kpi";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +36,27 @@ export default async function OpsPage() {
         </Link>
       }
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5 max-w-2xl">
+        <Kpi
+          label="Session secret"
+          value={sessionSecretOk ? "OK" : "Weak"}
+          tone={sessionSecretOk ? "sage" : "rose"}
+          icon={sessionSecretOk ? "✓" : "!"}
+        />
+        <Kpi
+          label="Database"
+          value={databaseUrl ? "Set" : "Missing"}
+          tone={databaseUrl ? "sage" : "rose"}
+          icon="#"
+        />
+        <Kpi
+          label="Termii SMS"
+          value={termiiKey ? "Live" : "Off"}
+          tone={termiiKey ? "sage" : "gold"}
+          icon="📱"
+        />
+        <Kpi label="SMS (7 days)" value={String(recentSms)} tone="sky" icon="📢" />
+      </div>
       <div className="space-y-6 max-w-2xl">
         <section className="ledger-block space-y-3">
           <h2 className="font-serif text-lg">Environment health</h2>
