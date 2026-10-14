@@ -7,6 +7,7 @@ import { resolveSchoolId } from "@/lib/tenant-scope";
 import { toMoney } from "@/lib/money";
 import { redirect } from "next/navigation";
 import { PayrollRunner } from "./PayrollRunner";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +35,9 @@ export default async function PayrollPage() {
       email={session.email}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
-        <Kpi label="Payslips" value={String(payslips.length)} tone="navy" />
-        <Kpi label="Gross (listed)" value={formatNaira(grossSum)} tone="gold" />
-        <Kpi label="Net (listed)" value={formatNaira(netSum)} tone="sage" />
+        <Kpi label="Payslips" value={String(payslips.length)} tone="navy" icon="📄" />
+        <Kpi label="Gross (listed)" value={formatNaira(grossSum)} tone="gold" icon="₦" />
+        <Kpi label="Net (listed)" value={formatNaira(netSum)} tone="sage" icon="✓" />
       </div>
 
       <PayrollRunner />
@@ -49,26 +50,26 @@ export default async function PayrollPage() {
           <p className="text-sm text-ink/50 text-center py-10 px-4">No payslips for this school yet.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="ledger">
+            <table className="w-full text-sm">
               <thead>
-                <tr>
-                  <th>Staff</th>
-                  <th>Month</th>
-                  <th>Gross</th>
-                  <th>Deductions</th>
-                  <th>Net</th>
+                <tr className="text-left text-xs uppercase tracking-wide text-ink/45 border-b border-line/80">
+                  <th className="px-4 py-2 font-medium">Staff</th>
+                  <th className="px-4 py-2 font-medium">Month</th>
+                  <th className="px-4 py-2 font-medium">Gross</th>
+                  <th className="px-4 py-2 font-medium">Deduction</th>
+                  <th className="px-4 py-2 font-medium">Net</th>
                 </tr>
               </thead>
               <tbody>
                 {payslips.map((p) => (
-                  <tr key={p.id}>
-                    <td className="font-medium">
+                  <tr key={p.id} className="border-b border-line/60 last:border-0">
+                    <td className="px-4 py-2.5">
                       {p.staff.lastName}, {p.staff.firstName}
                     </td>
-                    <td className="tabular-nums text-sm">{p.month}</td>
-                    <td className="tabular-nums">{formatNaira(p.gross)}</td>
-                    <td className="tabular-nums text-brick">{formatNaira(p.deductions)}</td>
-                    <td className="tabular-nums font-medium text-sage">{formatNaira(p.net)}</td>
+                    <td className="px-4 py-2.5 tabular-nums">{p.month}</td>
+                    <td className="px-4 py-2.5 tabular-nums">{formatNaira(p.gross)}</td>
+                    <td className="px-4 py-2.5 tabular-nums text-brick">{formatNaira(p.deductions)}</td>
+                    <td className="px-4 py-2.5 tabular-nums font-medium text-sage">{formatNaira(p.net)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -77,22 +78,5 @@ export default async function PayrollPage() {
         )}
       </section>
     </PortalShell>
-  );
-}
-
-const TONE: Record<string, string> = {
-  navy: "from-[#1a3a6e]/[12%] to-white border-navy/15",
-  sage: "from-emerald-500/[12%] to-white border-emerald-500/20",
-  gold: "from-amber-500/[12%] to-white border-amber-500/25",
-};
-
-function Kpi({ label, value, tone }: { label: string; value: string; tone: keyof typeof TONE }) {
-  return (
-    <div className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 shadow-sm ${TONE[tone]}`}>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-ink/50">{label}</p>
-      <p className="mt-1 text-base sm:text-xl font-semibold text-ink tabular-nums truncate" title={value}>
-        {value}
-      </p>
-    </div>
   );
 }
