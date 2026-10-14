@@ -7,6 +7,7 @@ import { CollectPaymentForm } from "./CollectPaymentForm";
 import { VoidInvoiceButton } from "./VoidInvoiceButton";
 import { FeeReminderButton } from "./FeeReminderButton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Kpi } from "@/components/ui/Kpi";
 import { redirect } from "next/navigation";
 import { homeRouteForRole } from "@/lib/permissions";
 import Link from "next/link";
@@ -93,30 +94,14 @@ export default async function FeesPage({
       }
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">
-            Total collected
-          </p>
-          <p className="mt-1.5 text-xl sm:text-2xl font-semibold tabular-nums text-emerald-800">
-            {formatNaira(totalCollected._sum.amountPaid ?? 0)}
-          </p>
-        </div>
-        <div className="rounded-xl border border-rose-200/90 bg-gradient-to-br from-rose-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-rose-700/70">
-            Total outstanding
-          </p>
-          <p className="mt-1.5 text-xl sm:text-2xl font-semibold tabular-nums text-rose-800">
-            {formatNaira(outstanding)}
-          </p>
-        </div>
-        <div className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-amber-800/70">
-            Students owing
-          </p>
-          <p className="mt-1.5 text-xl sm:text-2xl font-semibold tabular-nums text-amber-900">
-            {debtors.length}
-          </p>
-        </div>
+        <Kpi
+          label="Total collected"
+          value={formatNaira(toMoney(totalCollected._sum.amountPaid))}
+          tone="sage"
+          icon="₦"
+        />
+        <Kpi label="Total outstanding" value={formatNaira(outstanding)} tone="rose" icon="!" />
+        <Kpi label="Students owing" value={String(debtors.length)} tone="gold" icon="🎓" />
       </div>
 
       <div className="tab-bar mb-3">
