@@ -5,6 +5,7 @@ import { ScoreEntryGrid } from "./ScoreEntryGrid";
 import { redirect } from "next/navigation";
 import { homeRouteForRole } from "@/lib/permissions";
 import { resolveSchoolId } from "@/lib/tenant-scope";
+import { Kpi } from "@/components/ui/Kpi";
 
 const ALLOWED_ROLES = ["ADMIN", "TEACHER", "PRINCIPAL", "PLATFORM_ADMIN", "IT"];
 
@@ -64,18 +65,15 @@ export default async function ExamsPage({
       email={session.email}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
-        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Subjects</p>
-          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{armSubjects.length}</p>
-        </div>
-        <div className="rounded-xl border border-violet-200/90 bg-gradient-to-br from-violet-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-violet-700/70">Students in view</p>
-          <p className="mt-1 text-xl font-semibold text-violet-900 tabular-nums">{students.length}</p>
-        </div>
-        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Scores entered</p>
-          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">{existingScores.length}</p>
-        </div>
+        <Kpi label="Subjects" value={String(armSubjects.length)} tone="navy" icon="📚" />
+        <Kpi label="Students in view" value={String(students.length)} tone="violet" icon="🎓" />
+        <Kpi
+          label="Scores entered"
+          value={String(existingScores.length)}
+          tone="sage"
+          icon="✓"
+          className="col-span-2 sm:col-span-1"
+        />
       </div>
       <form method="GET" className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-3 shadow-sm flex flex-wrap gap-2 items-end">
         <div className="flex-1 min-w-[12rem]">
