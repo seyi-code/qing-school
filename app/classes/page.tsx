@@ -5,6 +5,7 @@ import { ClassManager } from "./ClassManager";
 import { can, homeRouteForRole } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -44,20 +45,15 @@ export default async function ClassesPage() {
       email={session.email}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
-        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Classes</p>
-          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{classes.length}</p>
-        </div>
-        <div className="rounded-xl border border-violet-200/90 bg-gradient-to-br from-violet-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-violet-700/70">Subjects</p>
-          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{subjects.length}</p>
-        </div>
-        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Arms</p>
-          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">
-            {classes.reduce((n, c) => n + c.arms.length, 0)}
-          </p>
-        </div>
+        <Kpi label="Classes" value={String(classes.length)} tone="navy" icon="🏫" />
+        <Kpi label="Subjects" value={String(subjects.length)} tone="violet" icon="📚" />
+        <Kpi
+          label="Arms"
+          value={String(classes.reduce((n, c) => n + c.arms.length, 0))}
+          tone="sage"
+          icon="#"
+          className="col-span-2 sm:col-span-1"
+        />
       </div>
       <div className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white px-3.5 py-3 text-sm text-sky-900/80 shadow-sm">
         Create classes → arms → subjects, then <strong>Assign subject to arm</strong> and pick a{" "}
