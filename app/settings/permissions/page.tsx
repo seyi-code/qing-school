@@ -11,7 +11,7 @@ const ROLES = ["ADMIN", "IT", "PRINCIPAL", "ACCOUNTANT", "SECRETARY", "TEACHER",
 
 export default async function PermissionsPage() {
   const session = await requireSession();
-  if (!["ADMIN", "IT"].includes(session.role)) {
+  if (!["ADMIN", "IT", "PLATFORM_ADMIN"].includes(session.role)) {
     redirect(homeRouteForRole(session.role));
   }
 

@@ -64,7 +64,7 @@ export function PlatformBillingForm({ schools }: { schools: SchoolOpt[] }) {
 
   return (
     <form onSubmit={subscribe} className="ledger-block space-y-3 text-sm">
-      <h2 className="font-serif text-lg">Subscribe school (Paystack)</h2>
+      <h2 className="font-serif text-lg text-navy">Subscribe school (Paystack)</h2>
       <p className="text-ink/60 text-xs">
         Live mode needs PAYSTACK_SECRET_KEY + PAYSTACK_PLAN_STARTER / _PRO / _ENTERPRISE plan codes.
         Without keys, plan limits still apply in mock mode.
@@ -72,7 +72,7 @@ export function PlatformBillingForm({ schools }: { schools: SchoolOpt[] }) {
       <label className="block">
         <span className="text-xs text-ink/50">School</span>
         <select
-          className="w-full border border-line px-3 py-2 mt-1"
+          className="w-full border border-line px-3 py-2 mt-1 rounded-lg bg-white"
           value={schoolId}
           onChange={(e) => setSchoolId(e.target.value)}
         >
@@ -86,7 +86,7 @@ export function PlatformBillingForm({ schools }: { schools: SchoolOpt[] }) {
       <label className="block">
         <span className="text-xs text-ink/50">Plan</span>
         <select
-          className="w-full border border-line px-3 py-2 mt-1"
+          className="w-full border border-line px-3 py-2 mt-1 rounded-lg bg-white"
           value={plan}
           onChange={(e) => setPlan(e.target.value as typeof plan)}
         >
@@ -100,25 +100,21 @@ export function PlatformBillingForm({ schools }: { schools: SchoolOpt[] }) {
         <input
           type="email"
           required
-          className="w-full border border-line px-3 py-2 mt-1"
+          className="w-full border border-line px-3 py-2 mt-1 rounded-lg bg-white"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="admin@school.ng"
         />
       </label>
       <div className="flex flex-wrap gap-2">
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-navy text-paper px-4 py-2 disabled:opacity-60"
-        >
+        <button type="submit" disabled={loading} className="btn-primary disabled:opacity-60">
           {loading ? "Working…" : "Start subscription"}
         </button>
         <button
           type="button"
           disabled={loading}
           onClick={setPlanOnly}
-          className="border border-navy text-navy px-4 py-2 disabled:opacity-60"
+          className="btn-ghost disabled:opacity-60"
         >
           Set limits only (no charge)
         </button>

@@ -120,12 +120,16 @@ export async function backfillKmsTenant(): Promise<Record<string, number>> {
 
 export async function isSchoolSuspended(schoolId: string): Promise<boolean> {
   const { prisma } = await import("@/lib/db");
+  const { isTrialExpired } = await import("@/lib/trial");
   const school = await prisma.school.findUnique({
     where: { id: schoolId },
-    select: { isActive: true, subscriptionStatus: true },
+    select: { isActive: true, subscriptionStatus: true, planRenewsAt: true },
   });
   if (!school) return true;
   if (!school.isActive) return true;
   const st = (school.subscriptionStatus || "").toUpperCase();
-  return st === "PAST_DUE" || st === "CANCELLED" || st === "SUSPENDED";
+  if (st === "PAST_DUE" || st === "CANCELLED" || st === "SUSPENDED") return true;
+  // Trial past end date → treat as suspended until they subscribe / platform extends
+  if (isTrialExpired(st, school.planRenewsAt)) return true;
+  return false;
 }

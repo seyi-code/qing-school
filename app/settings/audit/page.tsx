@@ -6,6 +6,7 @@ import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatDateTime } from "@/lib/format";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,10 @@ export default async function AuditLogPage() {
     take: 100,
   });
 
+  const loginCount = logs.filter((l) => l.action === "LOGIN").length;
+  const createCount = logs.filter((l) => l.action.startsWith("CREATE_")).length;
+  const uniqueUsers = new Set(logs.map((l) => l.user?.email).filter(Boolean)).size;
+
   return (
     <PortalShell
       role={session.role}
@@ -40,6 +45,12 @@ export default async function AuditLogPage() {
         </Link>
       }
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
+        <Kpi label="Rows shown" value={String(logs.length)} tone="navy" icon="📋" />
+        <Kpi label="Logins" value={String(loginCount)} tone="sky" icon="🔑" />
+        <Kpi label="Creates" value={String(createCount)} tone="sage" icon="+" />
+        <Kpi label="Users" value={String(uniqueUsers)} tone="violet" icon="👥" />
+      </div>
       <div className="ledger-block !p-0 overflow-x-auto">
         <table className="ledger text-xs">
           <thead>

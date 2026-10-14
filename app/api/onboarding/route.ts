@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { hashPassword } from "@/lib/auth";
+import { getSession, hashPassword } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { validatePassword } from "@/lib/password-policy";
+import { getTrialDays, trialEndsAt } from "@/lib/trial";
 
 const OnboardSchema = z.object({
   schoolName: z.string().min(3).max(120),
@@ -18,6 +19,14 @@ const OnboardSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const session = await getSession();
+  if (!session || session.role !== "PLATFORM_ADMIN") {
+    return NextResponse.json(
+      { error: "Only platform admins can onboard schools. Sign in at /login first." },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = OnboardSchema.safeParse(body);
   if (!parsed.success) {
@@ -49,6 +58,8 @@ export async function POST(req: Request) {
         isActive: true,
         isDemo: false,
         maxStudents: data.plan === "STARTER" ? 300 : data.plan === "PRO" ? 1500 : 10000,
+        subscriptionStatus: "TRIAL",
+        planRenewsAt: trialEndsAt(),
       },
     });
     const user = await tx.user.create({
@@ -84,18 +95,25 @@ export async function POST(req: Request) {
   });
 
   await logAudit({
-    userId: result.user.id,
+    userId: session.userId,
+    schoolId: result.school.id,
     action: "ONBOARD_SCHOOL",
     entity: "School",
     entityId: result.school.id,
     details: { slug: data.slug, plan: data.plan },
   });
 
-  return NextResponse.json({
-    ok: true,
-    schoolId: result.school.id,
-    slug: result.school.slug,
-    message: "School created. Log in with your admin email.",
-    loginUrl: "/login",
-  }, { status: 201 });
+  return NextResponse.json(
+    {
+      ok: true,
+      schoolId: result.school.id,
+      slug: result.school.slug,
+      message: `School created. ${getTrialDays()}-day trial started. Log in with your admin email.`,
+      trialDays: getTrialDays(),
+      trialEndsAt: trialEndsAt().toISOString(),
+      loginUrl: "/login",
+      redirectTo: "/login",
+    },
+    { status: 201 }
+  );
 }

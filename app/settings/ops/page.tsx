@@ -3,13 +3,14 @@ import { PortalShell } from "@/components/PortalShell";
 import { homeRouteForRole } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Kpi } from "@/components/ui/Kpi";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export default async function OpsPage() {
   const session = await requireSession();
-  if (!["ADMIN", "IT"].includes(session.role)) {
+  if (!["ADMIN", "IT", "PLATFORM_ADMIN"].includes(session.role)) {
     redirect(homeRouteForRole(session.role));
   }
 
@@ -28,71 +29,71 @@ export default async function OpsPage() {
       role={session.role}
       title="Operations"
       subtitle="SMS production keys, backup, and production hygiene"
+      email={session.email}
       actions={
         <Link href="/settings" className="text-sm border border-navy text-navy px-3 py-1.5">
           Back to Settings
         </Link>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="ledger-block space-y-3 text-sm">
-          <h2 className="font-serif text-lg">SMS (Termii)</h2>
-          <ul className="space-y-2">
-            <li className="flex justify-between border-b border-line py-1">
-              <span>TERMII_API_KEY</span>
-              <span className={termiiKey ? "text-sage" : "text-brick"}>
-                {termiiKey ? "Set" : "Missing (mock mode)"}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5 max-w-2xl">
+        <Kpi
+          label="Session secret"
+          value={sessionSecretOk ? "OK" : "Weak"}
+          tone={sessionSecretOk ? "sage" : "rose"}
+          icon={sessionSecretOk ? "✓" : "!"}
+        />
+        <Kpi
+          label="Database"
+          value={databaseUrl ? "Set" : "Missing"}
+          tone={databaseUrl ? "sage" : "rose"}
+          icon="#"
+        />
+        <Kpi
+          label="Termii SMS"
+          value={termiiKey ? "Live" : "Off"}
+          tone={termiiKey ? "sage" : "gold"}
+          icon="📱"
+        />
+        <Kpi label="SMS (7 days)" value={String(recentSms)} tone="sky" icon="📢" />
+      </div>
+      <div className="space-y-6 max-w-2xl">
+        <section className="ledger-block space-y-3">
+          <h2 className="font-serif text-lg">Environment health</h2>
+          <ul className="text-sm space-y-2">
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
+              <span>SESSION_SECRET</span>
+              <span className={sessionSecretOk ? "text-sage font-medium" : "text-brick font-medium"}>
+                {sessionSecretOk ? "OK" : "Missing / short"}
               </span>
             </li>
-            <li className="flex justify-between border-b border-line py-1">
-              <span>Sender ID</span>
-              <span className="font-mono">{sender}</span>
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
+              <span>DATABASE_URL</span>
+              <span className={databaseUrl ? "text-sage font-medium" : "text-brick font-medium"}>
+                {databaseUrl ? "Set" : "Missing"}
+              </span>
             </li>
-            <li className="flex justify-between border-b border-line py-1">
-              <span>SMS logs (7 days)</span>
-              <span>{recentSms}</span>
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
+              <span>Termii SMS API</span>
+              <span className={termiiKey ? "text-sage font-medium" : "text-ink/50"}>
+                {termiiKey ? `Key set · sender ${sender}` : "Not configured"}
+              </span>
+            </li>
+            <li className="flex justify-between gap-2 border-b border-line pb-2">
+              <span>SMS last 7 days</span>
+              <span className="tabular-nums font-medium">{recentSms}</span>
+            </li>
+            <li className="flex justify-between gap-2">
+              <span>ALLOW_SETUP_SEED</span>
+              <span className={allowSeed ? "text-amber-800 font-medium" : "text-sage font-medium"}>
+                {allowSeed ? "ON (disable in production)" : "Off"}
+              </span>
             </li>
           </ul>
-          <div className="text-xs text-ink/60 space-y-1">
-            <p className="font-medium text-ink">
-              Production setup (Vercel Settings / Environment Variables):
-            </p>
-            <ol className="list-decimal pl-4 space-y-1">
-              <li>Create a Termii account and approve sender ID (e.g. KMS).</li>
-              <li>Set TERMII_API_KEY to your API key.</li>
-              <li>Set TERMII_SENDER_ID to the approved sender.</li>
-              <li>Redeploy. Fee reminders and notices will send live SMS.</li>
-            </ol>
-            {!termiiKey && (
-              <p className="text-brick mt-2">
-                Without the key, SMS is logged as sent but not delivered to phones.
-              </p>
-            )}
-          </div>
         </section>
 
-        <section className="ledger-block space-y-3 text-sm">
-          <h2 className="font-serif text-lg">Backup and database</h2>
-          <ul className="space-y-2">
-            <li className="flex justify-between border-b border-line py-1">
-              <span>DATABASE_URL</span>
-              <span className={databaseUrl ? "text-sage" : "text-brick"}>
-                {databaseUrl ? "Configured" : "Missing"}
-              </span>
-            </li>
-            <li className="flex justify-between border-b border-line py-1">
-              <span>SESSION_SECRET</span>
-              <span className={sessionSecretOk ? "text-sage" : "text-brick"}>
-                {sessionSecretOk ? "OK" : "Weak / missing"}
-              </span>
-            </li>
-            <li className="flex justify-between border-b border-line py-1">
-              <span>ALLOW_SETUP_SEED</span>
-              <span className={allowSeed ? "text-brick" : "text-sage"}>
-                {allowSeed ? "true (lock after migrate)" : "false / off"}
-              </span>
-            </li>
-          </ul>
+        <section className="ledger-block space-y-3">
+          <h2 className="font-serif text-lg">Backup</h2>
           <div className="text-xs text-ink/60 space-y-2">
             <p className="font-medium text-ink">Backup story (product requirement):</p>
             <ol className="list-decimal pl-4 space-y-1">

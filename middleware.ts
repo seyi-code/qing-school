@@ -21,17 +21,23 @@ const PUBLIC_PATHS = [
   "/result-checker",
   "/pay",
   "/p",
-  "/onboarding",
-  "/api/onboarding",
 ];
 
+/**
+ * Path prefixes limited to specific roles.
+ * PLATFORM_ADMIN may access school-ops paths (staff, payroll, settings)
+ * while working as a tenant, but not student/parent/teacher portals.
+ * Onboarding is platform-only — never public.
+ */
 const PORTAL_RULES: Array<{ prefix: string; roles: string[] }> = [
+  { prefix: "/onboarding", roles: ["PLATFORM_ADMIN"] },
+  { prefix: "/platform", roles: ["PLATFORM_ADMIN"] },
   { prefix: "/portal/student", roles: ["STUDENT"] },
   { prefix: "/portal/parent", roles: ["PARENT"] },
   { prefix: "/portal/teacher", roles: ["TEACHER"] },
-  { prefix: "/staff", roles: ["ADMIN", "IT"] },
-  { prefix: "/payroll", roles: ["ADMIN", "ACCOUNTANT"] },
-  { prefix: "/settings", roles: ["ADMIN", "IT", "PRINCIPAL"] },
+  { prefix: "/staff", roles: ["ADMIN", "IT", "PLATFORM_ADMIN"] },
+  { prefix: "/payroll", roles: ["ADMIN", "ACCOUNTANT", "PLATFORM_ADMIN"] },
+  { prefix: "/settings", roles: ["ADMIN", "IT", "PRINCIPAL", "PLATFORM_ADMIN"] },
 ];
 
 async function getSessionFromCookie(req: NextRequest): Promise<{
@@ -92,7 +98,8 @@ export async function middleware(req: NextRequest) {
   for (const rule of PORTAL_RULES) {
     if (pathname === rule.prefix || pathname.startsWith(rule.prefix + "/")) {
       if (!rule.roles.includes(role)) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+        const fallback = role === "PLATFORM_ADMIN" ? "/platform" : "/dashboard";
+        return NextResponse.redirect(new URL(fallback, req.url));
       }
     }
   }

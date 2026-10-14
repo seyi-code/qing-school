@@ -25,11 +25,24 @@ export default function ForgotPasswordPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error || "Request failed");
+        const msg =
+          data.error ||
+          data.detail ||
+          (res.status === 503
+            ? "Reset not ready on database — contact platform admin."
+            : `Request failed (${res.status})`);
+        setError(msg);
         setLoading(false);
         return;
       }
-      setMessage(data.message || "If that account exists, instructions were sent.");
+      const parts = [
+        data.message || "If that account exists, instructions were sent.",
+        data.note,
+        data.emailStatus ? `Status: ${data.emailStatus}` : null,
+        data.emailError ? `Resend: ${data.emailError}` : null,
+        data.emailFrom ? `From: ${data.emailFrom}` : null,
+      ].filter(Boolean);
+      setMessage(parts.join("\n"));
       if (data.debugResetPath) setDebugPath(data.debugResetPath);
     } catch {
       setError("Network error");
@@ -45,10 +58,14 @@ export default function ForgotPasswordPage() {
           Enter the email for your {SCHOOL.shortName} portal account.
         </p>
         {error && (
-          <p className="text-sm text-brick border border-brick/30 bg-brick/5 px-3 py-2">{error}</p>
+          <p className="text-sm text-brick border border-brick/30 bg-brick/5 px-3 py-2 whitespace-pre-wrap">
+            {error}
+          </p>
         )}
         {message && (
-          <p className="text-sm text-navy border border-navy/20 bg-navy/5 px-3 py-2">{message}</p>
+          <p className="text-sm text-navy border border-navy/20 bg-navy/5 px-3 py-2 whitespace-pre-wrap">
+            {message}
+          </p>
         )}
         {debugPath && (
           <p className="text-xs break-all">
@@ -70,14 +87,16 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-navy text-paper py-2.5 text-sm disabled:opacity-60"
+            className="w-full bg-navy text-paper py-2.5 text-sm font-medium hover:bg-navy-light disabled:opacity-60"
           >
             {loading ? "Sending…" : "Send reset link"}
           </button>
         </form>
-        <Link href="/login" className="text-xs text-navy underline block text-center">
-          ← Back to sign in
-        </Link>
+        <p className="text-center text-sm">
+          <Link href="/login" className="text-navy underline">
+            ← Back to sign in
+          </Link>
+        </p>
       </div>
     </main>
   );

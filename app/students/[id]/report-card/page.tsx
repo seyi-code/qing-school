@@ -3,70 +3,29 @@ import { requireSession } from "@/lib/require-session";
 import { notFound } from "next/navigation";
 import { PrintButton } from "./PrintButton";
 import { SCHOOL } from "@/lib/school-config";
-import { getBrandingForSchoolId } from "@/lib/branding";
 import { formatDate } from "@/lib/format";
+import { inferSchoolBand } from "@/lib/report-band";
+import Link from "next/link";
+import { ReportCardHeader } from "./ReportCardHeader";
+import { DomainSection } from "./DomainSection";
 
 export const dynamic = "force-dynamic";
 
-/** Report-card template config (stored in ReportCardTemplate.configJson) */
 type TemplateConfig = {
   schoolName?: string;
   motto?: string;
   footerNote?: string;
-  showPosition?: boolean;
-  showAttendance?: boolean;
-  showDomains?: boolean;
-  showGradeScale?: boolean;
   principalTitle?: string;
-  headerBg?: string;
-  accentColor?: string;
   logoUrl?: string;
-  /** "auto" | "nursery" | "primary" | "secondary" */
-  level?: "auto" | "nursery" | "primary" | "secondary";
-  /** "ca-exam" (nursery/primary) | "ca1-ca2-exam" (secondary) */
-  scoreLayout?: "ca-exam" | "ca1-ca2-exam" | "auto";
+  address?: string;
+  phone?: string;
+  email?: string;
+  sessionLabel?: string;
   termLabel?: string;
-  sections?: string[];
-  psychomotor?: { name: string; rating: 1 | 2 | 3 | 4 | 5 }[];
-  affective?: { name: string; rating: 1 | 2 | 3 | 4 | 5 }[];
   teacherRemark?: string;
   principalRemark?: string;
+  domainsMode?: "auto" | "primary" | "secondary" | "hidden";
 };
-
-const DEFAULT_SECTIONS = [
-  "header",
-  "studentInfo",
-  "scoresTable",
-  "summary",
-  "domains",
-  "attendance",
-  "remarks",
-  "gradeScale",
-  "signatures",
-  "footer",
-];
-
-const DEFAULT_PSYCHOMOTOR = [
-  { name: "Handling of Tools", rating: 3 as const },
-  { name: "Drawing / Painting", rating: 3 as const },
-  { name: "Handwriting", rating: 4 as const },
-  { name: "Public Speaking", rating: 4 as const },
-  { name: "French Fluency", rating: 2 as const },
-  { name: "Sports & Games", rating: 2 as const },
-];
-
-const DEFAULT_AFFECTIVE = [
-  { name: "Attentiveness", rating: 5 as const },
-  { name: "Honesty", rating: 5 as const },
-  { name: "Neatness", rating: 4 as const },
-  { name: "Politeness", rating: 5 as const },
-  { name: "Punctuality", rating: 2 as const },
-  { name: "Self Control", rating: 2 as const },
-  { name: "Obedience", rating: 2 as const },
-  { name: "Reliability", rating: 4 as const },
-  { name: "Responsibility", rating: 4 as const },
-  { name: "Relationship with others", rating: 4 as const },
-];
 
 const GRADE_SCALE = [
   { grade: "A1", range: "90 – 100", remark: "Excellent" },
@@ -77,618 +36,490 @@ const GRADE_SCALE = [
   { grade: "F9", range: "0 – 49", remark: "Fail" },
 ];
 
-function detectLevel(className: string): "nursery" | "primary" | "secondary" {
-  const n = className.toUpperCase();
-  if (/\b(PRE[- ]?NUR|NUR|KG|CRECHE|PLAY)\b/.test(n)) return "nursery";
-  if (/\b(PRY|PRIMARY|BASIC\s*[1-6]|P[1-6])\b/.test(n)) return "primary";
-  return "secondary";
+function gradeFromTotal(total: number): { grade: string; remark: string; pill: string } {
+  if (total >= 90) return { grade: "A1", remark: "Excellent", pill: "g-a1" };
+  if (total >= 80) return { grade: "B2", remark: "Very Good", pill: "g-b2" };
+  if (total >= 70) return { grade: "C", remark: "Good", pill: "g-c" };
+  if (total >= 60) return { grade: "D", remark: "Fair", pill: "g-d" };
+  if (total >= 50) return { grade: "E", remark: "Pass", pill: "g-e" };
+  return { grade: "F9", remark: "Fail", pill: "g-f" };
 }
 
-function gradePillClass(grade: string | null | undefined): string {
-  if (!grade) return "bg-line text-ink/60";
-  const g = grade.toUpperCase();
-  if (g.startsWith("A")) return "bg-green-100 text-green-800";
-  if (g.startsWith("B")) return "bg-blue-100 text-blue-800";
-  if (g.startsWith("C")) return "bg-amber-100 text-amber-800";
-  if (g.startsWith("D") || g.startsWith("E")) return "bg-orange-100 text-orange-800";
-  return "bg-red-100 text-red-800";
-}
-
-function RatingDots({ rating }: { rating: number }) {
-  return (
-    <div className="flex gap-0.5">
-      {[5, 4, 3, 2, 1].map((n) => (
-        <span
-          key={n}
-          className={`inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-bold border ${
-            rating === n
-              ? "bg-gold border-gold text-white"
-              : "border-line text-transparent"
-          }`}
-        >
-          {n}
-        </span>
-      ))}
-    </div>
-  );
+function ordinal(n: number): string {
+  const v = n % 100;
+  if (v >= 11 && v <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
 }
 
 export default async function ReportCardPage({ params }: { params: { id: string } }) {
   await requireSession();
 
-  const [student, tpl, gradeBands] = await Promise.all([
-    prisma.student.findUnique({
-      where: { id: params.id },
-      include: {
-        arm: { include: { schoolClass: true } },
-        scores: {
-          include: { armSubject: { include: { subject: true } }, term: true },
-          orderBy: { armSubject: { subject: { name: "asc" } } },
+  const student = await prisma.student.findUnique({
+    where: { id: params.id },
+    include: {
+      school: {
+        select: {
+          id: true,
+          name: true,
+          shortName: true,
+          motto: true,
+          logoUrl: true,
         },
-        attendances: true,
-        documents: { orderBy: { uploadedAt: "desc" } },
-        school: true,
       },
-    }),
-    prisma.reportCardTemplate.findFirst({ orderBy: { updatedAt: "desc" } }),
-    prisma.gradeBand.findMany({ orderBy: { minScore: "desc" } }),
-  ]);
+      arm: { include: { schoolClass: true } },
+      scores: {
+        include: {
+          armSubject: { include: { subject: true } },
+          term: true,
+        },
+      },
+      attendances: true,
+      documents: { orderBy: { uploadedAt: "desc" }, take: 20 },
+    },
+  });
 
   if (!student) notFound();
 
-  const branding = await getBrandingForSchoolId(student.schoolId);
+  const [tpl, term, bands] = await Promise.all([
+    student.schoolId
+      ? prisma.reportCardTemplate.findFirst({
+          where: { name: `school:${student.schoolId}` },
+          orderBy: { updatedAt: "desc" },
+        })
+      : Promise.resolve(null),
+    prisma.term.findFirst({
+      where: { isCurrent: true },
+      include: { session: true },
+    }),
+    prisma.gradeBand.findMany({ orderBy: { minScore: "desc" } }).catch(
+      () => [] as { minScore: number; maxScore: number; grade: string; remark: string }[]
+    ),
+  ]);
 
-  const cfg: TemplateConfig = tpl
-    ? (JSON.parse(tpl.configJson) as TemplateConfig)
-    : {};
+  const cfg: TemplateConfig = tpl ? (JSON.parse(tpl.configJson) as TemplateConfig) : {};
 
-  const className = student.arm?.schoolClass?.name ?? "";
-  const level =
-    cfg.level && cfg.level !== "auto"
-      ? cfg.level
-      : detectLevel(className || student.arm?.name || "");
-
-  const scoreLayout: "ca-exam" | "ca1-ca2-exam" =
-    cfg.scoreLayout && cfg.scoreLayout !== "auto"
-      ? cfg.scoreLayout
-      : level === "secondary"
-        ? "ca1-ca2-exam"
-        : "ca-exam";
-
-  const sections = cfg.sections?.length ? cfg.sections : DEFAULT_SECTIONS;
-  const has = (id: string) => sections.includes(id);
-
-  const schoolName = cfg.schoolName || branding.name;
-  const motto = cfg.motto || branding.motto;
-  const logoUrl = cfg.logoUrl || branding.logoUrl || "/logo.svg";
-  const headerBg = cfg.headerBg || branding.primaryColor || SCHOOL.colors.primary;
-  const accent = cfg.accentColor || branding.accentColor || SCHOOL.colors.gold;
+  const schoolName = cfg.schoolName || student.school?.name || SCHOOL.name;
+  const motto = cfg.motto || student.school?.motto || SCHOOL.motto;
+  const logoUrl = cfg.logoUrl || student.school?.logoUrl || "/logo.svg";
+  const address = cfg.address || SCHOOL.contact.address;
+  const phones = [cfg.phone, SCHOOL.contact.phone, SCHOOL.contact.phoneAlt]
+    .filter(Boolean)
+    .join(" / ");
+  const email = cfg.email || SCHOOL.contact.email;
   const principalTitle = cfg.principalTitle || "Principal";
-  const termLabel =
-    cfg.termLabel ||
-    student.scores[0]?.term?.name ||
-    "Terminal";
 
-  const totalScore = student.scores.reduce((s, sc) => s + sc.total, 0);
-  const maxPerSubject = 100;
-  const obtainable = student.scores.length * maxPerSubject;
-  const average =
-    student.scores.length > 0
-      ? (totalScore / student.scores.length).toFixed(1)
-      : "—";
-  const pct =
-    obtainable > 0 ? ((totalScore / obtainable) * 100).toFixed(1) : "—";
+  const sessionLabel = cfg.sessionLabel || term?.session?.name || "2025 / 2026";
+  const termLabel = cfg.termLabel
+    ? cfg.termLabel
+    : term?.name
+      ? `${term.name} Report Card · ${sessionLabel}`
+      : `Terminal Report Card · ${sessionLabel}`;
+
+  const scores = [...student.scores].sort((a, b) =>
+    a.armSubject.subject.name.localeCompare(b.armSubject.subject.name)
+  );
+
+  function resolveGrade(total: number, stored?: string | null, remark?: string | null) {
+    if (stored) {
+      const g = stored.toUpperCase();
+      const pill =
+        g.startsWith("A") ? "g-a1" : g.startsWith("B") ? "g-b2" : g.startsWith("C") ? "g-c" : g.startsWith("D") ? "g-d" : g.startsWith("E") ? "g-e" : "g-f";
+      return { grade: stored, remark: remark || gradeFromTotal(total).remark, pill };
+    }
+    if (bands.length) {
+      const b = bands.find((x) => total >= x.minScore && total <= x.maxScore);
+      if (b) {
+        const g = b.grade.toUpperCase();
+        const pill =
+          g.startsWith("A") ? "g-a1" : g.startsWith("B") ? "g-b2" : g.startsWith("C") ? "g-c" : g.startsWith("D") ? "g-d" : g.startsWith("E") ? "g-e" : "g-f";
+        return { grade: b.grade, remark: remark || b.remark, pill };
+      }
+    }
+    return gradeFromTotal(total);
+  }
+
+  const rows = scores.map((s) => {
+    const ca = s.ca1 + s.ca2;
+    const { grade, remark, pill } = resolveGrade(s.total, s.grade, s.remark);
+    return {
+      id: s.id,
+      subject: s.armSubject.subject.name,
+      ca,
+      exam: s.exam,
+      total: s.total,
+      grade,
+      remark,
+      pill,
+    };
+  });
+
+  const totalObtained = rows.reduce((s, r) => s + r.total, 0);
+  const maxPossible = rows.length * 100;
+  const percentage =
+    rows.length > 0 ? ((totalObtained / maxPossible) * 100).toFixed(1) : "—";
+  const overallPass =
+    rows.length === 0
+      ? null
+      : rows.filter((r) => r.total >= 50).length >= Math.ceil(rows.length * 0.5);
 
   const presentDays = student.attendances.filter((a) => a.status === "PRESENT").length;
   const totalDays = student.attendances.length;
-
   const classLabel = student.arm
     ? `${student.arm.schoolClass.name} ${student.arm.name}`
     : "—";
 
-  // Photo: first document whose label looks like a photo, else placeholder
+  const schoolBand = inferSchoolBand(classLabel);
+  const scoresTitle = schoolBand === "primary" ? "Cognitive Domain" : "Examination Results";
+  const dobLabel = student.dateOfBirth ? formatDate(student.dateOfBirth) : "—";
+  let ageLabel = "—";
+  if (student.dateOfBirth) {
+    const dob = new Date(student.dateOfBirth);
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    const md = now.getMonth() - dob.getMonth();
+    if (md < 0 || (md === 0 && now.getDate() < dob.getDate())) age -= 1;
+    if (age >= 0 && age < 120) ageLabel = `${age} yrs`;
+  }
+
+  const fullName = `${student.firstName} ${student.otherNames ?? ""} ${student.lastName}`
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+
   const photoDoc = student.documents.find((d) =>
-    /photo|passport|picture|portrait|image/i.test(d.label)
+    /photo|passport|portrait|picture|image/i.test(d.label)
   );
-  const photoUrl = photoDoc?.fileUrl ?? null;
+  const photoUrl = photoDoc?.fileUrl || null;
 
-  const psychomotor = cfg.psychomotor?.length ? cfg.psychomotor : DEFAULT_PSYCHOMOTOR;
-  const affective = cfg.affective?.length ? cfg.affective : DEFAULT_AFFECTIVE;
-
-  const teacherRemark =
-    cfg.teacherRemark ||
-    (level === "nursery" || level === "primary"
-      ? "Has shown good progress this term. Continue to encourage consistent practice at home."
-      : "Keep working hard and maintain a steady improvement across all subjects.");
-  const principalRemark =
-    cfg.principalRemark ||
-    "I encourage you to take advantage of tutorials and additional resources to help you succeed. Education with Godliness.";
-
-  const scale = gradeBands.length
-    ? gradeBands.map((b) => ({
-        grade: b.grade,
-        range: `${b.minScore} – ${b.maxScore}`,
-        remark: b.remark,
+  let positionLabel = "—";
+  if (student.armId && rows.length > 0) {
+    const termIds = [...new Set(scores.map((s) => s.termId).filter(Boolean))];
+    const termIdFilter = termIds.length === 1 ? termIds[0] : term?.id ?? undefined;
+    const classmates = await prisma.student.findMany({
+      where: {
+        armId: student.armId,
+        status: "ACTIVE",
+        ...(student.schoolId ? { schoolId: student.schoolId } : {}),
+      },
+      select: {
+        id: true,
+        scores: {
+          where: termIdFilter ? { termId: termIdFilter } : undefined,
+          select: { total: true },
+        },
+      },
+    });
+    const ranked = classmates
+      .map((c) => ({
+        id: c.id,
+        total: c.scores.reduce((sum, sc) => sum + (sc.total || 0), 0),
       }))
-    : GRADE_SCALE;
+      .filter((c) => c.total > 0)
+      .sort((a, b) => b.total - a.total);
+    const rank = ranked.findIndex((c) => c.id === student.id) + 1;
+    if (rank > 0) {
+      positionLabel = `${ordinal(rank)} of ${ranked.length}`;
+    }
+  }
 
   return (
-    <div className="max-w-3xl mx-auto p-3 sm:p-8 font-sans text-ink bg-paper min-h-screen">
-      <div className="no-print mb-5 flex justify-between items-center gap-3">
-        <a
-          href={`/students/${student.id}`}
-          className="text-sm text-navy hover:underline"
-        >
-          ← Back to student
-        </a>
-        <PrintButton />
-      </div>
+    <>
+      <style>{`
+        .rc-page { max-width: 820px; margin: 0 auto; background: #fffefb; border: 1px solid #dedacd; box-shadow: 0 4px 24px rgba(26,58,110,.06); overflow: hidden; }
+        .rc-header { background: linear-gradient(160deg,#0f2748 0%,#1a3a6e 100%); color:#fff; padding:1.25rem 1.25rem 1.1rem; position:relative; }
+        .rc-header::after { content:""; position:absolute; bottom:0; left:0; right:0; height:4px; background:linear-gradient(90deg,#c9a227,#e8d48b,#c9a227); }
+        .rc-header-row { display:flex; align-items:flex-start; gap:0.85rem; }
+        .rc-logo { width:72px; height:72px; flex-shrink:0; background:rgba(255,255,255,.12); border-radius:50%; padding:4px; object-fit:contain; }
+        .rc-header-mid { flex:1; min-width:0; text-align:left; }
+        .rc-school { font-family:var(--font-fraunces),Georgia,serif; font-size:1.25rem; font-weight:600; letter-spacing:-.01em; line-height:1.2; }
+        .rc-motto { font-size:.7rem; opacity:.85; font-style:italic; margin-top:2px; }
+        .rc-contact { font-size:.62rem; opacity:.7; margin-top:.4rem; line-height:1.35; }
+        .rc-doc-title { margin-top:.65rem; font-size:.68rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:#c9a227; text-align:center; }
+        .rc-photo-box { width:78px; height:92px; flex-shrink:0; border:2px solid rgba(255,255,255,.45); background:rgba(255,255,255,.08); border-radius:2px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+        .rc-photo-box img { width:100%; height:100%; object-fit:cover; }
+        .rc-photo-placeholder { font-size:.55rem; text-align:center; color:rgba(255,255,255,.55); line-height:1.3; padding:0.25rem; }
+        .rc-meta { display:grid; grid-template-columns:1fr 1fr; gap:.35rem 1.5rem; padding:1rem 1.5rem; border-bottom:1px solid #dedacd; font-size:.8125rem; background:#faf8f3; }
+        .rc-meta-item { display:flex; gap:.4rem; }
+        .rc-meta-item > span:first-child { color:#4a5265; min-width:5.5rem; flex-shrink:0; }
+        .rc-section { padding:1.1rem 1.5rem .25rem; }
+        .rc-section-title { font-family:var(--font-fraunces),Georgia,serif; font-size:.95rem; font-weight:600; color:#1a3a6e; border-bottom:2px solid #1a3a6e; padding-bottom:.3rem; margin-bottom:.75rem; }
+        .rc-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        table.rc-scores { width:100%; border-collapse:collapse; font-size:.78rem; min-width:560px; }
+        table.rc-scores thead th { background:#1a3a6e; color:#fff; font-weight:600; text-align:center; padding:.5rem .4rem; white-space:nowrap; }
+        table.rc-scores thead th:first-child { text-align:left; padding-left:.6rem; }
+        table.rc-scores tbody td { border-bottom:1px solid #dedacd; padding:.4rem; text-align:center; }
+        table.rc-scores tbody td:first-child { text-align:left; padding-left:.6rem; font-weight:500; }
+        table.rc-scores tbody tr:nth-child(even) { background:#f9f7f1; }
+        .grade-pill { display:inline-block; font-size:.68rem; font-weight:700; padding:.1rem .4rem; border-radius:3px; }
+        .g-a1 { background:#d4edda; color:#155724; }
+        .g-b2 { background:#cce5ff; color:#004085; }
+        .g-c { background:#fff3cd; color:#856404; }
+        .g-d { background:#f8d7da; color:#721c24; }
+        .g-e { background:#e2e3e5; color:#383d41; }
+        .g-f { background:#f5c6cb; color:#721c24; }
+        .rc-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:.75rem; padding:.9rem 1.5rem; background:#faf8f3; border-top:1px solid #dedacd; border-bottom:1px solid #dedacd; }
+        .rc-summary-item { text-align:center; }
+        .rc-summary-item .label { font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; color:#4a5265; margin-bottom:.15rem; }
+        .rc-summary-item .value { font-family:var(--font-fraunces),Georgia,serif; font-size:1.25rem; font-weight:600; color:#1a3a6e; font-variant-numeric:tabular-nums; }
+        .rc-summary-item .sub { font-size:.65rem; color:#4a5265; }
+        .rc-domains { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; padding:1rem 1.5rem; }
+        .rc-domain-card { border:1px solid #dedacd; border-radius:4px; overflow:hidden; }
+        .rc-domain-card h3 { background:#1a3a6e; color:#fff; font-size:.72rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:.4rem .7rem; }
+        .rc-domain-list { padding:.5rem .7rem; font-size:.75rem; }
+        .rc-domain-row { display:flex; justify-content:space-between; align-items:center; padding:.28rem 0; border-bottom:1px solid #f0ede3; }
+        .rc-domain-row:last-child { border-bottom:none; }
+        .rc-rating { display:flex; gap:3px; }
+        .rc-dot { width:14px; height:14px; border-radius:50%; border:1.5px solid #dedacd; font-size:.55rem; display:flex; align-items:center; justify-content:center; color:transparent; }
+        .rc-dot.on { background:#c9a227; border-color:#c9a227; color:#fff; font-weight:700; }
+        .rc-rating-key { font-size:.65rem; color:#4a5265; padding:.5rem 1.5rem .25rem; line-height:1.5; }
+        .rc-attendance { display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; padding:.75rem 1.5rem 1rem; font-size:.78rem; }
+        .rc-att-item span:first-child { color:#4a5265; display:block; font-size:.65rem; }
+        .rc-remark-box { border:1px solid #dedacd; border-radius:4px; padding:.75rem 1rem; margin-bottom:.75rem; font-size:.8rem; background:#faf8f3; }
+        .rc-remark-box .who { font-size:.65rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#1a3a6e; margin-bottom:.3rem; }
+        .rc-remark-box .sign { margin-top:.6rem; font-size:.7rem; color:#4a5265; border-top:1px dashed #dedacd; padding-top:.4rem; display:flex; justify-content:space-between; }
+        .rc-grade-scale { padding:.5rem 1.5rem 1rem; font-size:.7rem; }
+        .rc-grade-scale table { width:100%; border-collapse:collapse; }
+        .rc-grade-scale td { padding:.2rem .4rem; border-bottom:1px solid #f0ede3; }
+        .rc-grade-scale td:first-child { font-weight:700; width:2.5rem; color:#1a3a6e; }
+        .rc-footer { background:#0f2748; color:rgba(255,255,255,.7); text-align:center; padding:.75rem 1.5rem; font-size:.65rem; }
+        .rc-footer strong { color:#c9a227; }
+        @media print {
+          body { background:white !important; }
+          .no-print { display:none !important; }
+          .rc-page { box-shadow:none; border:none; max-width:100%; }
+        }
+        @media (max-width:640px) {
+          .rc-meta { grid-template-columns:1fr; }
+          .rc-summary { grid-template-columns:1fr 1fr; }
+          .rc-domains { grid-template-columns:1fr; }
+          .rc-attendance { grid-template-columns:1fr 1fr; }
+          .rc-school { font-size:1.05rem; }
+          .rc-logo { width:56px; height:56px; }
+          .rc-photo-box { width:64px; height:76px; }
+          .rc-header-row { gap:0.5rem; }
+        }
+      `}</style>
 
-      <article className="report-card-print border border-line bg-white shadow-sm overflow-hidden print:shadow-none print:border-0">
-        {/* ── HEADER ── */}
-        {has("header") && (
-          <header
-            className="text-center text-paper px-4 py-5 sm:px-6 relative"
-            style={{ background: headerBg }}
-          >
-            <div
-              className="absolute bottom-0 left-0 right-0 h-1"
-              style={{
-                background: `linear-gradient(90deg, ${accent}, #e8d48b, ${accent})`,
-              }}
-            />
-            <div className="flex items-center justify-center gap-3 mb-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={logoUrl}
-                alt=""
-                className="h-14 w-14 object-contain bg-white/10 rounded-full p-1"
-              />
-              <div className="text-left">
-                <h1 className="font-serif text-xl sm:text-2xl leading-tight">
-                  {schoolName}
-                </h1>
-                {motto && (
-                  <p className="text-[11px] sm:text-xs opacity-90 italic mt-0.5">
-                    {motto}
-                  </p>
-                )}
-              </div>
-            </div>
-            <p className="text-[10px] sm:text-[11px] opacity-75 mt-2 leading-relaxed">
-              {branding.address}
-              <br />
-              Tel: {branding.phone}
-              {branding.phoneAlt ? ` / ${branding.phoneAlt}` : ""}
-              {branding.email ? ` · ${branding.email}` : ""}
-            </p>
-            <p
-              className="text-[11px] mt-3 tracking-[0.15em] uppercase font-semibold"
-              style={{ color: accent }}
-            >
-              {termLabel} Report Card
-            </p>
-          </header>
-        )}
-
-        {/* ── STUDENT INFO + PHOTO ── */}
-        {has("studentInfo") && (
-          <div className="flex gap-3 sm:gap-4 p-3 sm:p-5 border-b border-line bg-[#faf8f3]">
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm min-w-0">
-              <InfoRow label="Name" value={`${student.lastName}, ${student.firstName}${student.otherNames ? " " + student.otherNames : ""}`} />
-              <InfoRow label="Admission No." value={student.admissionNumber} />
-              <InfoRow label="Class / Arm" value={classLabel} />
-              <InfoRow label="Gender" value={student.gender ?? "—"} />
-              <InfoRow
-                label="Date of birth"
-                value={student.dateOfBirth ? formatDate(student.dateOfBirth) : "—"}
-              />
-              <InfoRow label="Status" value={student.status} />
-              <InfoRow
-                label="Level"
-                value={level.charAt(0).toUpperCase() + level.slice(1)}
-              />
-              <InfoRow label="Session" value={cfg.termLabel ? "—" : "Current"} />
-            </div>
-            {/* Photo box — right side like the Excel sample */}
-            <div className="shrink-0 w-[88px] sm:w-[110px]">
-              <div className="aspect-[3/4] border-2 border-navy/30 bg-white flex items-center justify-center overflow-hidden rounded-sm">
-                {photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={photoUrl}
-                    alt="Student"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-center p-2 text-ink/40">
-                    <svg
-                      className="w-8 h-8 mx-auto mb-1 opacity-50"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                      />
-                    </svg>
-                    <p className="text-[9px] leading-tight">Student photo</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="p-3 sm:p-5">
-          {/* ── COGNITIVE / SCORES ── */}
-          {has("scoresTable") && (
-            <section className="mb-5">
-              <h2 className="font-serif text-base text-navy border-b-2 border-navy pb-1 mb-3">
-                Cognitive Domain
-              </h2>
-
-              {/* Mobile cards */}
-              <div className="sm:hidden space-y-2.5 print:hidden">
-                {student.scores.length === 0 && (
-                  <p className="text-center text-ink/50 py-6 text-sm border border-dashed border-line">
-                    No scores entered for this student yet.
-                  </p>
-                )}
-                {student.scores.map((s) => {
-                  const ca =
-                    scoreLayout === "ca-exam"
-                      ? s.ca1 + s.ca2 || s.ca1
-                      : null;
-                  return (
-                    <div
-                      key={s.id}
-                      className="border border-line rounded-sm p-3 text-sm"
-                    >
-                      <p className="font-medium text-navy mb-2">
-                        {s.armSubject.subject.name}
-                      </p>
-                      <div
-                        className={`grid gap-2 text-center text-xs mb-2 ${
-                          scoreLayout === "ca-exam"
-                            ? "grid-cols-3"
-                            : "grid-cols-4"
-                        }`}
-                      >
-                        {scoreLayout === "ca-exam" ? (
-                          <>
-                            <div>
-                              <p className="text-ink/50">CA</p>
-                              <p className="font-medium">{ca}</p>
-                            </div>
-                            <div>
-                              <p className="text-ink/50">Exam</p>
-                              <p className="font-medium">{s.exam}</p>
-                            </div>
-                            <div>
-                              <p className="text-ink/50">Total</p>
-                              <p className="font-medium">{s.total}</p>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <p className="text-ink/50">CA1</p>
-                              <p className="font-medium">{s.ca1}</p>
-                            </div>
-                            <div>
-                              <p className="text-ink/50">CA2</p>
-                              <p className="font-medium">{s.ca2}</p>
-                            </div>
-                            <div>
-                              <p className="text-ink/50">Exam</p>
-                              <p className="font-medium">{s.exam}</p>
-                            </div>
-                            <div>
-                              <p className="text-ink/50">Total</p>
-                              <p className="font-medium">{s.total}</p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex justify-between gap-2 border-t border-line pt-2 text-xs">
-                        <span>
-                          <span className="text-ink/50">Grade: </span>
-                          <span
-                            className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${gradePillClass(s.grade)}`}
-                          >
-                            {s.grade ?? "—"}
-                          </span>
-                        </span>
-                        <span className="text-right max-w-[55%] truncate">
-                          {s.remark ?? "—"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Desktop / print table */}
-              <div className="hidden sm:block overflow-x-auto print:block">
-                <table className="w-full text-[13px] border-collapse min-w-[520px]">
-                  <thead>
-                    <tr style={{ background: headerBg, color: "#fff" }}>
-                      <th className="text-left py-2 px-2 font-semibold">Subject</th>
-                      {scoreLayout === "ca-exam" ? (
-                        <>
-                          <th className="text-right px-2 font-semibold">CA</th>
-                          <th className="text-right px-2 font-semibold">Exam</th>
-                        </>
-                      ) : (
-                        <>
-                          <th className="text-right px-2 font-semibold">CA1</th>
-                          <th className="text-right px-2 font-semibold">CA2</th>
-                          <th className="text-right px-2 font-semibold">Exam</th>
-                        </>
-                      )}
-                      <th className="text-right px-2 font-semibold">Total</th>
-                      <th className="text-center px-2 font-semibold">Grade</th>
-                      <th className="text-left pl-2 font-semibold">Remark</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {student.scores.map((s, i) => {
-                      const ca =
-                        scoreLayout === "ca-exam"
-                          ? s.ca1 + s.ca2 || s.ca1
-                          : null;
-                      return (
-                        <tr
-                          key={s.id}
-                          className={`border-b border-line ${i % 2 === 1 ? "bg-[#f9f7f1]" : ""}`}
-                        >
-                          <td className="py-1.5 px-2 font-medium">
-                            {s.armSubject.subject.name}
-                          </td>
-                          {scoreLayout === "ca-exam" ? (
-                            <>
-                              <td className="text-right px-2">{ca}</td>
-                              <td className="text-right px-2">{s.exam}</td>
-                            </>
-                          ) : (
-                            <>
-                              <td className="text-right px-2">{s.ca1}</td>
-                              <td className="text-right px-2">{s.ca2}</td>
-                              <td className="text-right px-2">{s.exam}</td>
-                            </>
-                          )}
-                          <td className="text-right px-2 font-semibold">{s.total}</td>
-                          <td className="text-center px-2">
-                            <span
-                              className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${gradePillClass(s.grade)}`}
-                            >
-                              {s.grade ?? "—"}
-                            </span>
-                          </td>
-                          <td className="pl-2 text-ink/80">{s.remark ?? "—"}</td>
-                        </tr>
-                      );
-                    })}
-                    {student.scores.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={scoreLayout === "ca-exam" ? 6 : 7}
-                          className="text-center text-ink/50 py-8"
-                        >
-                          No scores entered for this student yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-
-          {/* ── SUMMARY STRIP ── */}
-          {has("summary") && student.scores.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-5 p-3 bg-[#faf8f3] border border-line rounded-sm">
-              <SummaryItem label="Total obtained" value={String(totalScore)} sub={`of ${obtainable}`} />
-              <SummaryItem label="Percentage" value={`${pct}%`} sub="Average" />
-              <SummaryItem label="Subjects" value={String(student.scores.length)} sub="Offered" />
-              <SummaryItem
-                label="Overall"
-                value={Number(pct) >= 50 ? "PASS" : "FAIL"}
-                sub={Number(pct) >= 70 ? "Good standing" : Number(pct) >= 50 ? "Fair" : "Needs support"}
-                highlight={Number(pct) >= 50}
-              />
-            </div>
-          )}
-
-          {/* ── DOMAINS ── */}
-          {has("domains") && cfg.showDomains !== false && (
-            <section className="mb-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <DomainCard title="Psychomotor Domain" items={psychomotor} />
-                <DomainCard title="Affective Domain" items={affective} />
-              </div>
-              <p className="text-[10px] text-ink/50 mt-2 leading-relaxed">
-                <strong>Rating key:</strong> 5 = Excellent · 4 = High · 3 = Acceptable · 2 = Minimal · 1 = Needs improvement
-              </p>
-            </section>
-          )}
-
-          {/* ── ATTENDANCE ── */}
-          {has("attendance") && cfg.showAttendance !== false && (
-            <section className="mb-5">
-              <h2 className="font-serif text-base text-navy border-b-2 border-navy pb-1 mb-3">
-                Attendance Summary
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-ink/50">Days recorded</p>
-                  <p className="font-semibold">{totalDays || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-ink/50">Times present</p>
-                  <p className="font-semibold">{presentDays || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-ink/50">Attendance rate</p>
-                  <p className="font-semibold">
-                    {totalDays > 0
-                      ? `${Math.round((presentDays / totalDays) * 100)}%`
-                      : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-ink/50">Average score</p>
-                  <p className="font-semibold">{average}</p>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* ── REMARKS ── */}
-          {has("remarks") && (
-            <section className="mb-5">
-              <h2 className="font-serif text-base text-navy border-b-2 border-navy pb-1 mb-3">
-                Remarks
-              </h2>
-              <div className="space-y-3">
-                <RemarkBox who="Class Teacher's Remark" text={teacherRemark} />
-                <RemarkBox who={`${principalTitle}'s Remark`} text={principalRemark} />
-              </div>
-            </section>
-          )}
-
-          {/* ── GRADE SCALE ── */}
-          {has("gradeScale") && cfg.showGradeScale !== false && (
-            <section className="mb-5">
-              <h2 className="font-serif text-base text-navy border-b-2 border-navy pb-1 mb-3">
-                Grade Scale
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs">
-                {scale.map((g) => (
-                  <div key={g.grade} className="flex gap-2 py-0.5">
-                    <span className="font-bold text-navy w-7">{g.grade}</span>
-                    <span className="text-ink/60 w-16">{g.range}</span>
-                    <span>{g.remark}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ── SIGNATURES ── */}
-          {has("signatures") && (
-            <div className="grid grid-cols-2 gap-8 mt-8 text-sm">
-              <div className="border-t border-ink/40 pt-2 text-center text-ink/70">
-                Class teacher
-              </div>
-              <div className="border-t border-ink/40 pt-2 text-center text-ink/70">
-                {principalTitle}
-              </div>
-            </div>
-          )}
-
-          {/* Next term */}
-          <p className="text-sm text-ink/60 mt-6">
-            <strong className="text-navy">Next term begins:</strong> ………………………
-          </p>
+      <div className="min-h-screen bg-[#f7f5ef] print:bg-white px-3 sm:px-4 py-4 sm:py-6">
+        <div className="no-print max-w-[820px] mx-auto mb-4 flex justify-between items-center gap-3 text-sm">
+          <Link href={`/students/${student.id}`} className="text-[#1a3a6e] font-medium hover:underline">
+            ← Back to student
+          </Link>
+          <PrintButton />
         </div>
 
-        {/* ── FOOTER ── */}
-        {has("footer") && (
-          <footer
-            className="text-center text-[10px] px-4 py-3 text-paper/80"
-            style={{ background: SCHOOL.colors.primaryDark }}
-          >
-            <span className="text-gold font-semibold">{schoolName}</span>
-            {" · "}
-            {motto}
-            {" · "}
-            {cfg.footerNote ||
-              "This is a computer-generated report. Verify with the school stamp for official use."}
+        <article className="rc-page">
+          <ReportCardHeader
+            logoUrl={logoUrl}
+            schoolName={schoolName}
+            motto={motto}
+            address={address}
+            phones={phones}
+            email={email}
+            termLabel={termLabel}
+            photoUrl={photoUrl}
+            studentName={fullName}
+          />
+
+          <div className="rc-meta">
+            <div className="rc-meta-item">
+              <span>Name</span>
+              <strong>{fullName}</strong>
+            </div>
+            <div className="rc-meta-item">
+              <span>Admission No.</span>
+              <strong>{student.admissionNumber}</strong>
+            </div>
+            <div className="rc-meta-item">
+              <span>Class / Arm</span>
+              <strong>{classLabel}</strong>
+            </div>
+            <div className="rc-meta-item">
+              <span>Gender</span>
+              <strong>{student.gender ?? "—"}</strong>
+            </div>
+            <div className="rc-meta-item">
+              <span>Date of birth</span>
+              <strong>{dobLabel}</strong>
+            </div>
+            <div className="rc-meta-item">
+              <span>Age</span>
+              <strong>{ageLabel}</strong>
+            </div>
+            <div className="rc-meta-item">
+              <span>Session</span>
+              <strong>{sessionLabel}</strong>
+            </div>
+            <div className="rc-meta-item">
+              <span>Position in Class</span>
+              <strong>{positionLabel}</strong>
+            </div>
+          </div>
+
+          <section className="rc-section">
+            <h2 className="rc-section-title">{scoresTitle}</h2>
+            <div className="rc-table-wrap">
+              <table className="rc-scores">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>CA (40)</th>
+                    <th>Exam (60)</th>
+                    <th>Total (100)</th>
+                    <th>Grade</th>
+                    <th>Remark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: "center", padding: "2rem", color: "#4a5265" }}>
+                        No scores entered for this student yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    rows.map((r) => (
+                      <tr key={r.id}>
+                        <td>{r.subject}</td>
+                        <td>{r.ca}</td>
+                        <td>{r.exam}</td>
+                        <td>
+                          <strong>{r.total}</strong>
+                        </td>
+                        <td>
+                          <span className={`grade-pill ${r.pill}`}>{r.grade}</span>
+                        </td>
+                        <td>{r.remark}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <div className="rc-summary">
+            <div className="rc-summary-item">
+              <div className="label">Total Obtained</div>
+              <div className="value">{rows.length ? totalObtained : "—"}</div>
+              <div className="sub">{rows.length ? `of ${maxPossible}` : "—"}</div>
+            </div>
+            <div className="rc-summary-item">
+              <div className="label">Percentage</div>
+              <div className="value">{rows.length ? `${percentage}%` : "—"}</div>
+              <div className="sub">Average</div>
+            </div>
+            <div className="rc-summary-item">
+              <div className="label">Subjects</div>
+              <div className="value">{rows.length || "—"}</div>
+              <div className="sub">Offered</div>
+            </div>
+            <div className="rc-summary-item">
+              <div className="label">Overall</div>
+              <div
+                className="value"
+                style={{
+                  color:
+                    overallPass === null ? "#1a3a6e" : overallPass ? "#2d6a4f" : "#c41e3a",
+                }}
+              >
+                {overallPass === null ? "—" : overallPass ? "PASS" : "FAIL"}
+              </div>
+              <div className="sub">{overallPass ? "Good standing" : overallPass === false ? "Needs support" : "—"}</div>
+            </div>
+          </div>
+
+          <DomainSection classLabel={classLabel} domainsMode={cfg.domainsMode} />
+
+          <section className="rc-section" style={{ paddingBottom: 0 }}>
+            <h2 className="rc-section-title">Attendance Summary</h2>
+          </section>
+          <div className="rc-attendance">
+            <div className="rc-att-item">
+              <span>Days recorded</span>
+              <strong>{totalDays}</strong>
+            </div>
+            <div className="rc-att-item">
+              <span>Times present</span>
+              <strong>{presentDays}</strong>
+            </div>
+            <div className="rc-att-item">
+              <span>Attendance rate</span>
+              <strong>
+                {totalDays > 0 ? `${Math.round((presentDays / totalDays) * 100)}%` : "—"}
+              </strong>
+            </div>
+            <div className="rc-att-item">
+              <span>Status</span>
+              <strong>{student.status}</strong>
+            </div>
+          </div>
+
+          <section className="rc-section">
+            <h2 className="rc-section-title">Remarks</h2>
+            <div className="rc-remark-box">
+              <div className="who">Class Teacher's Remark</div>
+              <p>
+                {cfg.teacherRemark ||
+                  (rows.length
+                    ? `${student.firstName} has completed this term with ${rows.length} subject(s) recorded. Continue to encourage steady practice and attendance.`
+                    : "No scores entered yet for this term.")}
+              </p>
+              <div className="sign">
+                <span>Signature / Date</span>
+                <span>………………………</span>
+              </div>
+            </div>
+            <div className="rc-remark-box">
+              <div className="who">{principalTitle}'s Remark</div>
+              <p>
+                {cfg.principalRemark ||
+                  "Keep working hard and maintain good character. Education with Godliness."}
+              </p>
+              <div className="sign">
+                <span>Signature / Date</span>
+                <span>………………………</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="rc-section">
+            <h2 className="rc-section-title">Grade Scale</h2>
+            <div className="rc-grade-scale">
+              <table>
+                <tbody>
+                  {GRADE_SCALE.map((g) => (
+                    <tr key={g.grade}>
+                      <td>{g.grade}</td>
+                      <td>{g.range}</td>
+                      <td>{g.remark}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <div style={{ padding: "0.75rem 1.5rem 1.25rem", fontSize: "0.78rem", color: "#4a5265" }}>
+            <strong style={{ color: "#1a3a6e" }}>Next term begins:</strong> ………………………
+          </div>
+
+          <footer className="rc-footer">
+            <strong>{schoolName}</strong>
+            {motto ? ` · ${motto}` : ""} · This is a computer-generated report. Verify with the school
+            stamp for official use.
           </footer>
-        )}
-      </article>
-    </div>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-1.5 min-w-0">
-      <span className="text-ink/50 shrink-0 text-[13px]">{label}</span>
-      <strong className="truncate text-[13px]">{value}</strong>
-    </div>
-  );
-}
-
-function SummaryItem({
-  label,
-  value,
-  sub,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="text-center">
-      <p className="text-[10px] uppercase tracking-wide text-ink/50 mb-0.5">{label}</p>
-      <p
-        className={`font-serif text-xl font-semibold tabular-nums ${
-          highlight ? "text-sage" : "text-navy"
-        }`}
-      >
-        {value}
-      </p>
-      {sub && <p className="text-[10px] text-ink/50">{sub}</p>}
-    </div>
-  );
-}
-
-function DomainCard({
-  title,
-  items,
-}: {
-  title: string;
-  items: { name: string; rating: number }[];
-}) {
-  return (
-    <div className="border border-line rounded-sm overflow-hidden">
-      <h3 className="bg-navy text-paper text-[11px] font-semibold tracking-wide uppercase px-3 py-1.5">
-        {title}
-      </h3>
-      <ul className="px-3 py-1.5 text-xs">
-        {items.map((item) => (
-          <li
-            key={item.name}
-            className="flex justify-between items-center py-1 border-b border-line/60 last:border-0"
-          >
-            <span>{item.name}</span>
-            <RatingDots rating={item.rating} />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function RemarkBox({ who, text }: { who: string; text: string }) {
-  return (
-    <div className="border border-line rounded-sm p-3 bg-[#faf8f3] text-sm">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-navy mb-1">
-        {who}
-      </p>
-      <p className="text-ink/80 leading-relaxed">{text}</p>
-      <div className="mt-3 pt-2 border-t border-dashed border-line flex justify-between text-[11px] text-ink/50">
-        <span>Signature / Date</span>
-        <span>………………………</span>
+        </article>
       </div>
-    </div>
+    </>
   );
 }

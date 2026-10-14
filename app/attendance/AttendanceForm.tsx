@@ -8,23 +8,24 @@ export function AttendanceForm({
   armId,
   date,
   students,
+  alreadySaved = false,
 }: {
   armId: string;
   date: string;
   students: { id: string; name: string; status: Status }[];
+  alreadySaved?: boolean;
 }) {
   const [marks, setMarks] = useState<Record<string, Status>>(
     Object.fromEntries(students.map((s) => [s.id, s.status]))
   );
   const [notifyParents, setNotifyParents] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
 
   async function handleSave() {
     setSaving(true);
-    setMsg("");
-    setOk(false);
+    setMsg(null);
     const res = await fetch("/api/attendance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,6 +39,7 @@ export function AttendanceForm({
     const data = await res.json().catch(() => ({}));
     setSaving(false);
     if (!res.ok) {
+      setOk(false);
       setMsg(data.error || "Save failed");
       return;
     }
@@ -110,7 +112,7 @@ export function AttendanceForm({
             disabled={saving}
             className="bg-navy text-paper text-sm px-5 py-2.5 hover:bg-navy-light disabled:opacity-60"
           >
-            {saving ? "Saving..." : "Save Attendance"}
+            {saving ? "Saving..." : alreadySaved ? "Update attendance" : "Save attendance"}
           </button>
           {msg && <span className={`text-sm ${ok ? "text-sage" : "text-brick"}`}>{msg}</span>}
         </div>

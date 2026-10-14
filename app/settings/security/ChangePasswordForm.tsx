@@ -24,13 +24,21 @@ export function ChangePasswordForm({
     setMsg("");
     setOk(false);
     const fd = new FormData(e.currentTarget);
+    const currentPassword = String(fd.get("currentPassword") || "");
+    const newPassword = String(fd.get("newPassword") || "");
+    const confirmPassword = String(fd.get("confirmPassword") || "");
+
+    if (newPassword !== confirmPassword) {
+      setMsg("New password and confirmation do not match.");
+      toast("Passwords do not match.", "error");
+      setBusy(false);
+      return;
+    }
+
     const res = await fetch("/api/auth/change-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        currentPassword: fd.get("currentPassword"),
-        newPassword: fd.get("newPassword"),
-      }),
+      body: JSON.stringify({ currentPassword, newPassword }),
     });
     const data = await res.json().catch(() => ({}));
     setBusy(false);
@@ -41,19 +49,29 @@ export function ChangePasswordForm({
       return;
     }
     setOk(true);
-    setMsg("Password changed.");
-    toast("Password changed.", "success");
+    setMsg("Password changed successfully.");
+    toast("Password changed successfully.", "success");
     (e.target as HTMLFormElement).reset();
     if (forceMode || afterSuccessPath) {
       const dest = data.redirectTo || afterSuccessPath || "/dashboard";
-      router.push(dest);
-      router.refresh();
+      setTimeout(() => {
+        router.push(dest);
+        router.refresh();
+      }, 900);
     }
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-3 text-sm max-w-md">
       <p className="text-xs text-ink/60">{passwordPolicyHint()}</p>
+      {ok && (
+        <p className="text-sm text-sage border border-sage/40 bg-sage/10 px-3 py-2">
+          {msg || "Password changed successfully."}
+        </p>
+      )}
+      {!ok && msg && (
+        <p className="text-sm text-brick border border-brick/30 bg-brick/5 px-3 py-2">{msg}</p>
+      )}
       <label className="block">
         {forceMode ? "Temporary / current password" : "Current password"}
         <input
@@ -74,14 +92,23 @@ export function ChangePasswordForm({
           className="mt-1 w-full border border-line px-3 py-2"
         />
       </label>
+      <label className="block">
+        Confirm new password
+        <input
+          name="confirmPassword"
+          type="password"
+          required
+          autoComplete="new-password"
+          className="mt-1 w-full border border-line px-3 py-2"
+        />
+      </label>
       <button
         type="submit"
-        disabled={busy}
+        disabled={busy || ok}
         className="bg-navy text-paper px-4 py-2 disabled:opacity-50"
       >
-        {busy ? "Saving..." : forceMode ? "Save and continue" : "Change password"}
+        {busy ? "Saving..." : ok ? "Saved" : forceMode ? "Save and continue" : "Change password"}
       </button>
-      {msg && <p className={ok ? "text-sage" : "text-brick"}>{msg}</p>}
     </form>
   );
 }

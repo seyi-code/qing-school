@@ -9,8 +9,13 @@ export default async function NewStaffPage() {
   if (!can(session.role, "MANAGE_STAFF")) redirect("/staff");
 
   return (
-    <PortalShell role={session.role} title="Add Staff" subtitle="Creates a staff profile and their portal login">
-      <div className="max-w-xl">
+    <PortalShell
+      role={session.role}
+      title="Add Staff"
+      subtitle="Creates a staff profile and their portal login"
+      email={session.email}
+    >
+      <div className="max-w-xl rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 sm:p-5 shadow-sm">
         <StaffForm />
       </div>
     </PortalShell>

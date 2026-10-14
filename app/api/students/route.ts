@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { resolveSchoolId, schoolWhere, assertUnderStudentCap } from "@/lib/tenant-scope";
+import { generateAdmissionNumber } from "@/lib/admission";
 
 const CreateStudentSchema = z.object({
   firstName: z.string().min(1),
@@ -16,18 +17,11 @@ const CreateStudentSchema = z.object({
   previousSchool: z.string().optional(),
   medicalNotes: z.string().optional(),
   guardianPhone: z.string().optional(),
+  guardianEmail: z.string().email().optional().or(z.literal("")),
   armId: z.string().optional(),
+  branchId: z.string().optional(),
   forceAdmit: z.boolean().optional(),
 });
-
-async function generateAdmissionNumber(): Promise<string> {
-  const year = new Date().getFullYear();
-  const countThisYear = await prisma.student.count({
-    where: { admissionNumber: { startsWith: `KMS/${year}/` } },
-  });
-  const next = String(countThisYear + 1).padStart(4, "0");
-  return `KMS/${year}/${next}`;
-}
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -123,11 +117,21 @@ export async function POST(req: Request) {
     }
   }
 
-  const admissionNumber = await generateAdmissionNumber();
+  const { admissionNumber, branchId } = await generateAdmissionNumber(
+    schoolId,
+    data.branchId
+  );
+
+  const emailNote =
+    data.guardianEmail && String(data.guardianEmail).trim()
+      ? `Guardian email: ${String(data.guardianEmail).trim().toLowerCase()}`
+      : null;
+  const medicalNotes = [data.medicalNotes, emailNote].filter(Boolean).join(" | ") || undefined;
 
   const student = await prisma.student.create({
     data: {
       schoolId: schoolId ?? undefined,
+      branchId: branchId ?? undefined,
       admissionNumber,
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
@@ -136,14 +140,16 @@ export async function POST(req: Request) {
       dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
       address: data.address,
       previousSchool: data.previousSchool,
-      medicalNotes: data.medicalNotes,
+      medicalNotes,
       guardianPhone: data.guardianPhone,
       armId: data.armId || undefined,
+      status: "ACTIVE",
     },
   });
 
   await logAudit({
     userId: session.userId,
+    schoolId: schoolId ?? undefined,
     action: "CREATE_STUDENT",
     entity: "Student",
     entityId: student.id,

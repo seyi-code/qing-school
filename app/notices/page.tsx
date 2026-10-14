@@ -1,35 +1,37 @@
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { can, homeRouteForRole } from "@/lib/permissions";
-import { formatDate } from "@/lib/format";
-import { SCHOOL } from "@/lib/school-config";
 import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
+import { formatDate } from "@/lib/format";
 import { redirect } from "next/navigation";
 import { NoticeForm } from "./NoticeForm";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SCHOOL } from "@/lib/school-config";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
-/** One-time DB cleanup of legacy demo branding strings. */
 async function scrubLegacyBranding() {
-  const legacy = await prisma.notice.findMany({
+  const stale = await prisma.notice.findMany({
     where: {
       OR: [
-        { title: { contains: "Force Schools" } },
-        { body: { contains: "Force Schools" } },
+        { title: { contains: "Qing" } },
+        { body: { contains: "Qing" } },
+        { title: { contains: "qing-school" } },
+        { body: { contains: "qing-school" } },
       ],
     },
-    take: 50,
+    take: 20,
   });
-  for (const n of legacy) {
+  for (const n of stale) {
     await prisma.notice.update({
       where: { id: n.id },
       data: {
-        title: n.title.replace(/Force Schools/gi, SCHOOL.name),
+        title: n.title.replace(/\bQing School\b/gi, SCHOOL.name).replace(/\bQing\b/gi, SCHOOL.shortName),
         body: n.body
-          .replace(/Force Schools/gi, SCHOOL.name)
-          .replace(/\bFS\b/g, SCHOOL.shortName),
+          .replace(/\bQing School\b/gi, SCHOOL.name)
+          .replace(/\bQing\b/gi, SCHOOL.shortName),
       },
     });
   }
@@ -56,14 +58,26 @@ export default async function NoticesPage() {
   ]);
 
   return (
-    <PortalShell role={session.role} title="Communication" subtitle="Notices and public complaints">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-        <section className="ledger-block">
-          <h2 className="font-serif text-lg mb-3">Post a notice</h2>
+    <PortalShell role={session.role} title="Communication" subtitle="Notices and public complaints" email={session.email}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+        <Kpi label="Notices" value={String(notices.length)} tone="navy" icon="📢" />
+        <Kpi label="Complaints" value={String(complaints.length)} tone="gold" icon="!" />
+        <Kpi
+          label="On web"
+          value={String(notices.filter((n) => n.publishToWeb).length)}
+          tone="sage"
+          icon="🌐"
+          className="col-span-2 sm:col-span-1"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 mb-6">
+        <section className="rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 sm:p-5 shadow-sm">
+          <h2 className="font-serif text-lg text-navy mb-3">Post a notice</h2>
           <NoticeForm />
         </section>
-        <section className="ledger-block lg:col-span-2">
-          <h2 className="font-serif text-lg mb-3">Recent notices</h2>
+        <section className="rounded-xl border border-violet-200/70 bg-gradient-to-br from-violet-50/50 to-white p-4 sm:p-5 shadow-sm lg:col-span-2">
+          <h2 className="font-serif text-lg text-navy mb-3">Recent notices</h2>
           {notices.length === 0 ? (
             <EmptyState
               title="No notices yet"
@@ -72,13 +86,15 @@ export default async function NoticesPage() {
           ) : (
             <ul className="space-y-3">
               {notices.map((n) => (
-                <li key={n.id} className="border-b border-line pb-3 last:border-0">
-                  <p className="font-medium text-sm">{n.title}</p>
-                  <p className="text-xs text-ink/50 mt-0.5">
-                    {formatDate(n.createdAt)} · {n.audience}
-                    {n.publishToWeb ? " · web" : ""}
-                  </p>
-                  <p className="text-sm text-ink/70 mt-1 whitespace-pre-wrap">{n.body}</p>
+                <li key={n.id} className="rounded-xl border border-line/80 bg-white/80 p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="font-medium text-sm text-navy">{n.title}</p>
+                    <span className="status-pill text-[10px]">
+                      {n.audience}{n.publishToWeb ? " · web" : ""}
+                    </span>
+                  </div>
+                  <p className="text-xs text-ink/50 mt-0.5">{formatDate(n.createdAt)}</p>
+                  <p className="text-sm text-ink/70 mt-1.5 whitespace-pre-wrap">{n.body}</p>
                 </li>
               ))}
             </ul>
@@ -86,8 +102,8 @@ export default async function NoticesPage() {
         </section>
       </div>
 
-      <section className="ledger-block">
-        <h2 className="font-serif text-lg mb-3">Public complaints / feedback</h2>
+      <section className="rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-white p-4 sm:p-5 shadow-sm">
+        <h2 className="font-serif text-lg text-navy mb-3">Public complaints / feedback</h2>
         {complaints.length === 0 ? (
           <EmptyState
             title="No complaints"
@@ -96,8 +112,8 @@ export default async function NoticesPage() {
         ) : (
           <ul className="space-y-3">
             {complaints.map((n) => (
-              <li key={n.id} className="border-b border-line pb-3 last:border-0">
-                <p className="font-medium text-sm">{n.title}</p>
+              <li key={n.id} className="rounded-xl border border-line/80 bg-white/80 p-3">
+                <p className="font-medium text-sm text-navy">{n.title}</p>
                 <p className="text-xs text-ink/50">{formatDate(n.createdAt)}</p>
                 <p className="text-sm text-ink/70 mt-1 whitespace-pre-wrap">{n.body}</p>
               </li>

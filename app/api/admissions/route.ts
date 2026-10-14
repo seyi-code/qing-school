@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { assertUnderStudentCap, resolveSchoolIdFromRequest } from "@/lib/tenant-scope";
+import { generateAdmissionNumber } from "@/lib/admission";
 
 const ApplicationSchema = z.object({
   firstName: z.string().min(1).max(80),
@@ -17,22 +18,6 @@ const ApplicationSchema = z.object({
   parentEmail: z.string().email().optional().or(z.literal("")),
   desiredClass: z.string().max(80).optional(),
 });
-
-async function nextAdmissionNumber(schoolId: string, shortName: string) {
-  const year = new Date().getFullYear();
-  const tag = (shortName || "SCH").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) || "SCH";
-  const prefix = `${tag}/${year}/`;
-  const last = await prisma.student.findFirst({
-    where: { schoolId, admissionNumber: { startsWith: prefix } },
-    orderBy: { admissionNumber: "desc" },
-  });
-  let seq = 1;
-  if (last) {
-    const n = parseInt(last.admissionNumber.split("/").pop() || "0", 10);
-    if (!Number.isNaN(n)) seq = n + 1;
-  }
-  return `${prefix}${String(seq).padStart(4, "0")}`;
-}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -54,7 +39,7 @@ export async function POST(req: Request) {
   if (!cap.ok) {
     return NextResponse.json({ error: cap.error }, { status: 403 });
   }
-  const admissionNumber = await nextAdmissionNumber(school.id, school.shortName);
+  const { admissionNumber, branchId } = await generateAdmissionNumber(school.id);
 
   const medicalNotes = [
     `Parent/Guardian: ${d.parentName}`,
@@ -69,6 +54,7 @@ export async function POST(req: Request) {
   const student = await prisma.student.create({
     data: {
       schoolId: school.id,
+      branchId: branchId ?? undefined,
       admissionNumber,
       firstName: d.firstName,
       lastName: d.lastName,
@@ -86,6 +72,7 @@ export async function POST(req: Request) {
     action: "ONLINE_ADMISSION_APPLICATION",
     entity: "Student",
     entityId: student.id,
+    schoolId: school.id,
     details: { admissionNumber, parentPhone: d.parentPhone },
   });
 

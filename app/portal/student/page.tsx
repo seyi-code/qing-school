@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { PayOnlineButton } from "@/components/PayOnlineButton";
 import { formatNaira, formatDate } from "@/lib/format";
+import { toMoney } from "@/lib/money";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -15,75 +16,100 @@ export default async function StudentPortalPage() {
   const student = await prisma.student.findUnique({
     where: { userId: session.userId },
     include: {
+      school: { select: { name: true, shortName: true } },
       arm: { include: { schoolClass: true } },
       invoices: { orderBy: { createdAt: "desc" } },
-      scores: { include: { armSubject: { include: { subject: true } } } },
-      attendances: { orderBy: { date: "desc" }, take: 10 },
+      scores: {
+        include: { armSubject: { include: { subject: true } } },
+        take: 8,
+      },
+      attendances: { orderBy: { date: "desc" }, take: 8 },
     },
   });
 
   if (!student) {
     return (
-      <PortalShell role={session.role} title="My Portal">
-        <p className="text-ink/60 text-sm">
-          Your login isn&apos;t linked to a student profile yet. Ask the school office to link your
-          account.
-        </p>
+      <PortalShell role={session.role} title="My Portal" email={session.email}>
+        <div className="rounded-xl border border-line bg-white p-5 text-sm text-ink/70">
+          Your login isn&apos;t linked to a student profile yet. Ask the school office to enable
+          portal access on your student record.
+        </div>
       </PortalShell>
     );
   }
 
-  const balance = student.invoices.reduce((s, i) => s + (i.totalAmount - i.amountPaid), 0);
+  const balance = student.invoices.reduce(
+    (s, i) => s + (toMoney(i.totalAmount) - toMoney(i.amountPaid)),
+    0
+  );
   const unpaid = student.invoices.filter((i) => i.status !== "PAID");
+  const classLabel = student.arm
+    ? `${student.arm.schoolClass.name} ${student.arm.name}`
+    : "Class unassigned";
+  const schoolName = student.school?.name || "";
+  const schoolShort = student.school?.shortName || "";
 
   return (
     <PortalShell
       role={session.role}
-      title={`Welcome, ${student.firstName}`}
-      subtitle={
-        student.arm
-          ? `${student.arm.schoolClass.name} ${student.arm.name} · ${student.admissionNumber}`
-          : student.admissionNumber
-      }
+      title={`Hi, ${student.firstName}`}
+      subtitle={`${classLabel} · ${student.admissionNumber}`}
+      email={session.email}
+      schoolName={schoolName}
+      schoolShortName={schoolShort}
     >
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <div className="ledger-block">
-          <p className="text-xs uppercase text-ink/50">Fee balance</p>
-          <p className={`ledger-number text-2xl mt-1 ${balance > 0 ? "text-brick" : "text-sage"}`}>
-            {formatNaira(balance)}
-          </p>
-        </div>
-        <div className="ledger-block">
-          <p className="text-xs uppercase text-ink/50">Subjects scored</p>
-          <p className="ledger-number text-2xl mt-1">{student.scores.length}</p>
-        </div>
-        <div className="ledger-block col-span-2 md:col-span-1">
-          <p className="text-xs uppercase text-ink/50">Admission no.</p>
-          <p className="ledger-number text-lg mt-1 font-mono">{student.admissionNumber}</p>
-        </div>
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+        <Kpi
+          label="Fee balance"
+          value={formatNaira(balance)}
+          tone={balance > 0 ? "rose" : "sage"}
+        />
+        <Kpi label="Subjects scored" value={String(student.scores.length)} tone="sky" />
+        <Kpi
+          label="Unpaid invoices"
+          value={String(unpaid.length)}
+          tone={unpaid.length ? "gold" : "sage"}
+        />
+        <Kpi
+          label="Admission no."
+          value={student.admissionNumber}
+          tone="navy"
+          mono
+          className="col-span-2"
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
+        <Action href={`/students/${student.id}`} label="My record" />
+        <Action href={`/students/${student.id}/report-card`} label="Report card" primary />
+        {unpaid.length > 0 && (
+          <span className="text-xs self-center text-brick font-medium">
+            {unpaid.length} unpaid invoice{unpaid.length === 1 ? "" : "s"}
+          </span>
+        )}
       </div>
 
       {unpaid.length > 0 && (
-        <section className="ledger-block mb-6">
-          <h2 className="font-serif text-lg mb-3">Pay fees online</h2>
+        <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 mb-4 sm:mb-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-navy mb-3">Pay fees</h2>
           <ul className="space-y-3">
             {unpaid.map((inv) => {
-              const bal = inv.totalAmount - inv.amountPaid;
+              const bal = toMoney(inv.totalAmount) - toMoney(inv.amountPaid);
               return (
                 <li
                   key={inv.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm border-b border-line pb-3"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm border-b border-line/60 pb-3 last:border-0 last:pb-0"
                 >
                   <div>
-                    <span className="font-medium">{formatNaira(bal)}</span>
-                    <span className="text-ink/50 text-xs ml-2">of {formatNaira(inv.totalAmount)}</span>
-                    <span className="status-pill text-xs ml-2">{inv.status}</span>
+                    <p className="font-semibold text-ink">{formatNaira(bal)} due</p>
+                    <p className="text-xs text-ink/50 mt-0.5">
+                      Total {formatNaira(inv.totalAmount)} · Paid {formatNaira(inv.amountPaid)}
+                    </p>
+                    <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border bg-brick/10 text-brick border-brick/25">
+                      {inv.status}
+                    </span>
                   </div>
-                  <PayOnlineButton
-                    invoiceId={inv.id}
-                    maxAmount={bal}
-                    defaultEmail={session.email}
-                  />
+                  <PayOnlineButton invoiceId={inv.id} maxAmount={bal} />
                 </li>
               );
             })}
@@ -91,61 +117,124 @@ export default async function StudentPortalPage() {
         </section>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
-        <section className="ledger-block !p-0 overflow-x-auto">
-          <div className="p-4 pb-0">
-            <h2 className="font-serif text-lg">Recent scores</h2>
-          </div>
-          <table className="ledger mt-2">
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Total</th>
-                <th>Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {student.scores.slice(0, 8).map((sc) => (
-                <tr key={sc.id}>
-                  <td>{sc.armSubject.subject.name}</td>
-                  <td>{sc.total}</td>
-                  <td>{sc.grade ?? "-"}</td>
-                </tr>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-navy mb-3">Recent scores</h2>
+          {student.scores.length === 0 ? (
+            <Empty text="No scores yet." />
+          ) : (
+            <ul className="divide-y divide-line/70">
+              {student.scores.map((s) => (
+                <li key={s.id} className="flex justify-between py-2.5 text-sm">
+                  <span className="text-ink/80 truncate pr-2">{s.armSubject.subject.name}</span>
+                  <span className="font-semibold tabular-nums text-navy">{s.total}</span>
+                </li>
               ))}
-              {student.scores.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="text-center text-ink/50 py-6">
-                    No scores yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            </ul>
+          )}
         </section>
 
-        <section className="ledger-block">
-          <h2 className="font-serif text-lg mb-3">Recent attendance</h2>
-          <ul className="text-sm space-y-1">
-            {student.attendances.map((a) => (
-              <li key={a.id} className="flex justify-between border-b border-line py-1.5">
-                <span>{formatDate(a.date)}</span>
-                <span className="status-pill text-xs">{a.status}</span>
-              </li>
-            ))}
-            {student.attendances.length === 0 && (
-              <li className="text-ink/50">No attendance recorded yet.</li>
-            )}
-          </ul>
-          <div className="mt-4 flex flex-wrap gap-3 text-sm">
-            <Link href={`/students/${student.id}`} className="text-navy underline">
-              Full record
-            </Link>
-            <Link href={`/students/${student.id}/report-card`} className="text-navy underline">
-              Report card
-            </Link>
-          </div>
+        <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-navy mb-3">Recent attendance</h2>
+          {student.attendances.length === 0 ? (
+            <Empty text="No attendance recorded yet." />
+          ) : (
+            <ul className="divide-y divide-line/70">
+              {student.attendances.map((a) => (
+                <li key={a.id} className="flex justify-between items-center py-2.5 text-sm">
+                  <span className="text-ink/70">{formatDate(a.date)}</span>
+                  <Status status={a.status} />
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </PortalShell>
+  );
+}
+
+const TONE: Record<string, string> = {
+  navy: "from-[#1a3a6e]/[12%] to-white border-navy/15",
+  sky: "from-sky-500/[12%] to-white border-sky-500/20",
+  sage: "from-emerald-500/[12%] to-white border-emerald-500/20",
+  rose: "from-rose-500/[12%] to-white border-rose-500/20",
+  gold: "from-amber-500/[12%] to-white border-amber-500/25",
+};
+
+function Kpi({
+  label,
+  value,
+  tone = "navy",
+  mono = false,
+  className = "",
+}: {
+  label: string;
+  value: string;
+  tone?: keyof typeof TONE;
+  mono?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 sm:px-4 sm:py-3.5 min-w-0 ${TONE[tone] || TONE.navy} ${className}`}
+    >
+      <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/50">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-semibold tracking-tight text-ink truncate ${
+          mono ? "font-mono text-xs sm:text-sm" : "text-lg sm:text-xl"
+        }`}
+        title={value}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Action({
+  href,
+  label,
+  primary = false,
+}: {
+  href: string;
+  label: string;
+  primary?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        primary
+          ? "inline-flex items-center rounded-xl bg-navy px-3.5 py-2 text-xs font-semibold text-paper hover:bg-navy-light shadow-sm"
+          : "inline-flex items-center rounded-xl border border-line bg-white px-3.5 py-2 text-xs font-medium text-ink hover:border-navy/40"
+      }
+    >
+      {label}
+    </Link>
+  );
+}
+
+function Empty({ text }: { text: string }) {
+  return <p className="text-sm text-ink/40 py-6 text-center">{text}</p>;
+}
+
+function Status({ status }: { status: string }) {
+  const tone =
+    status === "PRESENT" || status === "PAID"
+      ? "bg-sage/15 text-sage border-sage/30"
+      : status === "LATE" || status === "PARTIAL"
+        ? "bg-gold/15 text-gold-dark border-gold/30"
+        : status === "ABSENT" || status === "UNPAID"
+          ? "bg-brick/10 text-brick border-brick/25"
+          : "bg-ink/5 text-ink/60 border-line";
+  return (
+    <span
+      className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border ${tone}`}
+    >
+      {status}
+    </span>
   );
 }

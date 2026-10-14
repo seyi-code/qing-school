@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { homeRouteForRole } from "@/lib/permissions";
+import { resolveSchoolId } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { GradeAttemptForm } from "./GradeAttemptForm";
@@ -10,11 +11,14 @@ export const dynamic = "force-dynamic";
 
 export default async function CbtResultsPage() {
   const session = await requireSession();
-  if (!["ADMIN", "IT", "TEACHER", "PRINCIPAL"].includes(session.role)) {
+  if (!["ADMIN", "IT", "TEACHER", "PRINCIPAL", "PLATFORM_ADMIN"].includes(session.role)) {
     redirect(homeRouteForRole(session.role));
   }
 
+  const schoolId = await resolveSchoolId(session);
+
   const attempts = await prisma.cbtAttempt.findMany({
+    where: schoolId ? { student: { schoolId } } : undefined,
     include: {
       student: { select: { firstName: true, lastName: true, admissionNumber: true } },
       exam: { select: { title: true } },
@@ -30,6 +34,7 @@ export default async function CbtResultsPage() {
       role={session.role}
       title="CBT results"
       subtitle={`${pending.length} need essay grading · ${attempts.length} recent attempts`}
+      email={session.email}
       actions={
         <Link href="/cbt" className="text-sm border border-navy text-navy px-3 py-1.5">
           Back to CBT
@@ -66,40 +71,27 @@ export default async function CbtResultsPage() {
               <th>Student</th>
               <th>Exam</th>
               <th>Score</th>
-              <th>Proctor</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {attempts.map((a) => {
-              let proctorCount = 0;
-              try {
-                proctorCount = a.proctorJson ? (JSON.parse(a.proctorJson) as unknown[]).length : 0;
-              } catch {
-                proctorCount = 0;
-              }
-              return (
-                <tr key={a.id}>
-                  <td className="text-xs">{a.submittedAt.toLocaleString()}</td>
-                  <td>
-                    {a.student.lastName}, {a.student.firstName}
-                    <span className="block text-xs font-mono text-ink/50">
-                      {a.student.admissionNumber}
-                    </span>
-                  </td>
-                  <td>{a.exam.title}</td>
-                  <td>
-                    {a.score}/{a.total} ({a.percent}%)
-                  </td>
-                  <td className={proctorCount > 3 ? "text-brick" : ""}>{proctorCount} events</td>
-                  <td>{a.needsGrading ? "Needs grading" : "Final"}</td>
-                </tr>
-              );
-            })}
+            {attempts.map((a) => (
+              <tr key={a.id}>
+                <td className="text-xs whitespace-nowrap">{a.submittedAt.toLocaleString()}</td>
+                <td>
+                  {a.student.lastName}, {a.student.firstName}
+                </td>
+                <td>{a.exam.title}</td>
+                <td>
+                  {a.score}/{a.total} ({a.percent}%)
+                </td>
+                <td>{a.needsGrading ? "Needs grading" : "Done"}</td>
+              </tr>
+            ))}
             {attempts.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-ink/50 py-8">
-                  No attempts yet.
+                <td colSpan={5} className="text-center text-ink/50 py-8">
+                  No CBT attempts for this school yet.
                 </td>
               </tr>
             )}

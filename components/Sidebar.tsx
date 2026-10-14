@@ -12,6 +12,7 @@ interface NavItem {
 
 /**
  * Role-based navigation.
+ * IT = technical co-admin (ops, data, settings) — not fee collection.
  * Password lives under header account menu (Profile), not duplicated here.
  */
 const NAV_ITEMS: NavItem[] = [
@@ -50,7 +51,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/leave",
     label: "Staff Leave",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL", "TEACHER", "ACCOUNTANT", "SECRETARY"],
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL", "TEACHER", "SECRETARY"],
   },
 
   {
@@ -87,7 +88,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/fees",
     label: "Fees",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY", "IT"],
+    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY"],
   },
   {
     href: "/fees/structure",
@@ -188,10 +189,29 @@ function rolePortalLabel(role: Role): string {
   }
 }
 
-export function Sidebar({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
+export function Sidebar({
+  role,
+  onNavigate,
+  schoolLabel,
+  schoolName,
+}: {
+  role: Role;
+  onNavigate?: () => void;
+  schoolLabel?: string;
+  schoolName?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const visible = NAV_ITEMS.filter((item) => item.roles.includes(role));
+  const workingAsSchool = Boolean(schoolLabel);
+  const visible = NAV_ITEMS.filter((item) => {
+    if (!item.roles.includes(role)) return false;
+    if (workingAsSchool && (item.href === "/platform" || item.href === "/onboarding")) {
+      return false;
+    }
+    return true;
+  });
+
+  const brand = schoolLabel || schoolName || "Qing School";
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -204,9 +224,11 @@ export function Sidebar({ role, onNavigate }: { role: Role; onNavigate?: () => v
       <div className="px-5 py-4 border-b border-paper/10 flex items-start justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="KMS" className="w-10 h-10 object-contain shrink-0" />
+          <img src="/logo.svg" alt="" className="w-10 h-10 object-contain shrink-0" />
           <div className="min-w-0">
-            <p className="font-serif text-lg leading-tight">KMS</p>
+            <p className="font-serif text-lg leading-tight truncate" title={schoolName || brand}>
+              {brand}
+            </p>
             <p className="text-[11px] text-paper/50 truncate">{rolePortalLabel(role)}</p>
           </div>
         </div>
@@ -224,7 +246,15 @@ export function Sidebar({ role, onNavigate }: { role: Role; onNavigate?: () => v
 
       <nav className="flex-1 min-h-0 py-2 overflow-y-auto overscroll-contain">
         {visible.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          // Longest matching href wins so /settings/ops does not also light up /settings
+          const matches = visible.filter(
+            (i) => pathname === i.href || pathname.startsWith(i.href + "/")
+          );
+          const best =
+            matches.length === 0
+              ? null
+              : matches.reduce((a, b) => (a.href.length >= b.href.length ? a : b));
+          const active = best?.href === item.href;
           return (
             <Link
               key={`${item.href}-${item.label}`}
@@ -243,6 +273,20 @@ export function Sidebar({ role, onNavigate }: { role: Role; onNavigate?: () => v
       </nav>
 
       <div className="shrink-0 p-4 border-t border-paper/10 bg-navy space-y-2">
+        {schoolName && (
+          <p className="text-[10px] text-paper/40 text-center truncate px-1" title={schoolName}>
+            {schoolName}
+          </p>
+        )}
+        {role === "PLATFORM_ADMIN" && workingAsSchool && (
+          <Link
+            href="/platform"
+            onClick={onNavigate}
+            className="block w-full text-center border border-gold/40 text-gold text-xs py-2 hover:bg-gold/10"
+          >
+            ← Platform admin
+          </Link>
+        )}
         <Link
           href="/account/profile"
           onClick={onNavigate}

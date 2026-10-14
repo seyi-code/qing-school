@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
+import { resolveSchoolId } from "@/lib/tenant-scope";
 
 const UpsertSchema = z.object({
   armId: z.string(),
@@ -13,12 +14,27 @@ const UpsertSchema = z.object({
   force: z.boolean().optional(),
 });
 
+async function assertArmInSchool(armId: string, schoolId: string | null) {
+  if (!schoolId) return true;
+  const arm = await prisma.arm.findUnique({
+    where: { id: armId },
+    include: { schoolClass: { select: { schoolId: true } } },
+  });
+  if (!arm) return false;
+  return !arm.schoolClass.schoolId || arm.schoolClass.schoolId === schoolId;
+}
+
 export async function GET(req: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const armId = new URL(req.url).searchParams.get("armId");
   if (!armId) return NextResponse.json({ error: "armId required" }, { status: 400 });
+
+  const schoolId = await resolveSchoolId(session);
+  if (!(await assertArmInSchool(armId, schoolId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const slots = await prisma.timetableSlot.findMany({
     where: { armId },
@@ -44,6 +60,10 @@ export async function POST(req: Request) {
   }
 
   const { armId, armSubjectId, dayOfWeek, period, force } = parsed.data;
+  const schoolId = await resolveSchoolId(session);
+  if (!(await assertArmInSchool(armId, schoolId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const link = await prisma.armSubject.findFirst({
     where: { id: armSubjectId, armId },
@@ -69,7 +89,10 @@ export async function POST(req: Request) {
         dayOfWeek,
         period,
         NOT: { armId },
-        armSubject: { teacherId: link.teacherId },
+        armSubject: {
+          teacherId: link.teacherId,
+          ...(schoolId ? { arm: { schoolClass: { schoolId } } } : {}),
+        },
       },
       include: {
         arm: { include: { schoolClass: true } },
@@ -78,7 +101,6 @@ export async function POST(req: Request) {
         },
       },
     });
-
     conflicts = teacherSlots.map((s) => ({
       armLabel: `${s.arm.schoolClass.name} ${s.arm.name}`,
       subjectName: s.armSubject.subject.name,
@@ -86,36 +108,33 @@ export async function POST(req: Request) {
         ? `${s.armSubject.teacher.firstName} ${s.armSubject.teacher.lastName}`
         : "Teacher",
     }));
+  }
 
-    if (conflicts.length > 0 && !force) {
-      return NextResponse.json(
-        {
-          error: "Teacher timetable conflict",
-          conflicts,
-          message: `${conflicts[0].teacherName} is already assigned to ${conflicts[0].subjectName} in ${conflicts[0].armLabel} at this period.`,
-        },
-        { status: 409 }
-      );
-    }
+  if (conflicts.length && !force) {
+    return NextResponse.json(
+      { error: "Teacher has another class at this time", conflicts },
+      { status: 409 }
+    );
   }
 
   const slot = await prisma.timetableSlot.upsert({
     where: {
       armId_dayOfWeek_period: { armId, dayOfWeek, period },
     },
-    update: { armSubjectId },
     create: { armId, armSubjectId, dayOfWeek, period },
+    update: { armSubjectId },
   });
 
   await logAudit({
     userId: session.userId,
+    schoolId: schoolId ?? undefined,
     action: "UPSERT_TIMETABLE_SLOT",
     entity: "TimetableSlot",
     entityId: slot.id,
-    details: conflicts.length ? { forced: !!force, conflicts } : undefined,
+    details: { armId, dayOfWeek, period },
   });
 
-  return NextResponse.json({ slot, conflicts });
+  return NextResponse.json({ slot });
 }
 
 export async function DELETE(req: Request) {
@@ -123,9 +142,22 @@ export async function DELETE(req: Request) {
   if (!session || !can(session.role, "MANAGE_CLASSES")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const schoolId = await resolveSchoolId(session);
+  const existing = await prisma.timetableSlot.findUnique({
+    where: { id },
+    include: { arm: { include: { schoolClass: true } } },
+  });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (
+    schoolId &&
+    existing.arm.schoolClass.schoolId &&
+    existing.arm.schoolClass.schoolId !== schoolId
+  ) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   await prisma.timetableSlot.delete({ where: { id } });
   return NextResponse.json({ ok: true });

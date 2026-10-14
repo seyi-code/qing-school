@@ -20,6 +20,7 @@ type Props = {
     guardianPhone: string;
     armId: string;
     status: string;
+    admissionNumber: string;
   };
 };
 
@@ -53,6 +54,7 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
       guardianPhone: form.guardianPhone.trim() || undefined,
       armId: form.armId || null,
       status: form.status,
+      admissionNumber: form.admissionNumber.trim(),
     };
 
     const res = await fetch(`/api/students/${studentId}`, {
@@ -78,7 +80,7 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
     <form onSubmit={onSubmit} className="ledger-block space-y-3">
       <h2 className="font-serif text-lg">Edit student / assign class</h2>
       <p className="text-xs text-ink/55">
-        Assign an unassigned student to a class arm, or update bio details.
+        Assign class, fix admission number (e.g. TEST/2026/0001), or update bio details.
       </p>
 
       {error && (
@@ -88,15 +90,21 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
         <p className="text-sm text-sage border border-sage/30 bg-sage/5 px-3 py-2">Saved.</p>
       )}
 
+      <Field
+        label="Admission number"
+        value={form.admissionNumber}
+        onChange={(v) => set("admissionNumber", v)}
+        required
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field
-          label="First name"
-          value={form.firstName}
-          onChange={(v) => set("firstName", v)}
-          required
-        />
+        <Field label="First name" value={form.firstName} onChange={(v) => set("firstName", v)} required />
         <Field label="Last name" value={form.lastName} onChange={(v) => set("lastName", v)} required />
-        <Field label="Other names" value={form.otherNames} onChange={(v) => set("otherNames", v)} />
+      </div>
+
+      <Field label="Other names" value={form.otherNames} onChange={(v) => set("otherNames", v)} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-ink/70 mb-1">Gender</label>
           <select
@@ -107,21 +115,6 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
             <option value="">—</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
-          </select>
-        </div>
-        <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-ink/70 mb-1">Class / Arm</label>
-          <select
-            value={form.armId}
-            onChange={(e) => set("armId", e.target.value)}
-            className="w-full border border-line px-3 py-2 text-sm bg-white"
-          >
-            <option value="">Unassigned</option>
-            {arms.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.label}
-              </option>
-            ))}
           </select>
         </div>
         <div>
@@ -137,27 +130,28 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
             <option value="GRADUATED">GRADUATED</option>
           </select>
         </div>
-        <Field label="Address" value={form.address} onChange={(v) => set("address", v)} />
-        <Field
-          label="Previous school"
-          value={form.previousSchool}
-          onChange={(v) => set("previousSchool", v)}
-        />
-        <Field
-          label="Guardian phone"
-          value={form.guardianPhone}
-          onChange={(v) => set("guardianPhone", v)}
-        />
-        <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-ink/70 mb-1">Medical / notes</label>
-          <textarea
-            value={form.medicalNotes}
-            onChange={(e) => set("medicalNotes", e.target.value)}
-            rows={2}
-            className="w-full border border-line px-3 py-2 text-sm bg-white"
-          />
-        </div>
       </div>
+
+      <div>
+        <label className="block text-xs font-medium text-ink/70 mb-1">Class / arm</label>
+        <select
+          value={form.armId}
+          onChange={(e) => set("armId", e.target.value)}
+          className="w-full border border-line px-3 py-2 text-sm bg-white"
+        >
+          <option value="">Unassigned</option>
+          {arms.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <Field label="Guardian phone" value={form.guardianPhone} onChange={(v) => set("guardianPhone", v)} />
+      <Field label="Address" value={form.address} onChange={(v) => set("address", v)} />
+      <Field label="Previous school" value={form.previousSchool} onChange={(v) => set("previousSchool", v)} />
+      <Field label="Medical notes" value={form.medicalNotes} onChange={(v) => set("medicalNotes", v)} />
 
       <button
         type="submit"

@@ -13,9 +13,11 @@ interface ClassView {
 export function ClassManager({
   classes,
   subjects,
+  teachers = [],
 }: {
   classes: ClassView[];
   subjects: { id: string; name: string }[];
+  teachers?: { id: string; label: string }[];
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -24,15 +26,20 @@ export function ClassManager({
   const [newClass, setNewClass] = useState({ name: "", order: 0 });
   const [newArm, setNewArm] = useState({ schoolClassId: "", name: "" });
   const [newSubject, setNewSubject] = useState({ subjectName: "", code: "" });
-  const [assign, setAssign] = useState({ armId: "", subjectId: "" });
+  const [assign, setAssign] = useState({
+    armId: "",
+    subjectId: "",
+    teacherId: "",
+    asClassTeacher: false,
+  });
   const [promote, setPromote] = useState({ fromArmId: "", toArmId: "" });
-  const [confirm, setConfirm] = useState<{ kind: "class" | "arm" | "subject"; id: string; label: string } | null>(
-    null
-  );
+  const [confirm, setConfirm] = useState<{
+    kind: "class" | "arm" | "subject";
+    id: string;
+    label: string;
+  } | null>(null);
 
-  const allArms = classes.flatMap((c) =>
-    c.arms.map((a) => ({ ...a, className: c.name }))
-  );
+  const allArms = classes.flatMap((c) => c.arms.map((a) => ({ ...a, className: c.name })));
 
   async function post(body: object) {
     const res = await fetch("/api/classes", {
@@ -110,14 +117,22 @@ export function ClassManager({
   async function assignSubject() {
     if (!assign.armId || !assign.subjectId) return;
     setBusy(true);
-    const { ok, data } = await post(assign);
+    const body: Record<string, unknown> = {
+      armId: assign.armId,
+      subjectId: assign.subjectId,
+    };
+    if (assign.teacherId) {
+      body.teacherId = assign.teacherId;
+      body.asClassTeacher = assign.asClassTeacher;
+    }
+    const { ok, data } = await post(body);
     setBusy(false);
     if (!ok) {
       toast(data.error || "Failed to assign subject", "error");
       return;
     }
-    toast("Subject assigned to arm (available for scores)", "success");
-    setAssign({ armId: "", subjectId: "" });
+    toast("Subject assigned" + (assign.teacherId ? " · teacher linked" : ""), "success");
+    setAssign({ armId: "", subjectId: "", teacherId: "", asClassTeacher: false });
     router.refresh();
   }
 
@@ -153,9 +168,7 @@ export function ClassManager({
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() =>
-                    setConfirm({ kind: "class", id: c.id, label: c.name })
-                  }
+                  onClick={() => setConfirm({ kind: "class", id: c.id, label: c.name })}
                   className="text-xs text-brick border border-brick/40 px-2 py-1 hover:bg-brick hover:text-paper shrink-0 disabled:opacity-50"
                   title={totalStudents > 0 ? "Blocked while students are assigned" : "Delete empty class"}
                 >
@@ -213,8 +226,8 @@ export function ClassManager({
             </ul>
           )}
           <p className="text-xs text-ink/50 mt-3">
-            After adding a subject, <strong>assign it to an arm</strong> so teachers can enter scores for that class.
-            Delete is blocked if scores already exist.
+            Assign a subject to an arm and pick a <strong>teacher</strong> so their portal and timetable
+            fill. Delete is blocked if scores exist.
           </p>
         </div>
       </div>
@@ -234,12 +247,7 @@ export function ClassManager({
               >
                 {busy ? "…" : "Confirm delete"}
               </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setConfirm(null)}
-                className="underline text-ink/60"
-              >
+              <button type="button" disabled={busy} onClick={() => setConfirm(null)} className="underline text-ink/60">
                 Cancel
               </button>
             </div>
@@ -296,6 +304,32 @@ export function ClassManager({
               </option>
             ))}
           </select>
+          <select
+            value={assign.teacherId}
+            onChange={(e) => setAssign((s) => ({ ...s, teacherId: e.target.value }))}
+            className="w-full border border-line px-3 py-2 text-sm mb-2"
+          >
+            <option value="">Teacher (optional)...</option>
+            {teachers.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 text-xs text-ink/70 mb-2">
+            <input
+              type="checkbox"
+              checked={assign.asClassTeacher}
+              onChange={(e) => setAssign((s) => ({ ...s, asClassTeacher: e.target.checked }))}
+              disabled={!assign.teacherId}
+            />
+            Also set as class teacher for this arm
+          </label>
+          {teachers.length === 0 && (
+            <p className="text-[11px] text-amber-800/80 mb-2">
+              No teaching staff yet. Add a staff member with category Teaching / role TEACHER first.
+            </p>
+          )}
           <button
             type="button"
             onClick={assignSubject}
@@ -314,12 +348,7 @@ export function ClassManager({
             placeholder="e.g. JSS 1"
             className="w-full border border-line px-3 py-2 text-sm mb-2"
           />
-          <button
-            type="button"
-            onClick={addClass}
-            disabled={busy}
-            className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50"
-          >
+          <button type="button" onClick={addClass} disabled={busy} className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50">
             Add
           </button>
         </div>
@@ -340,15 +369,10 @@ export function ClassManager({
           <input
             value={newArm.name}
             onChange={(e) => setNewArm((s) => ({ ...s, name: e.target.value }))}
-            placeholder="e.g. Diamond"
+            placeholder="e.g. A"
             className="w-full border border-line px-3 py-2 text-sm mb-2"
           />
-          <button
-            type="button"
-            onClick={addArm}
-            disabled={busy}
-            className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50"
-          >
+          <button type="button" onClick={addArm} disabled={busy} className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50">
             Add
           </button>
         </div>

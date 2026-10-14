@@ -34,7 +34,7 @@ export function WorkAsSchoolButton({
       type="button"
       onClick={run}
       disabled={busy}
-      className="text-xs border border-navy text-navy px-2 py-1 hover:bg-navy/5 disabled:opacity-50"
+      className="btn-ghost !px-2.5 !py-1 !text-[11px] disabled:opacity-50"
     >
       {busy ? "…" : label}
     </button>

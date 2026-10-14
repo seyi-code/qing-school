@@ -88,3 +88,56 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ created });
 }
+
+export async function DELETE(req: Request) {
+  const session = await getSession();
+  if (!session || !can(session.role, "MANAGE_FEES")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const id = typeof body?.id === "string" ? body.id : null;
+  if (!id) {
+    return NextResponse.json({ error: "Invoice id required" }, { status: 400 });
+  }
+
+  const schoolId = await resolveSchoolId(session);
+  const inv = await prisma.invoice.findUnique({
+    where: { id },
+    include: {
+      payments: { select: { id: true }, take: 1 },
+      student: { select: { schoolId: true } },
+    },
+  });
+  if (!inv) {
+    return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+  }
+  if (schoolId && inv.student.schoolId && inv.student.schoolId !== schoolId) {
+    return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+  }
+  if (toMoney(inv.amountPaid) > 0 || inv.payments.length > 0) {
+    return NextResponse.json(
+      { error: "Cannot void an invoice that has payments. Refund or adjust first." },
+      { status: 409 }
+    );
+  }
+  if (inv.status === "VOIDED") {
+    return NextResponse.json({ ok: true, already: true });
+  }
+
+  await prisma.invoice.update({
+    where: { id },
+    data: { status: "VOIDED" },
+  });
+
+  await logAudit({
+    userId: session.userId,
+    schoolId: schoolId ?? undefined,
+    action: "VOID_INVOICE",
+    entity: "Invoice",
+    entityId: id,
+    details: { previousStatus: inv.status, totalAmount: toMoney(inv.totalAmount) },
+  });
+
+  return NextResponse.json({ ok: true });
+}

@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/require-session";
 import { resolveSchoolId } from "@/lib/tenant-scope";
 import { PortalShell } from "@/components/PortalShell";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Kpi } from "@/components/ui/Kpi";
 import { ApproveStudentButton } from "@/components/ApproveStudentButton";
 import { BulkAssignClass } from "@/components/BulkAssignClass";
 import { can, homeRouteForRole } from "@/lib/permissions";
@@ -11,7 +12,7 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_ROLES = ["ADMIN", "IT", "SECRETARY", "PRINCIPAL", "TEACHER"];
+const ALLOWED_ROLES = ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL", "TEACHER"];
 
 export default async function StudentsPage({
   searchParams,
@@ -26,7 +27,7 @@ export default async function StudentsPage({
   const statusFilter = searchParams.status || "ACTIVE";
   const canAdmit = can(session.role, "MANAGE_STUDENTS");
 
-  const [students, appliedCount, arms] = await Promise.all([
+  const [students, appliedCount, activeCount, unassignedCount, arms] = await Promise.all([
     prisma.student.findMany({
       where: {
         status: statusFilter,
@@ -46,6 +47,10 @@ export default async function StudentsPage({
       take: 200,
     }),
     prisma.student.count({ where: { status: "APPLIED", ...(schoolId ? { schoolId } : {}) } }),
+    prisma.student.count({ where: { status: "ACTIVE", ...(schoolId ? { schoolId } : {}) } }),
+    prisma.student.count({
+      where: { status: "ACTIVE", armId: null, ...(schoolId ? { schoolId } : {}) },
+    }),
     prisma.arm.findMany({
       where: schoolId ? { schoolClass: { schoolId } } : undefined,
       include: { schoolClass: true },
@@ -65,37 +70,36 @@ export default async function StudentsPage({
       role={session.role}
       title="Students"
       subtitle={`${students.length} shown`}
+      email={session.email}
       actions={
         canAdmit ? (
           <div className="flex flex-wrap gap-2">
-            <a
-              href={`/api/students/export?status=${statusFilter}`}
-              className="border border-navy text-navy text-sm px-3 py-2 hover:bg-navy hover:text-paper"
-            >
+            <a href={`/api/students/export?status=${statusFilter}`} className="btn-ghost">
               Export CSV
             </a>
-            <Link
-              href="/students/new"
-              className="bg-navy text-paper text-sm px-4 py-2 hover:bg-navy-light"
-            >
+            <Link href="/students/new" className="btn-primary">
               + Admit Student
             </Link>
           </div>
         ) : undefined
       }
     >
-      <div className="flex flex-wrap gap-2 mb-4 text-sm">
-        {tabs.map((t) => (
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
+        <Kpi label="Active" value={String(activeCount)} tone="navy" icon="🎓" />
+        <Kpi label="Applications" value={String(appliedCount)} tone="gold" icon="+" />
+        <Kpi label="Unassigned" value={String(unassignedCount)} tone="rose" icon="!" />
+        <Kpi label="In this list" value={String(students.length)} tone="sage" icon="#" />
+      </div>
+
+      <div className="tab-bar">
+        {tabs.map((tab) => (
           <Link
-            key={t.key}
-            href={`/students?status=${t.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-            className={`px-3 py-1.5 border ${
-              statusFilter === t.key
-                ? "border-navy bg-navy text-paper"
-                : "border-line text-ink/70 hover:border-navy"
-            }`}
+            key={tab.key}
+            href={`/students?status=${tab.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            className="tab-pill"
+            data-active={statusFilter === tab.key ? "true" : "false"}
           >
-            {t.label}
+            {tab.label}
           </Link>
         ))}
       </div>
@@ -107,14 +111,14 @@ export default async function StudentsPage({
           name="q"
           defaultValue={q}
           placeholder="Search by name or admission number..."
-          className="border border-line px-3 py-2 text-sm w-full sm:w-72 bg-white"
+          className="border border-line px-3 py-2 text-sm flex-1 min-w-[12rem] rounded-lg bg-white"
         />
-        <button className="border border-navy text-navy text-sm px-4 hover:bg-navy hover:text-paper">
+        <button type="submit" className="btn-ghost">
           Search
         </button>
       </form>
 
-      {canAdmit && statusFilter === "ACTIVE" && (
+      {canAdmit && (
         <BulkAssignClass
           arms={arms.map((a) => ({
             id: a.id,
@@ -135,7 +139,7 @@ export default async function StudentsPage({
           description="Admit a student or switch the status tab above."
           action={
             canAdmit ? (
-              <Link href="/students/new" className="bg-navy text-paper text-sm px-4 py-2">
+              <Link href="/students/new" className="btn-primary">
                 + Admit student
               </Link>
             ) : undefined
@@ -148,7 +152,7 @@ export default async function StudentsPage({
           <Link
             key={s.id}
             href={`/students/${s.id}`}
-            className="block ledger-block !p-3 hover:border-navy"
+            className="block rounded-xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/40 p-3 shadow-sm hover:border-navy/30 transition-colors"
           >
             <div className="flex justify-between gap-2">
               <span className="font-medium text-sm">
@@ -195,7 +199,7 @@ export default async function StudentsPage({
                 <td className="space-x-2 whitespace-nowrap">
                   <Link
                     href={`/students/${s.id}`}
-                    className="text-navy underline text-sm hover:text-gold"
+                    className="text-navy text-sm font-medium hover:underline"
                   >
                     {canAdmit && !s.arm ? "Assign class" : "View"}
                   </Link>

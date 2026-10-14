@@ -294,13 +294,13 @@ export function ReportTemplateForm({ initial }: { initial: Config }) {
           </p>
         </div>
 
-        <button type="submit" disabled={busy} className="bg-navy text-paper px-4 py-2 disabled:opacity-60">
+        <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">
           {busy ? "Saving…" : "Save layout"}
         </button>
       </form>
 
       <div className="ledger-block !p-0 overflow-hidden">
-        <div className="p-3 border-b border-line text-xs text-ink/50">Live preview (A4-ish)</div>
+        <div className="p-3 border-b border-line text-xs text-ink/50">Live preview (A4-ish) — sample data only</div>
         <div
           className="bg-white text-ink text-xs p-4 min-h-[28rem]"
           style={{ maxWidth: 420, margin: "0 auto" }}
@@ -320,9 +320,9 @@ export function ReportTemplateForm({ initial }: { initial: Config }) {
           )}
           {(cfg.sections || []).includes("studentInfo") && (
             <div className="border border-line p-2 mb-2 grid grid-cols-2 gap-1">
-              <span>Name: Chioma Okafor</span>
-              <span>Class: JSS 1 A</span>
-              <span>Adm: KMS/2025/0001</span>
+              <span>Name: Sample Student</span>
+              <span>Class: Sample class</span>
+              <span>Adm: ADM/2026/0001</span>
               <span>Term: First Term</span>
             </div>
           )}
