@@ -15,6 +15,8 @@ const CreateSubjectSchema = z.object({
 const AssignSubjectSchema = z.object({
   armId: z.string().min(1),
   subjectId: z.string().min(1),
+  teacherId: z.string().optional(),
+  asClassTeacher: z.boolean().optional(),
 });
 
 const DeleteSchema = z.discriminatedUnion("kind", [
@@ -103,8 +105,15 @@ export async function POST(req: Request) {
       data: {
         armId: parsed.data.armId,
         subjectId: parsed.data.subjectId,
+        teacherId: parsed.data.teacherId || undefined,
       },
     });
+    if (parsed.data.asClassTeacher && parsed.data.teacherId) {
+      await prisma.arm.update({
+        where: { id: parsed.data.armId },
+        data: { classTeacherId: parsed.data.teacherId },
+      });
+    }
     await logAudit({
       userId: session.userId,
       schoolId: schoolId ?? undefined,
@@ -149,10 +158,6 @@ export async function POST(req: Request) {
   return NextResponse.json({ schoolClass }, { status: 201 });
 }
 
-/**
- * Safe delete: blocks if students (class/arm) or scores (subject) exist.
- * Empty mistaken entries can be removed.
- */
 export async function DELETE(req: Request) {
   const session = await getSession();
   if (!session || !can(session.role, "MANAGE_CLASSES")) {
