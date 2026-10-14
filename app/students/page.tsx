@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/require-session";
 import { resolveSchoolId } from "@/lib/tenant-scope";
 import { PortalShell } from "@/components/PortalShell";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Kpi } from "@/components/ui/Kpi";
 import { ApproveStudentButton } from "@/components/ApproveStudentButton";
 import { BulkAssignClass } from "@/components/BulkAssignClass";
 import { can, homeRouteForRole } from "@/lib/permissions";
@@ -84,22 +85,10 @@ export default async function StudentsPage({
       }
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
-        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Active</p>
-          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{activeCount}</p>
-        </div>
-        <div className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-amber-800/70">Applications</p>
-          <p className="mt-1 text-xl font-semibold text-amber-900 tabular-nums">{appliedCount}</p>
-        </div>
-        <div className="rounded-xl border border-rose-200/90 bg-gradient-to-br from-rose-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-rose-700/70">Unassigned</p>
-          <p className="mt-1 text-xl font-semibold text-rose-800 tabular-nums">{unassignedCount}</p>
-        </div>
-        <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">In this list</p>
-          <p className="mt-1 text-xl font-semibold text-emerald-800 tabular-nums">{students.length}</p>
-        </div>
+        <Kpi label="Active" value={String(activeCount)} tone="navy" icon="🎓" />
+        <Kpi label="Applications" value={String(appliedCount)} tone="gold" icon="+" />
+        <Kpi label="Unassigned" value={String(unassignedCount)} tone="rose" icon="!" />
+        <Kpi label="In this list" value={String(students.length)} tone="sage" icon="#" />
       </div>
 
       <div className="tab-bar">
