@@ -50,7 +50,7 @@ export default async function ClassesPage() {
         </div>
         <div className="rounded-xl border border-violet-200/90 bg-gradient-to-br from-violet-50 to-white px-3.5 py-3 shadow-sm">
           <p className="text-[10px] uppercase tracking-wide font-medium text-violet-700/70">Subjects</p>
-          <p className="mt-1 text-xl font-semibold text-violet-900 tabular-nums">{subjects.length}</p>
+          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{subjects.length}</p>
         </div>
         <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-3 shadow-sm col-span-2 sm:col-span-1">
           <p className="text-[10px] uppercase tracking-wide font-medium text-emerald-700/70">Arms</p>
@@ -60,14 +60,9 @@ export default async function ClassesPage() {
         </div>
       </div>
       <div className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white px-3.5 py-3 text-sm text-sky-900/80 shadow-sm">
-        Create classes and arms first, add subjects, then assign subjects to arms. To link a teacher
-        (fills their portal), use Assign with teacher selected when the teacher dropdown is available,
-        or call the assign API with teacherId.
-        {teacherOptions.length > 0 && (
-          <span className="block mt-1 text-ink/50">
-            Teaching staff on roll: {teacherOptions.map((t) => t.label).join("; ")}
-          </span>
-        )}
+        Create classes → arms → subjects, then <strong>Assign subject to arm</strong> and pick a{" "}
+        <strong>teacher</strong>. Optional: “Also set as class teacher”. That fills the teacher portal
+        and timetable teacher for conflicts.
       </div>
       <ClassManager
         classes={classes.map((c) => ({
@@ -83,7 +78,7 @@ export default async function ClassesPage() {
           id: s.id,
           name: s.name,
         }))}
-        {...({ teachers: teacherOptions } as object)}
+        teachers={teacherOptions}
       />
     </PortalShell>
   );
