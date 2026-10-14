@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/format";
 import { resolveSchoolId } from "@/lib/tenant-scope";
 import { LeaveForm } from "./LeaveForm";
 import { LeaveReviewButtons } from "./LeaveReviewButtons";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -42,10 +43,10 @@ export default async function LeavePage() {
       email={session.email}
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
-        <Kpi label="Total" value={String(requests.length)} tone="navy" />
-        <Kpi label="Pending" value={String(pending)} tone={pending ? "gold" : "sage"} />
-        <Kpi label="Approved" value={String(approved)} tone="sage" />
-        <Kpi label="Rejected" value={String(rejected)} tone="rose" />
+        <Kpi label="Total" value={String(requests.length)} tone="navy" icon="📋" />
+        <Kpi label="Pending" value={String(pending)} tone={pending ? "gold" : "sage"} icon="…" />
+        <Kpi label="Approved" value={String(approved)} tone="sage" icon="✓" />
+        <Kpi label="Rejected" value={String(rejected)} tone="rose" icon="✕" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -61,7 +62,7 @@ export default async function LeavePage() {
         )}
 
         <section
-          className={`rounded-xl border border-violet-200/70 bg-gradient-to-br from-violet-50/40 to-white shadow-sm overflow-hidden ${
+          className={`rounded-xl border border-line bg-white shadow-sm overflow-hidden ${
             isManager ? "lg:col-span-3" : "lg:col-span-2"
           }`}
         >
@@ -129,21 +130,5 @@ export default async function LeavePage() {
         </section>
       </div>
     </PortalShell>
-  );
-}
-
-const TONE: Record<string, string> = {
-  navy: "from-[#1a3a6e]/[12%] to-white border-navy/15",
-  sage: "from-emerald-500/[12%] to-white border-emerald-500/20",
-  rose: "from-rose-500/[12%] to-white border-rose-500/20",
-  gold: "from-amber-500/[12%] to-white border-amber-500/25",
-};
-
-function Kpi({ label, value, tone }: { label: string; value: string; tone: keyof typeof TONE }) {
-  return (
-    <div className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 shadow-sm ${TONE[tone]}`}>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-ink/50">{label}</p>
-      <p className="mt-1 text-lg sm:text-xl font-semibold text-ink tabular-nums">{value}</p>
-    </div>
   );
 }
