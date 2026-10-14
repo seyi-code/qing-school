@@ -5,6 +5,7 @@ import { can, homeRouteForRole } from "@/lib/permissions";
 import { resolveSchoolId } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { TimetableEditor } from "./TimetableEditor";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -50,17 +51,12 @@ export default async function TimetablePage({
       email={session.email}
     >
       <div className="grid grid-cols-2 gap-2.5 mb-4">
-        <div className="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-blue-700/70">Arms</p>
-          <p className="mt-1 text-xl font-semibold text-blue-900 tabular-nums">{arms.length}</p>
-        </div>
-        <div className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-3.5 py-3 shadow-sm">
-          <p className="text-[10px] uppercase tracking-wide font-medium text-amber-800/70">Slots saved</p>
-          <p className="mt-1 text-xl font-semibold text-amber-900 tabular-nums">{selected ? slots.length : 0}</p>
-        </div>
+        <Kpi label="Arms" value={String(arms.length)} tone="navy" icon="🏫" />
+        <Kpi label="Slots saved" value={String(selected ? slots.length : 0)} tone="gold" icon="📅" />
       </div>
       <p className="mb-4 text-sm text-sky-900/80 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white px-3.5 py-3 shadow-sm">
-        Conflict check: assigning a subject whose teacher is already teaching another class at the same day/period will warn you before saving.
+        Conflict check: assigning a subject whose teacher is already teaching another class at the same
+        day/period will warn you before saving.
       </p>
       {!selected ? (
         <p className="text-ink/50 text-sm rounded-xl border border-line bg-white px-4 py-6 text-center">
