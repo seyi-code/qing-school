@@ -7,6 +7,7 @@ import { resolveSchoolId } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { FeeStructureClient } from "./FeeStructureClient";
+import { Kpi } from "@/components/ui/Kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +51,10 @@ export default async function FeeStructurePage() {
       }
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
-        <Kpi label="Arms" value={String(arms.length)} tone="navy" />
-        <Kpi label="Terms" value={String(terms.length)} tone="sky" />
-        <Kpi label="Fee items" value={String(items.length)} tone="gold" />
-        <Kpi label="Compulsory" value={String(compulsory)} tone="sage" />
+        <Kpi label="Arms" value={String(arms.length)} tone="navy" icon="🏫" />
+        <Kpi label="Terms" value={String(terms.length)} tone="sky" icon="📅" />
+        <Kpi label="Fee items" value={String(items.length)} tone="gold" icon="📋" />
+        <Kpi label="Compulsory" value={String(compulsory)} tone="sage" icon="✓" />
       </div>
       {arms.length === 0 ? (
         <p className="text-sm text-ink/50 rounded-xl border border-line bg-white px-4 py-6 text-center">
@@ -89,21 +90,5 @@ export default async function FeeStructurePage() {
         </p>
       )}
     </PortalShell>
-  );
-}
-
-const TONE: Record<string, string> = {
-  navy: "from-[#1a3a6e]/[12%] to-white border-navy/15",
-  sky: "from-sky-500/[12%] to-white border-sky-500/20",
-  sage: "from-emerald-500/[12%] to-white border-emerald-500/20",
-  gold: "from-amber-500/[12%] to-white border-amber-500/25",
-};
-
-function Kpi({ label, value, tone }: { label: string; value: string; tone: keyof typeof TONE }) {
-  return (
-    <div className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 shadow-sm ${TONE[tone]}`}>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-ink/50">{label}</p>
-      <p className="mt-1 text-lg sm:text-xl font-semibold text-ink tabular-nums">{value}</p>
-    </div>
   );
 }
