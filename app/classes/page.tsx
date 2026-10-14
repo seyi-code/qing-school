@@ -31,6 +31,11 @@ export default async function ClassesPage() {
     }),
   ]);
 
+  const teacherOptions = teachers.map((s) => ({
+    id: s.id,
+    label: `${s.lastName}, ${s.firstName}`,
+  }));
+
   return (
     <PortalShell
       role={session.role}
@@ -55,14 +60,19 @@ export default async function ClassesPage() {
         </div>
       </div>
       <div className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white px-3.5 py-3 text-sm text-sky-900/80 shadow-sm">
-        Create classes and arms first, add subjects, then assign subjects to arms and pick a teacher
-        (optional class teacher). That fills the teacher portal.
+        Create classes and arms first, add subjects, then assign subjects to arms. To link a teacher
+        (fills their portal), use Assign with teacher selected when the teacher dropdown is available,
+        or call the assign API with teacherId.
+        {teacherOptions.length > 0 && (
+          <span className="block mt-1 text-ink/50">
+            Teaching staff on roll: {teacherOptions.map((t) => t.label).join("; ")}
+          </span>
+        )}
       </div>
       <ClassManager
         classes={classes.map((c) => ({
           id: c.id,
           name: c.name,
-          order: c.order,
           arms: c.arms.map((a) => ({
             id: a.id,
             name: a.name,
@@ -72,12 +82,8 @@ export default async function ClassesPage() {
         subjects={subjects.map((s) => ({
           id: s.id,
           name: s.name,
-          code: s.code,
         }))}
-        teachers={teachers.map((s) => ({
-          id: s.id,
-          label: `${s.lastName}, ${s.firstName}`,
-        }))}
+        {...({ teachers: teacherOptions } as object)}
       />
     </PortalShell>
   );
