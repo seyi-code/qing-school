@@ -23,7 +23,7 @@ export default async function StudentPortalPage() {
       scores: {
         include: { armSubject: { include: { subject: true } } },
         take: 8,
-        orderBy: { createdAt: "desc" },
+        orderBy: { total: "desc" },
       },
       attendances: { orderBy: { date: "desc" }, take: 10 },
     },
