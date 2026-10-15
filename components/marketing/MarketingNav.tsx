@@ -17,7 +17,8 @@ export function MarketingNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="sticky top-0 z-40">
+    <>
+      {/* Utility bar — scrolls away (not sticky) so mobile keeps vertical space */}
       <div className="bg-[#082442] text-[#eef4fb] text-[11px] sm:text-xs">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-9 flex items-center justify-between gap-3 flex-wrap py-1.5">
           <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -41,8 +42,10 @@ export function MarketingNav() {
           </div>
         </div>
       </div>
-      <header className="bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[72px] sm:min-h-[86px] flex items-center justify-between gap-4">
+
+      {/* Main brand bar — sticky only */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[64px] sm:min-h-[78px] flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -50,7 +53,7 @@ export function MarketingNav() {
               alt=""
               width={56}
               height={56}
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-contain shrink-0"
+              className="w-11 h-11 sm:w-14 sm:h-14 rounded-full object-contain shrink-0 bg-white"
             />
             <span className="min-w-0">
               <span className="block font-serif font-bold text-[#12345a] text-[15px] sm:text-xl leading-tight truncate">
@@ -82,7 +85,7 @@ export function MarketingNav() {
 
           <button
             type="button"
-            className="lg:hidden w-11 h-11 rounded-lg border border-[#e3e8ed] bg-[#f6f5f0] text-[#12345a] text-2xl"
+            className="lg:hidden w-11 h-11 rounded-lg border border-[#e3e8ed] bg-[#f6f5f0] text-[#12345a] text-2xl shrink-0"
             aria-expanded={open}
             aria-label={open ? "Close navigation" : "Open navigation"}
             onClick={() => setOpen((v) => !v)}
@@ -91,7 +94,7 @@ export function MarketingNav() {
           </button>
         </div>
         {open && (
-          <div className="lg:hidden border-t border-[#e3e8ed] bg-white px-4 py-3 flex flex-col gap-2">
+          <div className="lg:hidden border-t border-[#e3e8ed] bg-white px-4 py-3 flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
             {LINKS.map((l) => (
               <Link
                 key={l.href}
@@ -109,12 +112,16 @@ export function MarketingNav() {
             >
               Apply Now
             </Link>
-            <Link href="/login" className="text-center py-2 text-sm font-bold text-[#12345a]" onClick={() => setOpen(false)}>
+            <Link
+              href="/login"
+              className="text-center py-2 text-sm font-bold text-[#12345a]"
+              onClick={() => setOpen(false)}
+            >
               Portal login
             </Link>
           </div>
         )}
       </header>
-    </div>
+    </>
   );
 }
