@@ -38,8 +38,18 @@ export function ClassManager({
     id: string;
     label: string;
   } | null>(null);
+  const [classFilter, setClassFilter] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState("");
 
   const allArms = classes.flatMap((c) => c.arms.map((a) => ({ ...a, className: c.name })));
+  const qClass = classFilter.trim().toLowerCase();
+  const qSubject = subjectFilter.trim().toLowerCase();
+  const visibleClasses = qClass
+    ? classes.filter((cl) => cl.name.toLowerCase().includes(qClass))
+    : classes;
+  const visibleSubjects = qSubject
+    ? subjects.filter((s) => s.name.toLowerCase().includes(qSubject))
+    : subjects;
 
   async function post(body: object) {
     const res = await fetch("/api/classes", {
@@ -159,7 +169,19 @@ export function ClassManager({
   return (
     <div className="grid md:grid-cols-3 gap-6">
       <div className="md:col-span-2 space-y-4">
-        {classes.map((c) => {
+        <div className="mb-2">
+          <input
+            type="search"
+            placeholder="Filter classes…"
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+            className="w-full max-w-sm border border-line px-3 py-2 text-sm bg-white rounded-lg"
+          />
+        </div>
+        {visibleClasses.length === 0 && classFilter.trim() && (
+          <p className="text-sm text-ink/50">No classes match “{classFilter}”.</p>
+        )}
+        {visibleClasses.map((c) => {
           const totalStudents = c.arms.reduce((n, a) => n + a.studentCount, 0);
           return (
             <div key={c.id} className="ledger-block">
@@ -206,24 +228,37 @@ export function ClassManager({
           {subjects.length === 0 ? (
             <p className="text-sm text-ink/50">No subjects yet. Add English, Maths, etc. on the right.</p>
           ) : (
-            <ul className="text-sm space-y-1">
-              {subjects.map((s) => (
-                <li
-                  key={s.id}
-                  className="border border-line px-2 py-1.5 flex items-center justify-between gap-2"
-                >
-                  <span className="min-w-0 truncate">{s.name}</span>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => setConfirm({ kind: "subject", id: s.id, label: s.name })}
-                    className="text-[11px] text-brick/80 underline hover:text-brick shrink-0 disabled:opacity-50"
-                  >
-                    Delete
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <input
+                type="search"
+                placeholder="Filter subjects…"
+                value={subjectFilter}
+                onChange={(e) => setSubjectFilter(e.target.value)}
+                className="w-full border border-line px-3 py-2 text-sm bg-white rounded-lg mb-2"
+              />
+              {visibleSubjects.length === 0 ? (
+                <p className="text-sm text-ink/50">No subjects match “{subjectFilter}”.</p>
+              ) : (
+                <ul className="text-sm space-y-1 max-h-80 overflow-y-auto">
+                  {visibleSubjects.map((s) => (
+                    <li
+                      key={s.id}
+                      className="border border-line px-2 py-1.5 flex items-center justify-between gap-2"
+                    >
+                      <span className="min-w-0 truncate">{s.name}</span>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setConfirm({ kind: "subject", id: s.id, label: s.name })}
+                        className="text-[11px] text-brick/80 underline hover:text-brick shrink-0 disabled:opacity-50"
+                      >
+                        Delete
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
           <p className="text-xs text-ink/50 mt-3">
             Assign a subject to an arm and pick a <strong>teacher</strong> so their portal and timetable
@@ -247,7 +282,12 @@ export function ClassManager({
               >
                 {busy ? "…" : "Confirm delete"}
               </button>
-              <button type="button" disabled={busy} onClick={() => setConfirm(null)} className="underline text-ink/60">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setConfirm(null)}
+                className="underline text-ink/60"
+              >
                 Cancel
               </button>
             </div>
@@ -348,7 +388,12 @@ export function ClassManager({
             placeholder="e.g. JSS 1"
             className="w-full border border-line px-3 py-2 text-sm mb-2"
           />
-          <button type="button" onClick={addClass} disabled={busy} className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50">
+          <button
+            type="button"
+            onClick={addClass}
+            disabled={busy}
+            className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50"
+          >
             Add
           </button>
         </div>
@@ -372,7 +417,12 @@ export function ClassManager({
             placeholder="e.g. A"
             className="w-full border border-line px-3 py-2 text-sm mb-2"
           />
-          <button type="button" onClick={addArm} disabled={busy} className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50">
+          <button
+            type="button"
+            onClick={addArm}
+            disabled={busy}
+            className="bg-navy text-paper text-sm px-4 py-2 w-full disabled:opacity-50"
+          >
             Add
           </button>
         </div>
