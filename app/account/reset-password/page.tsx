@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 function ResetForm() {
   const router = useRouter();
@@ -60,9 +61,9 @@ function ResetForm() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f5ef]">
+    <main className="min-h-screen bg-[#f7f5ef] flex flex-col">
       <MarketingNav />
-      <div className="flex items-center justify-center px-4 py-10">
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md bg-white border border-[#e3e8ed] rounded-2xl p-5 space-y-4 shadow-sm">
           <h1 className="font-serif text-xl">Choose a new password</h1>
           <p className="text-sm text-ink/60">
@@ -114,6 +115,7 @@ function ResetForm() {
           </Link>
         </div>
       </div>
+      <MarketingFooter />
     </main>
   );
 }

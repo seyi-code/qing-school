@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -42,9 +43,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f5ef] text-ink">
+    <main className="min-h-screen bg-[#f7f5ef] text-ink flex flex-col">
       <MarketingNav />
-      <div className="max-w-lg mx-auto px-4 py-10">
+      <div className="max-w-lg mx-auto px-4 py-10 flex-1 w-full">
         <p className="text-xs tracking-widest uppercase text-ink/40 mb-2">School ERP · Multi-tenant</p>
         <h1 className="font-serif text-3xl text-navy mb-2">Onboard your school</h1>
         <p className="text-sm text-ink/60 mb-6">
@@ -148,6 +149,7 @@ export default function OnboardingPage() {
           </Link>
         </p>
       </div>
+      <MarketingFooter />
     </main>
   );
 }

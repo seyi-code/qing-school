@@ -4,11 +4,8 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
-/**
- * Payment return / mock checkout page.
- * Live Paystack redirects here after payment; mock mode confirms locally.
- */
 export default function PayReferencePage() {
   const params = useParams();
   const search = useSearchParams();
@@ -45,9 +42,9 @@ export default function PayReferencePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f5ef]">
+    <main className="min-h-screen bg-[#f7f5ef] flex flex-col">
       <MarketingNav />
-      <div className="flex items-center justify-center px-4 py-10">
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="bg-white border border-[#e3e8ed] rounded-2xl max-w-md w-full space-y-4 text-center p-5 shadow-sm">
           <h1 className="font-serif text-2xl text-[#12345a]">Fee Payment</h1>
           <p className="text-sm text-[#627184] break-all">Reference: {reference}</p>
@@ -76,6 +73,7 @@ export default function PayReferencePage() {
           </Link>
         </div>
       </div>
+      <MarketingFooter />
     </main>
   );
 }

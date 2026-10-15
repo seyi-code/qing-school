@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { SCHOOL } from "@/lib/school-config";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,7 @@ export default async function PublicCmsPage({ params }: { params: { slug: string
 
   return (
     <main
-      className="min-h-screen bg-[#f7f5ef] text-ink"
+      className="min-h-screen bg-[#f7f5ef] text-ink flex flex-col"
       style={{
         fontFamily: theme.font === "sans" ? "system-ui, sans-serif" : "Georgia, serif",
         // @ts-expect-error css vars
@@ -54,7 +55,7 @@ export default async function PublicCmsPage({ params }: { params: { slug: string
       }}
     >
       <MarketingNav />
-      <article className="max-w-2xl mx-auto px-4 py-10">
+      <article className="max-w-2xl mx-auto px-4 py-10 flex-1 w-full">
         <h1 className="font-serif text-3xl text-[#12345a] mb-6">{page.title}</h1>
         <div
           className="prose text-sm leading-relaxed"
@@ -66,6 +67,7 @@ export default async function PublicCmsPage({ params }: { params: { slug: string
           </Link>
         </p>
       </article>
+      <MarketingFooter />
     </main>
   );
 }
