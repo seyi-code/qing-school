@@ -1,0 +1,56 @@
+name: KMS Production Readiness
+
+on:
+  pull_request:
+    branches: [main, staging, fix/v1.3-p0-saas-hardening]
+  push:
+    branches:
+      - qa/production-readiness-ci
+      - fix/v1.3-p0-saas-hardening
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kms-readiness-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Static, unit, and build gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Syntactically valid local-only URL. No database connection or migration occurs.
+      DATABASE_URL: postgresql://kms_ci:kms_ci@127.0.0.1:5432/kms_ci?schema=public
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Vitest suite
+        run: npm test
+
+      - name: Production build (no database migration)
+        run: npm run build:safe
