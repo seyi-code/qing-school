@@ -25,7 +25,7 @@ export default async function StudentPortalPage() {
         take: 8,
         orderBy: { createdAt: "desc" },
       },
-      attendance: { orderBy: { date: "desc" }, take: 10 },
+      attendances: { orderBy: { date: "desc" }, take: 10 },
     },
   });
 
@@ -33,7 +33,7 @@ export default async function StudentPortalPage() {
     return (
       <PortalShell role={session.role} title="My Portal" email={session.email}>
         <div className="rounded-xl border border-line bg-white p-5 text-sm text-ink/70">
-          Your login isn&apos;t linked to a student profile yet. Ask the school office to enable
+          Your login isn't linked to a student profile yet. Ask the school office to enable
           portal access on your student record.
         </div>
       </PortalShell>
@@ -108,7 +108,7 @@ export default async function StudentPortalPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold tabular-nums">{formatNaira(bal)}</span>
-                    <PayOnlineButton invoiceId={inv.id} amount={bal} />
+                    <PayOnlineButton invoiceId={inv.id} maxAmount={bal} />
                   </div>
                 </li>
               );
@@ -135,11 +135,11 @@ export default async function StudentPortalPage() {
         </section>
         <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-navy mb-3">Recent attendance</h2>
-          {student.attendance.length === 0 ? (
+          {student.attendances.length === 0 ? (
             <Empty text="No attendance yet" />
           ) : (
             <ul className="text-sm space-y-2">
-              {student.attendance.map((a) => (
+              {student.attendances.map((a) => (
                 <li key={a.id} className="flex justify-between border-b border-line pb-2">
                   <span className="text-ink/70">{formatDate(a.date)}</span>
                   <Status status={a.status} />
