@@ -71,7 +71,9 @@ export async function middleware(req: NextRequest) {
 
   if (
     PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
-    pathname.startsWith("/_next")
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/kms-home") ||
+    pathname.startsWith("/campus")
   ) {
     const res = NextResponse.next();
     if (schoolSlug) res.headers.set("x-school-slug", schoolSlug);
@@ -109,6 +111,13 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
+/**
+ * Skip middleware for Next internals and static files under /public.
+ * Previously only .png was excluded — .jpg under /kms-home was redirected to /login
+ * (browser then showed broken images / alt text on the homepage).
+ */
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo.svg|.*\\.png$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|logo\\.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|woff2?)$).*)",
+  ],
 };

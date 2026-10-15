@@ -27,14 +27,17 @@ export function HeroSlider() {
     setIndex((n + SLIDES.length) % SLIDES.length);
   }, []);
 
+  // Stable autoplay: advance without resetting the timer on every index change
   useEffect(() => {
     if (paused) return;
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
-    const t = setInterval(() => show(index + 1), 5000);
+    const t = setInterval(() => {
+      setIndex((i) => (i + 1) % SLIDES.length);
+    }, 5000);
     return () => clearInterval(t);
-  }, [index, paused, show]);
+  }, [paused]);
 
   return (
     <section
@@ -50,11 +53,12 @@ export function HeroSlider() {
           <img
             key={s.src}
             src={s.src}
-            alt={s.alt}
+            alt={i === index ? s.alt : ""}
             className={`absolute inset-0 w-full h-full object-cover object-[center_38%] transition-opacity duration-700 ${
-              i === index ? "opacity-100" : "opacity-0"
+              i === index ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-hidden={i !== index}
+            draggable={false}
           />
         ))}
         <div
