@@ -33,6 +33,7 @@ export function ScoreEntryGrid({
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [ok, setOk] = useState(false);
+  const [studentFilter, setStudentFilter] = useState("");
 
   function draftKey(id: string, field: string) {
     return `${id}:${field}`;
@@ -120,12 +121,32 @@ export function ScoreEntryGrid({
     setMsg(`Saved and graded ${data.count ?? nextRows.length} student(s).`);
   }
 
+  const q = studentFilter.trim().toLowerCase();
+  const visibleRows = q
+    ? rows.filter((r) => r.name.toLowerCase().includes(q))
+    : rows;
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-ink/50">
         Continuous assessment: CA1 / {CA1_MAX} + CA2 / {CA2_MAX} + Exam / {EXAM_MAX} = 100. Totals
         auto-grade using school grade bands.
       </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          placeholder="Search student name…"
+          value={studentFilter}
+          onChange={(e) => setStudentFilter(e.target.value)}
+          className="w-full max-w-xs border border-line px-3 py-2 text-sm rounded-lg bg-white"
+          aria-label="Filter students by name"
+        />
+        {q && (
+          <span className="text-xs text-ink/50">
+            {visibleRows.length} of {rows.length}
+          </span>
+        )}
+      </div>
       <div className="ledger-block !p-0 overflow-x-auto">
         <table className="ledger">
           <thead>
@@ -138,7 +159,14 @@ export function ScoreEntryGrid({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => {
+            {visibleRows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="text-sm text-ink/50 py-6 text-center">
+                  No students match “{studentFilter}”.
+                </td>
+              </tr>
+            )}
+            {visibleRows.map((r) => {
               const total = r.ca1 + r.ca2 + r.exam;
               return (
                 <tr key={r.id}>
