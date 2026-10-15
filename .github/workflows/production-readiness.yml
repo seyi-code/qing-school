@@ -2,7 +2,7 @@ name: KMS Production Readiness
 
 on:
   pull_request:
-    branches: [main, staging]
+    branches: [main, staging, fix/v1.3-p0-saas-hardening]
   push:
     branches:
       - qa/production-readiness-ci
@@ -22,8 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      # Prisma CLI needs a syntactically valid URL for schema validation/generation.
-      # No database connection or migration is performed by this workflow.
+      # Syntactically valid local-only URL. No database connection or migration occurs.
       DATABASE_URL: postgresql://kms_ci:kms_ci@127.0.0.1:5432/kms_ci?schema=public
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
@@ -34,7 +33,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
