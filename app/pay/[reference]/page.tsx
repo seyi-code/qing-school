@@ -3,6 +3,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 /**
  * Payment return / mock checkout page.
@@ -44,33 +45,36 @@ export default function PayReferencePage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper flex items-center justify-center px-4">
-      <div className="ledger-block max-w-md w-full space-y-4 text-center">
-        <h1 className="font-serif text-2xl">Fee Payment</h1>
-        <p className="text-sm text-ink/60 break-all">Reference: {reference}</p>
+    <main className="min-h-screen bg-[#f7f5ef]">
+      <MarketingNav />
+      <div className="flex items-center justify-center px-4 py-10">
+        <div className="bg-white border border-[#e3e8ed] rounded-2xl max-w-md w-full space-y-4 text-center p-5 shadow-sm">
+          <h1 className="font-serif text-2xl text-[#12345a]">Fee Payment</h1>
+          <p className="text-sm text-[#627184] break-all">Reference: {reference}</p>
 
-        {status === "idle" && (
-          <>
-            <p className="text-sm">
-              If you completed payment with the gateway, tap confirm below. In demo mode this
-              simulates a successful charge.
-            </p>
-            <button
-              type="button"
-              onClick={confirm}
-              className="w-full bg-navy text-paper py-2.5 text-sm hover:bg-navy-light"
-            >
-              Confirm payment
-            </button>
-          </>
-        )}
-        {status === "loading" && <p className="text-sm">Verifying…</p>}
-        {status === "ok" && <p className="text-sm text-sage">{message}</p>}
-        {status === "err" && <p className="text-sm text-brick">{message}</p>}
+          {status === "idle" && (
+            <>
+              <p className="text-sm text-[#627184]">
+                If you completed payment with the gateway, tap confirm below. In demo mode this
+                simulates a successful charge.
+              </p>
+              <button
+                type="button"
+                onClick={confirm}
+                className="w-full rounded-xl bg-[#12345a] text-white py-3 text-sm font-semibold"
+              >
+                Confirm payment
+              </button>
+            </>
+          )}
+          {status === "loading" && <p className="text-sm">Verifying…</p>}
+          {status === "ok" && <p className="text-sm text-sage">{message}</p>}
+          {status === "err" && <p className="text-sm text-brick">{message}</p>}
 
-        <Link href="/" className="block text-sm text-navy underline">
-          Back to site
-        </Link>
+          <Link href="/" className="block text-sm text-[#12345a] font-semibold underline">
+            Back to site
+          </Link>
+        </div>
       </div>
     </main>
   );
