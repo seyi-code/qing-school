@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export default function AdmissionsPage() {
   const [loading, setLoading] = useState(false);
@@ -36,10 +37,10 @@ export default function AdmissionsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f5ef] text-[#1e2e43]">
+    <main className="min-h-screen bg-[#f7f5ef] text-[#1e2e43] flex flex-col">
       <MarketingNav />
 
-      <div className="max-w-xl mx-auto px-4 py-10">
+      <div className="max-w-xl mx-auto px-4 py-10 flex-1 w-full">
         <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-[#a57d13]">Admissions</p>
         <h1 className="font-serif text-3xl text-[#12345a] mt-1 mb-2">Online Admission</h1>
         <p className="text-sm text-[#627184] mb-8">
@@ -101,6 +102,7 @@ export default function AdmissionsPage() {
           </form>
         )}
       </div>
+      <MarketingFooter />
     </main>
   );
 }

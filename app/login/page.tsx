@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 function LoginForm() {
   const router = useRouter();
@@ -56,9 +57,9 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#eef2f8] via-paper to-paper">
+    <main className="min-h-screen bg-gradient-to-b from-[#eef2f8] via-paper to-paper flex flex-col">
       <MarketingNav />
-      <div className="flex items-center justify-center px-4 py-10">
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <div className="text-center mb-7">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -151,6 +152,7 @@ function LoginForm() {
           </p>
         </div>
       </div>
+      <MarketingFooter />
     </main>
   );
 }
