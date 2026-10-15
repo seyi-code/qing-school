@@ -54,8 +54,8 @@ export function MarketingFooter() {
             <Link href="/result-checker" className="hover:text-white">
               Result checker
             </Link>
-            <Link href="/complaints" className="hover:text-white">
-              Feedback
+            <Link href="/contact" className="hover:text-white">
+              Contact
             </Link>
           </div>
         </div>
@@ -72,6 +72,9 @@ export function MarketingFooter() {
               {SCHOOL.contact.email}
             </a>
           </p>
+          <Link href="/contact" className="inline-block mt-2 text-sm text-[#d2ae3b] font-semibold hover:underline">
+            Message the office →
+          </Link>
         </div>
       </div>
       <div className="max-w-[1180px] mx-auto px-5 pt-6 border-t border-white/10 flex flex-col sm:flex-row gap-2 justify-between text-xs text-[#8a9aab]">

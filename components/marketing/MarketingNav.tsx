@@ -10,7 +10,7 @@ const LINKS = [
   { href: "/#why", label: "Why KMS" },
   { href: "/admissions", label: "Admissions" },
   { href: "/#news", label: "News" },
-  { href: "/#contact", label: "Contact" },
+  { href: "/contact", label: "Contact" },
 ];
 
 /**
@@ -59,7 +59,7 @@ export function MarketingNav() {
                 alt=""
                 width={56}
                 height={56}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-contain shrink-0 bg-white"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-contain bg-[#f7f5ef] border border-[#e8e4d8] shrink-0"
               />
               <span className="min-w-0">
                 <span className="block font-serif font-bold text-[#12345a] text-[14px] sm:text-lg leading-tight truncate">
@@ -129,9 +129,8 @@ export function MarketingNav() {
           )}
         </header>
       </div>
-
-      {/* Spacer ≈ utility (36px) + brand (56–72px) */}
-      <div className="h-[92px] sm:h-[108px]" aria-hidden />
+      {/* Spacer matches fixed header height (utility + brand) */}
+      <div className="h-[88px] sm:h-[100px]" aria-hidden />
     </>
   );
 }
