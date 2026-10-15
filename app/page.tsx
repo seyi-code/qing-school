@@ -147,7 +147,7 @@ export default async function PublicHomePage() {
               ))}
             </div>
             <Link
-              href="/admissions"
+              href="/#about"
               className="inline-flex mt-6 items-center gap-2 px-5 py-3 rounded-lg bg-[#12345a] text-white text-sm font-extrabold hover:brightness-110"
             >
               Learn More About Us →
@@ -170,7 +170,7 @@ export default async function PublicHomePage() {
               formation, creativity and practical skills.
             </p>
             <Link
-              href="/admissions"
+              href="/#programmes"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[#12345a] text-white text-sm font-extrabold"
             >
               Explore Our Academics →
@@ -188,7 +188,7 @@ export default async function PublicHomePage() {
                   {p.title}
                 </h3>
                 <p className="text-[12px] text-[#627184] leading-snug m-0 mb-2">{p.body}</p>
-                <Link href="/admissions" className="text-[12px] font-extrabold text-[#b3234b] hover:underline">
+                <Link href="/#programmes" className="text-[12px] font-extrabold text-[#b3234b] hover:underline">
                   Learn More →
                 </Link>
               </article>
@@ -211,7 +211,7 @@ export default async function PublicHomePage() {
               encouraged and empowered to achieve their best.
             </p>
             <Link
-              href="/admissions"
+              href="/#why"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[#12345a] text-white text-sm font-extrabold"
             >
               Discover More →
@@ -223,7 +223,7 @@ export default async function PublicHomePage() {
                 <span className="text-2xl text-[#d2ae3b]">{w.icon}</span>
                 <h3 className="text-sm font-bold text-[#12345a] mt-2 mb-1">{w.title}</h3>
                 <p className="text-xs text-[#627184] m-0 mb-2">{w.body}</p>
-                <Link href="/admissions" className="text-[12px] font-extrabold text-[#b3234b]">
+                <Link href="/#why" className="text-[12px] font-extrabold text-[#b3234b]">
                   Learn More →
                 </Link>
               </article>
