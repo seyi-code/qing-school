@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { SCHOOL } from "@/lib/school-config";
 
 const LINKS = [
@@ -13,50 +13,17 @@ const LINKS = [
   { href: "/#contact", label: "Contact" },
 ];
 
+/**
+ * Marketing header matching kms-homepage-standalone behavior:
+ * - Phone/portal strip scrolls away with the page
+ * - White brand bar stays sticky and always visible while scrolling
+ */
 export function MarketingNav() {
   const [open, setOpen] = useState(false);
-  /** true = bar visible */
-  const [visible, setVisible] = useState(true);
-  const lastY = useRef(0);
-  const ticking = useRef(false);
-
-  const onScroll = useCallback(() => {
-    if (ticking.current) return;
-    ticking.current = true;
-    requestAnimationFrame(() => {
-      const y = window.scrollY;
-      const delta = y - lastY.current;
-
-      // Always show near top of page or when mobile menu is open
-      if (y < 24 || open) {
-        setVisible(true);
-      } else if (delta > 8) {
-        // scrolling down → hide
-        setVisible(false);
-      } else if (delta < -8) {
-        // scrolling up → show
-        setVisible(true);
-      }
-
-      lastY.current = y;
-      ticking.current = false;
-    });
-  }, [open]);
-
-  useEffect(() => {
-    lastY.current = window.scrollY;
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [onScroll]);
-
-  // Keep nav open while menu is expanded
-  useEffect(() => {
-    if (open) setVisible(true);
-  }, [open]);
 
   return (
     <>
-      {/* Utility bar — scrolls with page */}
+      {/* Utility bar — not sticky; scrolls off */}
       <div className="bg-[#082442] text-[#eef4fb] text-[11px] sm:text-xs">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-9 flex items-center justify-between gap-3 flex-wrap py-1.5">
           <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -81,12 +48,8 @@ export function MarketingNav() {
         </div>
       </div>
 
-      {/* Main brand bar — hides on scroll down, shows on scroll up */}
-      <header
-        className={`sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#e3e8ed] transition-transform duration-300 ease-out ${
-          visible ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
+      {/* Brand bar — sticky, always on screen while scrolling (standalone behavior) */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[64px] sm:min-h-[78px] flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
