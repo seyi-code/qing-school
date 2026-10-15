@@ -14,16 +14,19 @@ const LINKS = [
 ];
 
 /**
- * Marketing header matching kms-homepage-standalone behavior:
- * - Phone/portal strip scrolls away with the page
- * - White brand bar stays sticky and always visible while scrolling
+ * Matches kms-homepage-standalone scroll behavior:
+ * - Utility strip scrolls away with the page
+ * - White brand bar stays pinned at the top while scrolling
+ *
+ * Uses position:fixed (not sticky) so it works even if an ancestor
+ * has overflow set — sticky was broken by html/body overflow-x:hidden.
  */
 export function MarketingNav() {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      {/* Utility bar — not sticky; scrolls off */}
+      {/* Utility bar — normal flow, scrolls off the top */}
       <div className="bg-[#082442] text-[#eef4fb] text-[11px] sm:text-xs">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-9 flex items-center justify-between gap-3 flex-wrap py-1.5">
           <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -48,8 +51,12 @@ export function MarketingNav() {
         </div>
       </div>
 
-      {/* Brand bar — sticky, always on screen while scrolling (standalone behavior) */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
+      {/*
+        Fixed brand bar. Spacer below reserves the same height so content
+        is not hidden under the bar. At page top you see utility + bar;
+        after scroll, only the bar remains on screen (standalone demo).
+      */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[64px] sm:min-h-[78px] flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -127,6 +134,9 @@ export function MarketingNav() {
           </div>
         )}
       </header>
+
+      {/* Spacer so first paint is not covered by fixed header */}
+      <div className="h-[64px] sm:h-[78px]" aria-hidden />
     </>
   );
 }
