@@ -85,7 +85,7 @@ export default async function PublicHomePage() {
   const cmsHtml = homeCms ? blocksToHtml(parseBlocks(homeCms.body)) : null;
 
   return (
-    <main className="min-h-screen bg-white text-[#1e2e43] overflow-x-hidden">
+    <main className="min-h-screen bg-white text-[#1e2e43]">
       <MarketingNav />
       <HeroSlider />
 
