@@ -9,6 +9,7 @@ import { homeRouteForRole } from "@/lib/permissions";
 import { resolveSchoolId } from "@/lib/tenant-scope";
 import { Kpi } from "@/components/ui/Kpi";
 import Link from "next/link";
+import { compareClassNames } from "@/lib/class-sort";
 
 const ALLOWED_ROLES = ["PLATFORM_ADMIN", "ADMIN", "TEACHER", "IT"];
 
@@ -33,13 +34,19 @@ export default async function AttendancePage({
       ? searchParams.date
       : todayIso;
 
-  const arms = await prisma.arm.findMany({
+  const armsRaw = await prisma.arm.findMany({
     where: schoolId ? { schoolClass: { schoolId } } : undefined,
     include: {
       schoolClass: true,
       _count: { select: { students: { where: { status: "ACTIVE" } } } },
     },
     orderBy: [{ schoolClass: { order: "asc" } }, { name: "asc" }],
+  });
+  // Natural level order: JSS 1 → JSS 2 → … → SSS 3 (order field alone is often 0)
+  const arms = [...armsRaw].sort((a, b) => {
+    const byClass = compareClassNames(a.schoolClass.name, b.schoolClass.name);
+    if (byClass !== 0) return byClass;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true });
   });
 
   const requested = searchParams.armId;
@@ -80,7 +87,6 @@ export default async function AttendancePage({
   const alreadySaved = markedCount > 0;
   const isToday = dateIso === todayIso;
 
-  // Recent history (14 days) for this arm — no schema change
   const from = new Date(todayIso);
   from.setDate(from.getDate() - 14);
   const recentRows = selectedArmId
