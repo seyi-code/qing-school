@@ -7,6 +7,7 @@ import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { toMoney } from "@/lib/money";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ActionTile } from "@/components/ui/ActionTile";
 
 export const dynamic = "force-dynamic";
 
@@ -102,28 +103,84 @@ export default async function DashboardPage() {
     attention.push({ href: "/attendance", label: "Attendance not taken today", tone: "info" });
   }
 
-  const actions: { href: string; label: string; primary?: boolean }[] = [];
+  const actions: {
+    href: string;
+    label: string;
+    icon: string;
+    description?: string;
+    primary?: boolean;
+  }[] = [];
   if (can(session.role, "MANAGE_STUDENTS") && !isAccounts) {
-    actions.push({ href: "/students/new", label: "Admit student", primary: true });
+    actions.push({
+      href: "/students/new",
+      label: "Admit student",
+      icon: "🎓",
+      description: "Register a new learner",
+      primary: true,
+    });
   }
   if (showFinancials || isSecretary || isAccounts) {
-    actions.push({ href: "/fees", label: "Collect fees", primary: isAccounts });
+    actions.push({
+      href: "/fees",
+      label: "Collect fees",
+      icon: "₦",
+      description: "Invoices & payments",
+      primary: isAccounts,
+    });
   }
-  if (["ADMIN", "IT", "PLATFORM_ADMIN"].includes(session.role)) {
-    actions.push({ href: "/attendance", label: "Attendance" });
+  if (["ADMIN", "IT", "PLATFORM_ADMIN", "TEACHER", "PRINCIPAL"].includes(session.role)) {
+    actions.push({
+      href: "/attendance",
+      label: "Attendance",
+      icon: "✓",
+      description: "Mark class register",
+    });
   }
   if (["ADMIN", "PRINCIPAL", "SECRETARY", "IT", "PLATFORM_ADMIN"].includes(session.role)) {
-    actions.push({ href: "/notices", label: "Post notice" });
+    actions.push({
+      href: "/notices",
+      label: "Post notice",
+      icon: "📢",
+      description: "School announcements",
+    });
   }
   if (isAccounts) {
-    actions.push({ href: "/expenses", label: "Expense" });
-    actions.push({ href: "/payroll", label: "Payroll" });
+    actions.push({
+      href: "/expenses",
+      label: "Record expense",
+      icon: "💸",
+      description: "School spending",
+    });
+    actions.push({
+      href: "/payroll",
+      label: "Payroll",
+      icon: "💼",
+      description: "Staff salaries",
+    });
   }
   if (isPrincipal) {
-    actions.push({ href: "/reports", label: "Reports" });
+    actions.push({
+      href: "/reports",
+      label: "Reports",
+      icon: "📊",
+      description: "Exports & analytics",
+    });
+  }
+  if (["ADMIN", "IT", "PLATFORM_ADMIN", "TEACHER", "PRINCIPAL"].includes(session.role)) {
+    actions.push({
+      href: "/exams",
+      label: "Scores / CA",
+      icon: "📝",
+      description: "Enter continuous assessment",
+    });
   }
   if (session.role === "PLATFORM_ADMIN") {
-    actions.push({ href: "/platform", label: "Platform" });
+    actions.push({
+      href: "/platform",
+      label: "Platform",
+      icon: "◆",
+      description: "Tenants & billing",
+    });
   }
 
   const welcome =
@@ -251,12 +308,22 @@ export default async function DashboardPage() {
       )}
 
       {actions.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-5">
-          {actions.map((a) => (
-            <Link key={a.href + a.label} href={a.href} className={a.primary ? "btn-primary" : "btn-ghost"}>
-              {a.label}
-            </Link>
-          ))}
+        <div className="mb-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#627184] mb-2">
+            Quick actions
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {actions.map((a) => (
+              <ActionTile
+                key={a.href + a.label}
+                href={a.href}
+                label={a.label}
+                icon={a.icon}
+                description={a.description}
+                primary={a.primary}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -295,18 +362,18 @@ export default async function DashboardPage() {
             <h2 className="font-serif text-lg text-navy">Recent activity</h2>
           </div>
           {recentAudit.length === 0 ? (
-            <p className="text-sm text-ink/40 py-6 text-center">No activity yet.</p>
+            <p className="text-sm text-ink/50 py-6 text-center">No recent audit entries.</p>
           ) : (
-            <ul className="divide-y divide-indigo-100/80">
+            <ul className="space-y-2 text-sm">
               {recentAudit.map((log) => (
-                <li key={log.id} className="py-2.5 text-sm">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="text-ink/75 truncate max-w-[55%]">{log.user?.email ?? "System"}</span>
-                    <span className="inline-flex items-center rounded-md bg-indigo-100/90 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-indigo-800">
-                      {log.action}
+                <li key={log.id} className="border-b border-line/60 pb-2 last:border-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-ink/80">{log.action}</span>
+                    <span className="inline-flex items-center rounded-md bg-indigo-100/90 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-indigo-800 shrink-0">
+                      {formatDateTime(log.createdAt)}
                     </span>
                   </div>
-                  <p className="text-[11px] text-ink/40 mt-0.5">{formatDateTime(log.createdAt)}</p>
+                  <p className="text-[11px] text-ink/45 mt-0.5">{log.user?.email || "System"}</p>
                 </li>
               ))}
             </ul>
@@ -319,12 +386,15 @@ export default async function DashboardPage() {
 
 type KpiTone = "navy" | "violet" | "gold" | "sage" | "brick" | "sky" | "slate";
 
-const TONE: Record<KpiTone, { card: string; label: string; value: string; badge: string }> = {
+const TONE: Record<
+  KpiTone,
+  { card: string; label: string; value: string; badge: string }
+> = {
   navy: {
-    card: "border-blue-200/90 bg-gradient-to-br from-blue-50 to-white",
-    label: "text-blue-700/70",
-    value: "text-blue-900",
-    badge: "bg-blue-100 text-blue-800",
+    card: "border-navy/20 bg-gradient-to-br from-[#1a3a6e]/[12%] to-white",
+    label: "text-navy/60",
+    value: "text-navy",
+    badge: "bg-navy/10 text-navy",
   },
   violet: {
     card: "border-violet-200/90 bg-gradient-to-br from-violet-50 to-white",
