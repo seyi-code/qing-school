@@ -52,6 +52,7 @@ export default async function StaffPage() {
 
       {staff.length === 0 ? (
         <EmptyState
+          icon="👥"
           title="No staff yet"
           description="Add teaching and non-teaching staff so roles, payroll and class teachers work."
           action={
