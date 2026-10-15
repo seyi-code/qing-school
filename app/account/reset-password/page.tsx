@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, FormEvent, Suspense } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 /**
  * Token-based reset (forgot password).
@@ -13,6 +15,8 @@ function ResetForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
+  const { toast } = useToast();
+
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -22,7 +26,6 @@ function ResetForm() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -44,16 +47,18 @@ function ResetForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error || "Reset failed");
+        const msg = data.error || "Could not reset password.";
+        setError(msg);
+        toast(msg, "error");
         setLoading(false);
         return;
       }
-      setSuccess("Password updated successfully. Redirecting to sign in…");
-      setTimeout(() => {
-        router.push("/login?reset=ok");
-      }, 1200);
+      setSuccess("Password updated. You can sign in now.");
+      toast("Password updated.", "success");
+      setTimeout(() => router.push("/login?reset=ok"), 1200);
     } catch {
-      setError("Network error");
+      setError("Network error. Try again.");
+      toast("Network error.", "error");
       setLoading(false);
     }
   }
@@ -74,8 +79,7 @@ function ResetForm() {
         <form onSubmit={onSubmit} className="space-y-3">
           <label className="block text-sm">
             New password
-            <input
-              type="password"
+            <PasswordInput
               required
               minLength={8}
               value={password}
@@ -88,8 +92,7 @@ function ResetForm() {
           </label>
           <label className="block text-sm">
             Confirm password
-            <input
-              type="password"
+            <PasswordInput
               required
               minLength={8}
               value={confirm}

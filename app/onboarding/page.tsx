@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -107,9 +108,8 @@ export default function OnboardingPage() {
           </label>
           <label className="block">
             Admin password (10+ chars, mixed)
-            <input
+            <PasswordInput
               name="adminPassword"
-              type="password"
               required
               minLength={10}
               className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
