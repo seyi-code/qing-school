@@ -10,6 +10,22 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+function invoiceLabel(lineItems: string): string {
+  const raw = (lineItems || "").trim();
+  if (!raw) return "School fees";
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const first = parsed[0] as { name?: string; label?: string };
+      return first?.name || first?.label || "School fees";
+    }
+    if (typeof parsed === "string" && parsed) return parsed;
+  } catch {
+    /* plain string */
+  }
+  return raw.length > 48 ? `${raw.slice(0, 45)}…` : raw;
+}
+
 export default async function StudentPortalPage() {
   const session = await requireSession();
   if (session.role !== "STUDENT") redirect("/dashboard");
@@ -103,7 +119,7 @@ export default async function StudentPortalPage() {
                   className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3 last:border-0"
                 >
                   <div>
-                    <p className="text-sm font-medium">{inv.description || "School fees"}</p>
+                    <p className="text-sm font-medium">{invoiceLabel(inv.lineItems)}</p>
                     <p className="text-xs text-ink/50">{inv.status}</p>
                   </div>
                   <div className="flex items-center gap-2">
