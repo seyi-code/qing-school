@@ -52,7 +52,7 @@ export function PortalShell({
   const tenantLabel = schoolShort || schoolName;
 
   return (
-    <div className="flex min-h-screen bg-paper">
+    <div className="flex min-h-screen bg-[#f5f7fa]">
       <div className="hidden lg:flex lg:shrink-0 lg:h-screen lg:sticky lg:top-0">
         <Sidebar role={role} schoolLabel={tenantLabel} schoolName={schoolName} />
       </div>
@@ -77,11 +77,11 @@ export function PortalShell({
       )}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="border-b border-line bg-paper px-4 sm:px-6 lg:px-8 py-3 sm:py-4 no-print sticky top-0 z-30">
+        <header className="border-b border-[#e3e8ed] bg-white/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-3 sm:py-4 no-print sticky top-0 z-30 shadow-sm">
           <div className="flex items-start gap-3">
             <button
               type="button"
-              className="lg:hidden mt-0.5 shrink-0 w-10 h-10 flex flex-col items-center justify-center gap-1.5 border border-line bg-white"
+              className="lg:hidden mt-0.5 shrink-0 w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#e3e8ed] bg-[#f6f5f0]"
               aria-label="Open menu"
               onClick={() => setMobileOpen(true)}
             >
@@ -101,11 +101,11 @@ export function PortalShell({
                       ) : null}
                     </p>
                   )}
-                  <h1 className="font-serif text-xl sm:text-2xl text-ink leading-tight break-words">
+                  <h1 className="font-serif text-xl sm:text-2xl text-[#12345a] leading-tight break-words">
                     {title}
                   </h1>
                   {subtitle && (
-                    <p className="text-xs sm:text-sm text-ink/60 mt-0.5 break-words">{subtitle}</p>
+                    <p className="text-xs sm:text-sm text-[#627184] mt-0.5 break-words">{subtitle}</p>
                   )}
                 </div>
                 <UserMenu email={email} />
@@ -118,7 +118,7 @@ export function PortalShell({
           </div>
         </header>
 
-        <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1">{children}</main>
+        <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 max-w-[1400px] w-full mx-auto">{children}</main>
       </div>
     </div>
   );
