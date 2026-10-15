@@ -7,6 +7,7 @@ import { toMoney } from "@/lib/money";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ActionTile } from "@/components/ui/ActionTile";
 import { getBrandingForSchoolId } from "@/lib/branding";
 import { resolveSchoolId } from "@/lib/tenant-scope";
 
@@ -43,6 +44,27 @@ export default async function ParentPortalPage() {
       subtitle={`${brand.shortName} · balances, attendance and notices for your children`}
       email={session.email}
     >
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#627184] mb-2">
+        Quick actions
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+        <ActionTile
+          href="/result-checker"
+          label="Result checker"
+          icon="📊"
+          description="Check published scores"
+          primary
+        />
+        <ActionTile href="/notices" label="School notices" icon="📢" description="Announcements" />
+        <ActionTile
+          href="/fees"
+          label="Fees overview"
+          icon="₦"
+          description="Balances for your children"
+        />
+        <ActionTile href="/account/profile" label="My profile" icon="👤" description="Account settings" />
+      </div>
+
       {links.length === 0 ? (
         <EmptyState
           title="No children linked"
