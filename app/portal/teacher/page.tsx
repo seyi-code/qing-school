@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
+import { ActionTile } from "@/components/ui/ActionTile";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -57,6 +58,24 @@ export default async function TeacherPortalPage() {
         />
       </div>
 
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#627184] mb-2">
+        Quick actions
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <ActionTile
+          href="/attendance"
+          label="Mark attendance"
+          icon="✓"
+          description="Today's class register"
+          primary
+        />
+        <ActionTile href="/exams" label="Enter scores" icon="📝" description="CA and exam marks" />
+        <ActionTile href="/timetable" label="Timetable" icon="🗓" description="Your schedule" />
+        <ActionTile href="/leave" label="Leave request" icon="📅" description="Apply for time off" />
+        <ActionTile href="/notices" label="Notices" icon="📢" description="School announcements" />
+        <ActionTile href="/cbt" label="CBT" icon="💻" description="Computer-based tests" />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <section className="rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 sm:p-5 shadow-sm">
           <h2 className="font-serif text-lg text-navy mb-3">Classes you lead</h2>
@@ -98,27 +117,6 @@ export default async function TeacherPortalPage() {
           </ul>
         </section>
       </div>
-
-      <section className="rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-white p-4 sm:p-5 shadow-sm mb-6">
-        <h2 className="font-serif text-lg text-navy mb-3">Quick actions</h2>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/attendance" className="btn-primary text-sm">
-            Take attendance
-          </Link>
-          <Link href="/exams" className="btn-ghost text-sm">
-            Enter scores
-          </Link>
-          <Link href="/students" className="btn-ghost text-sm">
-            Class list
-          </Link>
-          <Link href="/timetable" className="btn-ghost text-sm">
-            Timetable
-          </Link>
-          <Link href="/leave" className="btn-ghost text-sm">
-            Request leave
-          </Link>
-        </div>
-      </section>
 
       {staff.leaveRequests.length > 0 && (
         <section className="rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/80 to-white p-4 sm:p-5 shadow-sm">
