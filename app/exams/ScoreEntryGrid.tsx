@@ -14,6 +14,10 @@ const CA1_MAX = 20;
 const CA2_MAX = 20;
 const EXAM_MAX = 60;
 
+function fieldMax(field: "ca1" | "ca2" | "exam") {
+  return field === "exam" ? EXAM_MAX : field === "ca1" ? CA1_MAX : CA2_MAX;
+}
+
 export function ScoreEntryGrid({
   armSubjectId,
   termId,
@@ -24,19 +28,71 @@ export function ScoreEntryGrid({
   students: Row[];
 }) {
   const [rows, setRows] = useState<Row[]>(students);
+  /** While typing, keep raw string so mobile can clear zeros and avoid leading-zero quirks */
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [ok, setOk] = useState(false);
 
-  function update(id: string, field: "ca1" | "ca2" | "exam", value: number) {
+  function draftKey(id: string, field: string) {
+    return `${id}:${field}`;
+  }
+
+  function displayValue(id: string, field: "ca1" | "ca2" | "exam") {
+    const k = draftKey(id, field);
+    if (Object.prototype.hasOwnProperty.call(drafts, k)) return drafts[k];
+    const n = rows.find((r) => r.id === id)?.[field] ?? 0;
+    return String(n);
+  }
+
+  function onChange(id: string, field: "ca1" | "ca2" | "exam", raw: string) {
     setMsg("");
     setOk(false);
-    const max = field === "exam" ? EXAM_MAX : field === "ca1" ? CA1_MAX : CA2_MAX;
-    const clamped = Math.max(0, Math.min(max, Number.isFinite(value) ? value : 0));
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: clamped } : r)));
+    const cleaned = raw.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+    setDrafts((d) => ({ ...d, [draftKey(id, field)]: cleaned }));
+  }
+
+  function commit(id: string, field: "ca1" | "ca2" | "exam") {
+    const k = draftKey(id, field);
+    if (!Object.prototype.hasOwnProperty.call(drafts, k)) return;
+    const raw = drafts[k].trim();
+    const max = fieldMax(field);
+    let n = raw === "" ? 0 : Number(raw);
+    if (!Number.isFinite(n)) n = 0;
+    n = Math.max(0, Math.min(max, n));
+    if (Number.isInteger(n)) n = Math.round(n);
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: n } : r)));
+    setDrafts((d) => {
+      const next = { ...d };
+      delete next[k];
+      return next;
+    });
   }
 
   async function save() {
+    const open = { ...drafts };
+    const nextRows = rows.map((r) => {
+      let ca1 = r.ca1;
+      let ca2 = r.ca2;
+      let exam = r.exam;
+      for (const field of ["ca1", "ca2", "exam"] as const) {
+        const k = draftKey(r.id, field);
+        if (Object.prototype.hasOwnProperty.call(open, k)) {
+          const raw = open[k].trim();
+          const max = fieldMax(field);
+          let n = raw === "" ? 0 : Number(raw);
+          if (!Number.isFinite(n)) n = 0;
+          n = Math.max(0, Math.min(max, n));
+          if (field === "ca1") ca1 = n;
+          if (field === "ca2") ca2 = n;
+          if (field === "exam") exam = n;
+        }
+      }
+      return { ...r, ca1, ca2, exam };
+    });
+    setRows(nextRows);
+    setDrafts({});
+
     setSaving(true);
     setMsg("");
     setOk(false);
@@ -46,7 +102,7 @@ export function ScoreEntryGrid({
       body: JSON.stringify({
         armSubjectId,
         termId,
-        scores: rows.map((r) => ({
+        scores: nextRows.map((r) => ({
           studentId: r.id,
           ca1: r.ca1,
           ca2: r.ca2,
@@ -61,7 +117,7 @@ export function ScoreEntryGrid({
       return;
     }
     setOk(true);
-    setMsg(`Saved and graded ${data.count ?? rows.length} student(s).`);
+    setMsg(`Saved and graded ${data.count ?? nextRows.length} student(s).`);
   }
 
   return (
@@ -90,16 +146,22 @@ export function ScoreEntryGrid({
                   {(["ca1", "ca2", "exam"] as const).map((field) => (
                     <td key={field}>
                       <input
-                        type="number"
-                        min={0}
-                        max={field === "exam" ? EXAM_MAX : field === "ca1" ? CA1_MAX : CA2_MAX}
-                        value={r[field]}
-                        onChange={(e) => update(r.id, field, Number(e.target.value))}
-                        className="w-16 border border-line px-2 py-1 text-sm"
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*"
+                        autoComplete="off"
+                        value={displayValue(r.id, field)}
+                        onChange={(e) => onChange(r.id, field, e.target.value)}
+                        onBlur={() => commit(r.id, field)}
+                        onFocus={(e) => e.target.select()}
+                        className="w-16 border border-line px-2 py-1 text-sm tabular-nums"
+                        aria-label={`${field} for ${r.name}`}
                       />
                     </td>
                   ))}
-                  <td className={`font-medium ${total > 100 ? "text-brick" : ""}`}>{total}</td>
+                  <td className={`font-medium tabular-nums ${total > 100 ? "text-brick" : ""}`}>
+                    {total}
+                  </td>
                 </tr>
               );
             })}
