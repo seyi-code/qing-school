@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { AttendanceForm } from "./AttendanceForm";
 import { ArmPicker } from "./ArmPicker";
 import { DateNav } from "./DateNav";
@@ -42,7 +43,6 @@ export default async function AttendancePage({
     },
     orderBy: [{ schoolClass: { order: "asc" } }, { name: "asc" }],
   });
-  // Natural level order: JSS 1 → JSS 2 → … → SSS 3 (order field alone is often 0)
   const arms = [...armsRaw].sort((a, b) => {
     const byClass = compareClassNames(a.schoolClass.name, b.schoolClass.name);
     if (byClass !== 0) return byClass;
@@ -172,27 +172,27 @@ export default async function AttendancePage({
       </div>
 
       {arms.length === 0 ? (
-        <div className="ledger-block text-sm text-ink/70 mt-3">
-          <p>No classes/arms for this school yet. Create them under Classes first.</p>
-        </div>
+        <EmptyState
+          icon="🏫"
+          title="No classes yet"
+          description="Create classes and arms under Classes & Subjects before marking attendance."
+          action={
+            <Link href="/classes" className="btn-primary">
+              Open Classes
+            </Link>
+          }
+        />
       ) : selectedArmId && students.length === 0 ? (
-        <div className="ledger-block text-sm text-ink/70 space-y-2 mt-3">
-          <p>
-            <strong>
-              {selectedArm
-                ? `${selectedArm.schoolClass.name} ${selectedArm.name}`
-                : "This class"}
-            </strong>{" "}
-            has <strong>0 active students</strong> assigned.
-          </p>
-          <p>
-            Assign students under{" "}
-            <Link href="/students" className="text-navy font-medium hover:underline">
-              Students
-            </Link>{" "}
-            (edit student → class/arm), then return here to mark attendance.
-          </p>
-        </div>
+        <EmptyState
+          icon="🎓"
+          title="No students in this class"
+          description={`${selectedArm ? `${selectedArm.schoolClass.name} ${selectedArm.name}` : "This class"} has 0 active students. Assign learners under Students, then return here.`}
+          action={
+            <Link href="/students" className="btn-primary">
+              Open Students
+            </Link>
+          }
+        />
       ) : selectedArmId ? (
         <div className="mt-3">
           <AttendanceForm
