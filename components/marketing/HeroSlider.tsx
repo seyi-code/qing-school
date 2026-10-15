@@ -27,7 +27,6 @@ export function HeroSlider() {
     setIndex((n + SLIDES.length) % SLIDES.length);
   }, []);
 
-  // Stable autoplay: advance without resetting the timer on every index change
   useEffect(() => {
     if (paused) return;
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -89,7 +88,7 @@ export function HeroSlider() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/admissions"
+              href="/#about"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#b3234b] text-white text-sm font-extrabold hover:brightness-95 transition"
             >
               Explore Our School →
