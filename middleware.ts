@@ -18,6 +18,7 @@ const PUBLIC_PATHS = [
   "/",
   "/admissions",
   "/complaints",
+  "/contact",
   "/result-checker",
   "/pay",
   "/p",
