@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
+import { ActionTile } from "@/components/ui/ActionTile";
 import { PayOnlineButton } from "@/components/PayOnlineButton";
 import { formatNaira, formatDate } from "@/lib/format";
 import { toMoney } from "@/lib/money";
@@ -8,6 +9,22 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+function invoiceLabel(lineItems: string): string {
+  const raw = (lineItems || "").trim();
+  if (!raw) return "School fees";
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const first = parsed[0] as { name?: string; label?: string };
+      return first?.name || first?.label || "School fees";
+    }
+    if (typeof parsed === "string" && parsed) return parsed;
+  } catch {
+    /* plain string */
+  }
+  return raw.length > 48 ? `${raw.slice(0, 45)}…` : raw;
+}
 
 export default async function StudentPortalPage() {
   const session = await requireSession();
@@ -22,8 +39,9 @@ export default async function StudentPortalPage() {
       scores: {
         include: { armSubject: { include: { subject: true } } },
         take: 8,
+        orderBy: { total: "desc" },
       },
-      attendances: { orderBy: { date: "desc" }, take: 8 },
+      attendances: { orderBy: { date: "desc" }, take: 10 },
     },
   });
 
@@ -31,7 +49,7 @@ export default async function StudentPortalPage() {
     return (
       <PortalShell role={session.role} title="My Portal" email={session.email}>
         <div className="rounded-xl border border-line bg-white p-5 text-sm text-ink/70">
-          Your login isn&apos;t linked to a student profile yet. Ask the school office to enable
+          Your login isn't linked to a student profile yet. Ask the school office to enable
           portal access on your student record.
         </div>
       </PortalShell>
@@ -58,35 +76,35 @@ export default async function StudentPortalPage() {
       schoolName={schoolName}
       schoolShortName={schoolShort}
     >
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
-        <Kpi
-          label="Fee balance"
-          value={formatNaira(balance)}
-          tone={balance > 0 ? "rose" : "sage"}
-        />
-        <Kpi label="Subjects scored" value={String(student.scores.length)} tone="sky" />
-        <Kpi
-          label="Unpaid invoices"
-          value={String(unpaid.length)}
-          tone={unpaid.length ? "gold" : "sage"}
-        />
-        <Kpi
-          label="Admission no."
-          value={student.admissionNumber}
-          tone="navy"
-          mono
-          className="col-span-2"
-        />
+      <div className="grid grid-cols-2 gap-3 mb-4 sm:mb-5">
+        <Kpi label="Fee balance" value={formatNaira(balance)} tone={balance > 0 ? "rose" : "sage"} />
+        <Kpi label="Admission no." value={student.admissionNumber} tone="navy" mono />
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
-        <Action href={`/students/${student.id}`} label="My record" />
-        <Action href={`/students/${student.id}/report-card`} label="Report card" primary />
-        {unpaid.length > 0 && (
-          <span className="text-xs self-center text-brick font-medium">
-            {unpaid.length} unpaid invoice{unpaid.length === 1 ? "" : "s"}
-          </span>
-        )}
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#627184] mb-2">
+        Quick actions
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 sm:mb-5">
+        <ActionTile
+          href={`/students/${student.id}`}
+          label="My record"
+          icon="👤"
+          description="Profile and class details"
+        />
+        <ActionTile
+          href={`/students/${student.id}/report-card`}
+          label="Report card"
+          icon="📊"
+          description="Term results"
+          primary
+        />
+        <ActionTile href="/cbt" label="CBT / Tests" icon="💻" description="Open computer-based exams" />
+        <ActionTile
+          href="/fees"
+          label="Fees"
+          icon="₦"
+          description={unpaid.length ? `${unpaid.length} unpaid` : "Balances"}
+        />
       </div>
 
       {unpaid.length > 0 && (
@@ -98,18 +116,16 @@ export default async function StudentPortalPage() {
               return (
                 <li
                   key={inv.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm border-b border-line/60 pb-3 last:border-0 last:pb-0"
+                  className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3 last:border-0"
                 >
                   <div>
-                    <p className="font-semibold text-ink">{formatNaira(bal)} due</p>
-                    <p className="text-xs text-ink/50 mt-0.5">
-                      Total {formatNaira(inv.totalAmount)} · Paid {formatNaira(inv.amountPaid)}
-                    </p>
-                    <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border bg-brick/10 text-brick border-brick/25">
-                      {inv.status}
-                    </span>
+                    <p className="text-sm font-medium">{invoiceLabel(inv.lineItems)}</p>
+                    <p className="text-xs text-ink/50">{inv.status}</p>
                   </div>
-                  <PayOnlineButton invoiceId={inv.id} maxAmount={bal} />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold tabular-nums">{formatNaira(bal)}</span>
+                    <PayOnlineButton invoiceId={inv.id} maxAmount={bal} />
+                  </div>
                 </li>
               );
             })}
@@ -117,31 +133,30 @@ export default async function StudentPortalPage() {
         </section>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-navy mb-3">Recent scores</h2>
           {student.scores.length === 0 ? (
-            <Empty text="No scores yet." />
+            <Empty text="No scores yet" />
           ) : (
-            <ul className="divide-y divide-line/70">
-              {student.scores.map((s) => (
-                <li key={s.id} className="flex justify-between py-2.5 text-sm">
-                  <span className="text-ink/80 truncate pr-2">{s.armSubject.subject.name}</span>
-                  <span className="font-semibold tabular-nums text-navy">{s.total}</span>
+            <ul className="text-sm space-y-2">
+              {student.scores.map((sc) => (
+                <li key={sc.id} className="flex justify-between border-b border-line pb-2">
+                  <span>{sc.armSubject.subject.name}</span>
+                  <span className="font-mono text-xs">{sc.total ?? "—"}</span>
                 </li>
               ))}
             </ul>
           )}
         </section>
-
         <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-navy mb-3">Recent attendance</h2>
           {student.attendances.length === 0 ? (
-            <Empty text="No attendance recorded yet." />
+            <Empty text="No attendance yet" />
           ) : (
-            <ul className="divide-y divide-line/70">
+            <ul className="text-sm space-y-2">
               {student.attendances.map((a) => (
-                <li key={a.id} className="flex justify-between items-center py-2.5 text-sm">
+                <li key={a.id} className="flex justify-between border-b border-line pb-2">
                   <span className="text-ink/70">{formatDate(a.date)}</span>
                   <Status status={a.status} />
                 </li>
@@ -179,9 +194,7 @@ function Kpi({
     <div
       className={`rounded-xl border bg-gradient-to-br px-3.5 py-3 sm:px-4 sm:py-3.5 min-w-0 ${TONE[tone] || TONE.navy} ${className}`}
     >
-      <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/50">
-        {label}
-      </p>
+      <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-ink/50">{label}</p>
       <p
         className={`mt-1 font-semibold tracking-tight text-ink truncate ${
           mono ? "font-mono text-xs sm:text-sm" : "text-lg sm:text-xl"
@@ -191,29 +204,6 @@ function Kpi({
         {value}
       </p>
     </div>
-  );
-}
-
-function Action({
-  href,
-  label,
-  primary = false,
-}: {
-  href: string;
-  label: string;
-  primary?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={
-        primary
-          ? "inline-flex items-center rounded-xl bg-navy px-3.5 py-2 text-xs font-semibold text-paper hover:bg-navy-light shadow-sm"
-          : "inline-flex items-center rounded-xl border border-line bg-white px-3.5 py-2 text-xs font-medium text-ink hover:border-navy/40"
-      }
-    >
-      {label}
-    </Link>
   );
 }
 

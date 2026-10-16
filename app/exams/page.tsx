@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { homeRouteForRole } from "@/lib/permissions";
 import { resolveSchoolId } from "@/lib/tenant-scope";
 import { Kpi } from "@/components/ui/Kpi";
+import { compareClassNames } from "@/lib/class-sort";
 
 const ALLOWED_ROLES = ["ADMIN", "TEACHER", "PRINCIPAL", "PLATFORM_ADMIN", "IT"];
 
@@ -28,10 +29,20 @@ export default async function ExamsPage({
     },
   });
 
-  const armSubjects = await prisma.armSubject.findMany({
+  const armSubjectsRaw = await prisma.armSubject.findMany({
     where: schoolId ? { arm: { schoolClass: { schoolId } } } : undefined,
     include: { arm: { include: { schoolClass: true } }, subject: true },
     orderBy: [{ arm: { schoolClass: { order: "asc" } } }],
+  });
+  const armSubjects = [...armSubjectsRaw].sort((a, b) => {
+    const byClass = compareClassNames(a.arm.schoolClass.name, b.arm.schoolClass.name);
+    if (byClass !== 0) return byClass;
+    const byArm = a.arm.name.localeCompare(b.arm.name, undefined, {
+      sensitivity: "base",
+      numeric: true,
+    });
+    if (byArm !== 0) return byArm;
+    return a.subject.name.localeCompare(b.subject.name, undefined, { sensitivity: "base" });
   });
 
   const requested = searchParams.armSubjectId;
@@ -75,9 +86,14 @@ export default async function ExamsPage({
           className="col-span-2 sm:col-span-1"
         />
       </div>
-      <form method="GET" className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-3 shadow-sm flex flex-wrap gap-2 items-end">
+      <form
+        method="GET"
+        className="mb-4 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-3 shadow-sm flex flex-wrap gap-2 items-end"
+      >
         <div className="flex-1 min-w-[12rem]">
-          <label className="text-[10px] font-semibold uppercase tracking-wide text-ink/50">Class · subject</label>
+          <label className="text-[10px] font-semibold uppercase tracking-wide text-ink/50">
+            Class · subject
+          </label>
           <select
             name="armSubjectId"
             defaultValue={selected?.id}

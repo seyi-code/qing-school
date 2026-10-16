@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -41,8 +43,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper text-ink px-4 py-10">
-      <div className="max-w-lg mx-auto">
+    <main className="min-h-screen bg-[#f7f5ef] text-ink flex flex-col">
+      <MarketingNav />
+      <div className="max-w-lg mx-auto px-4 py-10 flex-1 w-full">
         <p className="text-xs tracking-widest uppercase text-ink/40 mb-2">School ERP · Multi-tenant</p>
         <h1 className="font-serif text-3xl text-navy mb-2">Onboard your school</h1>
         <p className="text-sm text-ink/60 mb-6">
@@ -50,13 +53,13 @@ export default function OnboardingPage() {
           <strong>14-day free trial</strong> (configurable). After that, billing or platform approval is
           required.
         </p>
-        <form onSubmit={submit} className="ledger-block space-y-3.5 text-sm shadow-sm">
+        <form onSubmit={submit} className="bg-white border border-[#e3e8ed] rounded-2xl p-5 space-y-3.5 text-sm shadow-sm">
           <label className="block">
             School full name
             <input
               name="schoolName"
               required
-              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
             />
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -67,7 +70,7 @@ export default function OnboardingPage() {
                 required
                 placeholder="KMS"
                 maxLength={12}
-                className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+                className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
               />
             </label>
             <label className="block">
@@ -77,13 +80,13 @@ export default function OnboardingPage() {
                 required
                 placeholder="my-school"
                 pattern="[a-z0-9\-]+"
-                className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white font-mono text-xs"
+                className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white font-mono text-xs"
               />
             </label>
           </div>
           <label className="block">
             Plan
-            <select name="plan" className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white">
+            <select name="plan" className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white">
               <option value="STARTER">Starter (~300 students)</option>
               <option value="PRO">Pro (~1,500)</option>
               <option value="ENTERPRISE">Enterprise</option>
@@ -94,7 +97,7 @@ export default function OnboardingPage() {
             <input
               name="adminName"
               required
-              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
             />
           </label>
           <label className="block">
@@ -103,7 +106,7 @@ export default function OnboardingPage() {
               name="adminEmail"
               type="email"
               required
-              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
             />
           </label>
           <label className="block">
@@ -112,25 +115,25 @@ export default function OnboardingPage() {
               name="adminPassword"
               required
               minLength={10}
-              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
             />
           </label>
           <label className="block">
             Phone (optional)
-            <input name="phone" className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white" />
+            <input name="phone" className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white" />
           </label>
           <label className="block">
             Address (optional)
             <input
               name="address"
-              className="mt-1 w-full border border-line px-3 py-2 rounded-lg bg-white"
+              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
             />
           </label>
           {error && <p className="text-brick text-sm">{error}</p>}
           <button
             type="submit"
             disabled={busy}
-            className="btn-primary w-full justify-center py-2.5 disabled:opacity-60"
+            className="w-full rounded-xl bg-[#12345a] text-white py-3 font-semibold disabled:opacity-60"
           >
             {busy ? "Creating…" : "Create school workspace"}
           </button>
@@ -146,6 +149,7 @@ export default function OnboardingPage() {
           </Link>
         </p>
       </div>
+      <MarketingFooter />
     </main>
   );
 }

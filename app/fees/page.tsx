@@ -133,8 +133,9 @@ export default async function FeesPage({
 
       {invoices.length === 0 ? (
         <EmptyState
+          icon="₦"
           title="No invoices in this list"
-          description="Generate invoices from fee structure, or clear filters."
+          description="Generate invoices from fee structure, or clear filters / search."
           action={
             <Link href="/fees/structure" className="btn-primary">
               Fee structure

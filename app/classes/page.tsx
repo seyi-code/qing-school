@@ -6,6 +6,7 @@ import { can, homeRouteForRole } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import { Kpi } from "@/components/ui/Kpi";
 import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
+import { compareClassNames } from "@/lib/class-sort";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,8 @@ export default async function ClassesPage() {
     label: `${s.lastName}, ${s.firstName}`,
   }));
 
+  const sortedClasses = [...classes].sort((a, b) => compareClassNames(a.name, b.name));
+
   return (
     <PortalShell
       role={session.role}
@@ -45,7 +48,7 @@ export default async function ClassesPage() {
       email={session.email}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
-        <Kpi label="Classes" value={String(classes.length)} tone="navy" icon="🏫" />
+        <Kpi label="Classes" value={String(sortedClasses.length)} tone="navy" icon="🏫" />
         <Kpi label="Subjects" value={String(subjects.length)} tone="violet" icon="📚" />
         <Kpi
           label="Arms"
@@ -66,14 +69,18 @@ export default async function ClassesPage() {
         )}
       </div>
       <ClassManager
-        classes={classes.map((c) => ({
+        classes={sortedClasses.map((c) => ({
           id: c.id,
           name: c.name,
-          arms: c.arms.map((a) => ({
-            id: a.id,
-            name: a.name,
-            studentCount: a.students.length,
-          })),
+          arms: [...c.arms]
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true })
+            )
+            .map((a) => ({
+              id: a.id,
+              name: a.name,
+              studentCount: a.students.length,
+            })),
         }))}
         subjects={subjects.map((s) => ({
           id: s.id,

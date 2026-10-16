@@ -13,10 +13,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Do NOT use overflow-x: hidden on html/body — it breaks position:sticky
+ * for the marketing header on mobile browsers (Chrome/WebKit).
+ * overflow-x: clip still prevents horizontal bounce without creating a
+ * scroll-containing block that kills sticky.
+ */
 html,
 body {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .ledger-block {

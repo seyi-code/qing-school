@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { SCHOOL } from "@/lib/school-config";
 
-type ScoreRow = { subject: string; total: number; grade: string | null; remark?: string | null };
+type ScoreRow = { subject: string; total: number | string; grade?: string | null };
 
 export default function ResultCheckerPage() {
   const [admissionNumber, setAdmissionNumber] = useState("");
@@ -40,40 +42,26 @@ export default function ResultCheckerPage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper flex flex-col px-4 py-6 sm:py-10">
-      <nav className="w-full max-w-md mx-auto flex items-center justify-between text-sm mb-8">
-        <a href="/" className="text-navy underline hover:text-gold">
-          ← Home
-        </a>
-        <a href="/login" className="text-navy underline hover:text-gold">
-          Portal login →
-        </a>
-      </nav>
-      <div className="max-w-md w-full mx-auto flex-1 flex flex-col justify-center">
-        <div className="flex justify-center mb-5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.svg"
-            alt={SCHOOL.name}
-            className="h-16 w-16 object-contain"
-            width={64}
-            height={64}
-          />
-        </div>
-        <h1 className="font-serif text-2xl text-center mb-1 text-navy">Result Checker</h1>
-        <p className="text-sm text-navy/80 text-center font-medium mb-1">{SCHOOL.name}</p>
-        <p className="text-xs text-ink/50 text-center mb-6">
-          Enter admission number and scratch-card PIN to view terminal results.
+    <main className="min-h-screen bg-[#f7f5ef] text-[#1e2e43] flex flex-col">
+      <MarketingNav />
+      <div className="max-w-md mx-auto px-4 py-10 flex-1 w-full">
+        <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-[#a57d13]">Results</p>
+        <h1 className="font-serif text-3xl text-[#12345a] mt-1 mb-2">Result checker</h1>
+        <p className="text-sm text-[#627184] mb-6">
+          Enter the admission number and PIN issued by the school office.
         </p>
 
-        <form onSubmit={check} className="ledger-block space-y-3">
+        <form
+          onSubmit={check}
+          className="bg-white border border-[#e3e8ed] rounded-2xl p-5 space-y-3 shadow-sm"
+        >
           <input
             value={admissionNumber}
             onChange={(e) => setAdmissionNumber(e.target.value)}
             placeholder="Admission number"
             required
             autoComplete="off"
-            className="w-full border border-line px-3 py-2 text-sm"
+            className="w-full border border-[#e3e8ed] px-3 py-2.5 text-sm rounded-lg"
           />
           <input
             value={pin}
@@ -81,31 +69,31 @@ export default function ResultCheckerPage() {
             placeholder="PIN"
             required
             autoComplete="off"
-            className="w-full border border-line px-3 py-2 text-sm"
+            className="w-full border border-[#e3e8ed] px-3 py-2.5 text-sm rounded-lg"
           />
           {error && <p className="text-sm text-brick">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-navy text-paper py-2.5 text-sm disabled:opacity-60"
+            className="w-full rounded-xl bg-[#12345a] text-white py-3 text-sm font-semibold disabled:opacity-60"
           >
             {loading ? "Checking..." : "Check Result"}
           </button>
         </form>
 
         {result && (
-          <div className="ledger-block mt-4 report-card-print">
+          <div className="bg-white border border-[#e3e8ed] rounded-2xl p-5 mt-4 report-card-print shadow-sm">
             <div className="no-print mb-3 flex justify-end">
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="text-sm border border-navy text-navy px-3 py-1.5"
+                className="text-sm border border-[#12345a] text-[#12345a] px-3 py-1.5 rounded-lg"
               >
                 Print
               </button>
             </div>
             <h2 className="font-serif text-lg mb-1">{result.student.name}</h2>
-            <p className="text-xs font-mono text-ink/50 mb-3">{result.student.admissionNumber}</p>
+            <p className="text-xs font-mono text-[#627184] mb-3">{result.student.admissionNumber}</p>
             <div className="overflow-x-auto -mx-1">
               <table className="ledger min-w-[280px] w-full">
                 <thead>
@@ -125,7 +113,7 @@ export default function ResultCheckerPage() {
                   ))}
                   {result.scores.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="text-center text-ink/50 py-4">
+                      <td colSpan={3} className="text-center text-[#627184] py-4">
                         No scores published for this term yet.
                       </td>
                     </tr>
@@ -133,12 +121,13 @@ export default function ResultCheckerPage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-[10px] text-ink/40 mt-4 text-center">
+            <p className="text-[10px] text-[#627184] mt-4 text-center">
               {SCHOOL.shortName} · Official result checker
             </p>
           </div>
         )}
       </div>
+      <MarketingFooter />
     </main>
   );
 }

@@ -8,6 +8,7 @@ interface NavItem {
   href: string;
   label: string;
   roles: Role[];
+  icon: string;
 }
 
 /**
@@ -19,147 +20,193 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/dashboard",
     label: "Dashboard",
+    icon: "⌂",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL", "ACCOUNTANT"],
   },
   {
     href: "/platform",
     label: "Platform (SaaS)",
+    icon: "◆",
     roles: ["PLATFORM_ADMIN"],
   },
   {
     href: "/onboarding",
     label: "Onboard school",
+    icon: "+",
     roles: ["PLATFORM_ADMIN"],
   },
-
-  { href: "/portal/student", label: "My Portal", roles: ["STUDENT"] },
-  { href: "/portal/parent", label: "Family dashboard", roles: ["PARENT"] },
-  { href: "/portal/teacher", label: "Teacher Portal", roles: ["TEACHER"] },
-  { href: "/notices", label: "School notices", roles: ["PARENT"] },
-  { href: "/result-checker", label: "Result checker", roles: ["PARENT"] },
-
+  {
+    href: "/portal/student",
+    label: "My Portal",
+    icon: "🎓",
+    roles: ["STUDENT"],
+  },
+  {
+    href: "/portal/parent",
+    label: "Family dashboard",
+    icon: "👨‍👩‍👧",
+    roles: ["PARENT"],
+  },
+  {
+    href: "/portal/teacher",
+    label: "Teacher Portal",
+    icon: "👩‍🏫",
+    roles: ["TEACHER"],
+  },
+  {
+    href: "/notices",
+    label: "School notices",
+    icon: "📢",
+    roles: ["PARENT"],
+  },
+  {
+    href: "/result-checker",
+    label: "Result checker",
+    icon: "📊",
+    roles: ["PARENT"],
+  },
   {
     href: "/students",
     label: "Students",
+    icon: "🎓",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL", "TEACHER"],
   },
   {
     href: "/staff",
     label: "Staff",
+    icon: "👥",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
   {
     href: "/leave",
     label: "Staff Leave",
+    icon: "📅",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL", "TEACHER", "SECRETARY"],
   },
-
   {
     href: "/classes",
     label: "Classes & Subjects",
+    icon: "🏫",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
   {
     href: "/timetable",
     label: "Timetable",
+    icon: "🗓",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "TEACHER", "PRINCIPAL"],
   },
   {
     href: "/attendance",
     label: "Attendance",
+    icon: "✓",
     roles: ["PLATFORM_ADMIN", "ADMIN", "TEACHER", "IT"],
   },
   {
     href: "/exams",
     label: "Scores / CA",
+    icon: "📝",
     roles: ["PLATFORM_ADMIN", "ADMIN", "TEACHER", "IT", "PRINCIPAL"],
   },
   {
     href: "/cbt",
     label: "CBT",
+    icon: "💻",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "TEACHER", "PRINCIPAL", "STUDENT"],
   },
   {
     href: "/reports",
     label: "Reports",
+    icon: "📊",
     roles: ["PLATFORM_ADMIN", "ADMIN", "PRINCIPAL", "IT"],
   },
-
   {
     href: "/fees",
     label: "Fees",
+    icon: "₦",
     roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY"],
   },
   {
     href: "/fees/structure",
     label: "Fee structure",
+    icon: "📋",
     roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT"],
   },
   {
     href: "/expenses",
     label: "Expenses",
+    icon: "💸",
     roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT"],
   },
   {
     href: "/payroll",
     label: "Payroll",
+    icon: "💼",
     roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT"],
   },
-
   {
     href: "/modules",
     label: "Modules hub",
+    icon: "▦",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
   },
   {
     href: "/library",
     label: "Library",
+    icon: "📚",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "TEACHER", "PRINCIPAL"],
   },
   {
     href: "/hostel",
     label: "Hostel",
+    icon: "🏘",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
   },
   {
     href: "/transport",
     label: "Transport",
+    icon: "🚌",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL", "ACCOUNTANT"],
   },
   {
     href: "/notices",
     label: "Notices",
+    icon: "📢",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
   },
   {
     href: "/cms",
     label: "Website CMS",
+    icon: "🌐",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
-
   {
     href: "/settings",
     label: "Admin Settings",
+    icon: "⚙",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
   {
     href: "/settings/ops",
     label: "Ops / SMS / Backup",
+    icon: "🛠",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
   {
     href: "/settings/audit",
     label: "Audit trail",
+    icon: "📜",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
   {
     href: "/settings/report-template",
     label: "Report designer",
+    icon: "🖨",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL"],
   },
   {
     href: "/settings/go-live",
     label: "Go-live checklist",
+    icon: "🚀",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
 ];
@@ -220,23 +267,29 @@ export function Sidebar({
   }
 
   return (
-    <aside className="w-60 max-w-full h-full max-h-dvh bg-navy text-paper flex flex-col no-print">
-      <div className="px-5 py-4 border-b border-paper/10 flex items-start justify-between gap-2 shrink-0">
+    <aside className="w-60 max-w-full h-full max-h-dvh bg-[#0c2744] text-paper flex flex-col no-print">
+      <div className="px-4 py-4 border-b border-white/10 flex items-start justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="" className="w-10 h-10 object-contain shrink-0" />
+          <img
+            src="/kms-home/kms-school-crest.jpg"
+            alt=""
+            className="w-10 h-10 rounded-full object-contain bg-white/10 border border-white/15 shrink-0"
+          />
           <div className="min-w-0">
-            <p className="font-serif text-lg leading-tight truncate" title={schoolName || brand}>
+            <p className="font-serif text-base leading-tight truncate text-white" title={schoolName || brand}>
               {brand}
             </p>
-            <p className="text-[11px] text-paper/50 truncate">{rolePortalLabel(role)}</p>
+            <p className="text-[10px] text-[#d2ae3b]/90 truncate font-semibold tracking-wide uppercase mt-0.5">
+              {rolePortalLabel(role)}
+            </p>
           </div>
         </div>
         {onNavigate && (
           <button
             type="button"
             onClick={onNavigate}
-            className="lg:hidden text-paper/70 hover:text-gold text-2xl leading-none px-1"
+            className="lg:hidden text-paper/70 hover:text-[#d2ae3b] text-2xl leading-none px-1"
             aria-label="Close menu"
           >
             &times;
@@ -244,9 +297,8 @@ export function Sidebar({
         )}
       </div>
 
-      <nav className="flex-1 min-h-0 py-2 overflow-y-auto overscroll-contain">
+      <nav className="flex-1 min-h-0 py-2 overflow-y-auto overscroll-contain px-2">
         {visible.map((item) => {
-          // Longest matching href wins so /settings/ops does not also light up /settings
           const matches = visible.filter(
             (i) => pathname === i.href || pathname.startsWith(i.href + "/")
           );
@@ -260,21 +312,29 @@ export function Sidebar({
               key={`${item.href}-${item.label}`}
               href={item.href}
               onClick={onNavigate}
-              className={`block px-5 py-2.5 text-sm border-l-2 ${
+              className={`flex items-center gap-2.5 mx-1 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${
                 active
-                  ? "border-gold bg-white/5 text-gold"
-                  : "border-transparent text-paper/75 hover:bg-white/5 hover:text-paper"
+                  ? "bg-[#d2ae3b]/15 text-[#f1d264] shadow-sm"
+                  : "text-white/75 hover:bg-white/5 hover:text-white"
               }`}
             >
-              {item.label}
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sm ${
+                  active ? "bg-[#d2ae3b]/25" : "bg-white/5"
+                }`}
+                aria-hidden
+              >
+                {item.icon}
+              </span>
+              <span className="truncate">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="shrink-0 p-4 border-t border-paper/10 bg-navy space-y-2">
+      <div className="shrink-0 p-3 border-t border-white/10 space-y-2">
         {schoolName && (
-          <p className="text-[10px] text-paper/40 text-center truncate px-1" title={schoolName}>
+          <p className="text-[10px] text-white/40 text-center truncate px-1" title={schoolName}>
             {schoolName}
           </p>
         )}
@@ -282,22 +342,22 @@ export function Sidebar({
           <Link
             href="/platform"
             onClick={onNavigate}
-            className="block w-full text-center border border-gold/40 text-gold text-xs py-2 hover:bg-gold/10"
+            className="block text-center text-xs font-semibold py-2 rounded-lg border border-[#d2ae3b]/40 text-[#f1d264] hover:bg-[#d2ae3b]/10"
           >
-            ← Platform admin
+            ← Back to platform
           </Link>
         )}
         <Link
           href="/account/profile"
           onClick={onNavigate}
-          className="block w-full text-center border border-paper/20 text-paper/80 text-sm py-2 hover:border-gold hover:text-gold"
+          className="block text-center text-xs font-semibold py-2 rounded-lg border border-white/15 text-white/80 hover:border-[#d2ae3b]/50 hover:text-[#f1d264]"
         >
           My profile
         </Link>
         <button
           type="button"
           onClick={logout}
-          className="w-full border border-paper/30 text-paper text-sm py-2.5 hover:border-gold hover:text-gold transition-colors"
+          className="w-full text-xs font-semibold py-2.5 rounded-lg bg-white/5 text-white/80 hover:bg-white/10 hover:text-white border border-white/10"
         >
           Sign out
         </button>

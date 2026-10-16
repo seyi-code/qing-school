@@ -2,7 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { PublicHeader } from "@/components/PublicHeader";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export default function AdmissionsPage() {
   const [loading, setLoading] = useState(false);
@@ -36,29 +37,33 @@ export default function AdmissionsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper text-ink">
-      <PublicHeader />
+    <main className="min-h-screen bg-[#f7f5ef] text-[#1e2e43] flex flex-col">
+      <MarketingNav />
 
-      <div className="max-w-xl mx-auto px-4 py-10">
-        <h1 className="font-serif text-3xl mb-2">Online Admission</h1>
-        <p className="text-sm text-ink/60 mb-8">
+      <div className="max-w-xl mx-auto px-4 py-10 flex-1 w-full">
+        <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-[#a57d13]">Admissions</p>
+        <h1 className="font-serif text-3xl text-[#12345a] mt-1 mb-2">Online Admission</h1>
+        <p className="text-sm text-[#627184] mb-8">
           Submit an application for the current session. The office will review and contact you.
         </p>
 
         {done ? (
-          <div className="ledger-block space-y-3">
+          <div className="bg-white border border-[#e3e8ed] rounded-2xl p-5 space-y-3 shadow-sm">
             <p className="text-sage font-medium">Application received</p>
             <p className="text-sm">{done.message}</p>
-            <p className="font-serif text-2xl">{done.admissionNumber}</p>
-            <p className="text-xs text-ink/50">Save this number for follow-up.</p>
-            <Link href="/" className="inline-block text-sm text-navy underline mt-2">
+            <p className="font-serif text-2xl text-[#12345a]">{done.admissionNumber}</p>
+            <p className="text-xs text-[#627184]">Save this number for follow-up.</p>
+            <Link href="/" className="inline-block text-sm text-[#12345a] font-semibold underline mt-2">
               Back to homepage
             </Link>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="ledger-block space-y-4">
+          <form
+            onSubmit={onSubmit}
+            className="bg-white border border-[#e3e8ed] rounded-2xl p-5 space-y-4 shadow-sm"
+          >
             {error && (
-              <p className="text-sm text-brick border border-brick/30 px-3 py-2">{error}</p>
+              <p className="text-sm text-brick border border-brick/30 px-3 py-2 rounded-lg">{error}</p>
             )}
             <div className="grid sm:grid-cols-2 gap-3">
               <Field name="firstName" label="First name" required />
@@ -67,8 +72,11 @@ export default function AdmissionsPage() {
             <Field name="otherNames" label="Other names" />
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs uppercase text-ink/50 mb-1">Gender</label>
-                <select name="gender" className="w-full border border-line bg-white px-3 py-2.5 text-sm">
+                <label className="block text-xs uppercase text-[#627184] mb-1">Gender</label>
+                <select
+                  name="gender"
+                  className="w-full border border-[#e3e8ed] bg-white px-3 py-2.5 text-sm rounded-lg"
+                >
                   <option value="">—</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -79,21 +87,22 @@ export default function AdmissionsPage() {
             <Field name="address" label="Home address" />
             <Field name="previousSchool" label="Previous school" />
             <Field name="desiredClass" label="Class applying for (e.g. JSS1)" />
-            <hr className="border-line" />
-            <p className="text-xs uppercase tracking-wide text-ink/50">Parent / Guardian</p>
+            <hr className="border-[#e3e8ed]" />
+            <p className="text-xs uppercase tracking-wide text-[#627184]">Parent / Guardian</p>
             <Field name="parentName" label="Full name" required />
             <Field name="parentPhone" label="Phone" required />
             <Field name="parentEmail" label="Email" type="email" />
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-navy text-paper py-2.5 text-sm hover:bg-navy-light disabled:opacity-60"
+              className="w-full rounded-xl bg-[#12345a] text-white py-3 text-sm font-semibold hover:brightness-110 disabled:opacity-60"
             >
               {loading ? "Submitting…" : "Submit application"}
             </button>
           </form>
         )}
       </div>
+      <MarketingFooter />
     </main>
   );
 }
@@ -111,7 +120,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs uppercase text-ink/50 mb-1" htmlFor={name}>
+      <label className="block text-xs uppercase text-[#627184] mb-1" htmlFor={name}>
         {label}
       </label>
       <input
@@ -119,7 +128,7 @@ function Field({
         name={name}
         type={type}
         required={required}
-        className="w-full border border-line bg-white px-3 py-2.5 text-sm focus:border-navy outline-none"
+        className="w-full border border-[#e3e8ed] bg-white px-3 py-2.5 text-sm rounded-lg focus:border-[#12345a] outline-none"
       />
     </div>
   );
