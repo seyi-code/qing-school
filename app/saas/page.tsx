@@ -52,7 +52,8 @@ export default function SaasLandingPage() {
               Sign in
             </Link>
             <Link
-              href="/login"\％ className="rounded-lg bg-[#12345a] text-white px-3 py-1.5 font-medium hover:bg-[#1a3a6e]"
+              href="/login"
+              className="rounded-lg bg-[#12345a] text-white px-3 py-1.5 font-medium hover:bg-[#1a3a6e]"
             >
               Open portal
             </Link>
