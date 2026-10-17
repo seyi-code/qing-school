@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { classifyHost, getAppHost, normalizeHost } from "@/lib/host-mode";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -16,6 +17,7 @@ const PUBLIC_PATHS = [
   "/api/webhooks",
   "/api/fees/payments/confirm",
   "/",
+  "/saas",
   "/admissions",
   "/complaints",
   "/contact",
@@ -62,12 +64,48 @@ async function getSessionFromCookie(req: NextRequest): Promise<{
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const host = req.headers.get("host") || "";
-  const hostNoPort = host.split(":")[0];
+  const hostHeader = req.headers.get("host") || "";
+  const hostNoPort = normalizeHost(hostHeader);
+  const hostMode = classifyHost(hostHeader);
   const hostParts = hostNoPort.split(".");
   let schoolSlug: string | null = null;
   if (hostParts.length >= 3 && !["www", "app", "api"].includes(hostParts[0])) {
     schoolSlug = hostParts[0];
+  }
+
+  // Phase 1: marketing host serves SaaS landing at `/` (rewrite — URL stays `/`)
+  if (hostMode === "marketing" && pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/saas";
+    const res = NextResponse.rewrite(url);
+    res.headers.set("x-host-mode", hostMode);
+    return res;
+  }
+
+  // Optional: send portal login from marketing site to app host when configured
+  const appHost = getAppHost();
+  if (
+    hostMode === "marketing" &&
+    appHost &&
+    (pathname === "/login" || pathname.startsWith("/login/"))
+  ) {
+    const dest = new URL(req.url);
+    dest.host = appHost;
+    dest.protocol = "https:";
+    dest.port = "";
+    return NextResponse.redirect(dest);
+  }
+
+  // Marketing host: block platform/onboarding entry (use app host)
+  if (
+    hostMode === "marketing" &&
+    (pathname.startsWith("/platform") || pathname.startsWith("/onboarding"))
+  ) {
+    if (appHost) {
+      const dest = new URL(pathname, `https://${appHost}`);
+      return NextResponse.redirect(dest);
+    }
+    return NextResponse.redirect(new URL("/saas", req.url));
   }
 
   if (
@@ -78,6 +116,7 @@ export async function middleware(req: NextRequest) {
   ) {
     const res = NextResponse.next();
     if (schoolSlug) res.headers.set("x-school-slug", schoolSlug);
+    res.headers.set("x-host-mode", hostMode);
     return res;
   }
 
@@ -86,6 +125,11 @@ export async function middleware(req: NextRequest) {
   if (!role) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("next", pathname);
+    if (hostMode === "marketing" && appHost) {
+      loginUrl.host = appHost;
+      loginUrl.protocol = "https:";
+      loginUrl.port = "";
+    }
     return NextResponse.redirect(loginUrl);
   }
 
@@ -109,6 +153,7 @@ export async function middleware(req: NextRequest) {
 
   const res = NextResponse.next();
   if (schoolSlug) res.headers.set("x-school-slug", schoolSlug);
+  res.headers.set("x-host-mode", hostMode);
   return res;
 }
 
