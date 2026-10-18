@@ -4,21 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Branding } from "@/lib/branding";
 import { defaultBranding } from "@/lib/branding";
-
-const SLIDES = [
-  {
-    src: "/kms-home/hero-classroom.jpg",
-    alt: "Students learning in class",
-  },
-  {
-    src: "/kms-home/about-students.jpg",
-    alt: "Students smiling with books",
-  },
-  {
-    src: "/kms-home/admissions-students.jpg",
-    alt: "Happy learners",
-  },
-];
+import { schoolHeroSlides } from "@/lib/school-images";
 
 export function HeroSlider({
   brand,
@@ -28,6 +14,7 @@ export function HeroSlider({
   schoolSlug?: string | null;
 }) {
   const b = brand || defaultBranding();
+  const slides = schoolHeroSlides(schoolSlug);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -36,20 +23,26 @@ export function HeroSlider({
     ? `/admissions?school=${encodeURIComponent(schoolSlug)}`
     : "/admissions";
 
-  const show = useCallback((n: number) => {
-    setIndex((n + SLIDES.length) % SLIDES.length);
-  }, []);
+  const show = useCallback(
+    (n: number) => {
+      setIndex((n + slides.length) % slides.length);
+    },
+    [slides.length]
+  );
 
   useEffect(() => {
     if (paused) return;
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       return;
     }
     const t = setInterval(() => {
-      setIndex((i) => (i + 1) % SLIDES.length);
+      setIndex((i) => (i + 1) % slides.length);
     }, 5000);
     return () => clearInterval(t);
-  }, [paused]);
+  }, [paused, slides.length]);
 
   return (
     <section
@@ -57,16 +50,26 @@ export function HeroSlider({
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {SLIDES.map((s, i) => (
+      {slides.map((s, i) => (
         <div
-          key={s.src}
+          key={s.src + i}
           className={`absolute inset-0 transition-opacity duration-700 ${
             i === index ? "opacity-100 z-[1]" : "opacity-0 z-0"
           }`}
           aria-hidden={i !== index}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={s.src} alt={s.alt} className="w-full h-full object-cover" />
+          <img
+            src={s.src}
+            alt={s.alt}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (el.dataset.fb === "1") return;
+              el.dataset.fb = "1";
+              el.src = s.fallback;
+            }}
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0c1f38]/90 via-[#0c1f38]/55 to-transparent" />
         </div>
       ))}
@@ -130,7 +133,7 @@ export function HeroSlider({
         ›
       </button>
       <div className="absolute z-[4] bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-        {SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <button
             key={i}
             type="button"

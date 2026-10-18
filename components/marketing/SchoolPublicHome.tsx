@@ -3,6 +3,7 @@ import type { Branding } from "@/lib/branding";
 import { HeroSlider } from "@/components/marketing/HeroSlider";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import { schoolImage, schoolProgrammeImages } from "@/lib/school-images";
 
 const HIGHLIGHTS = [
   { icon: "📚", title: "Academic Excellence", body: "Quality education for a brighter future" },
@@ -11,18 +12,38 @@ const HIGHLIGHTS = [
   { icon: "💻", title: "Modern Facilities", body: "A safe and conducive learning environment" },
 ];
 
-const PROGRAMMES = [
-  { title: "Early Years", body: "A strong foundation for lifelong success.", img: "/kms-home/early-years.jpg" },
-  { title: "Primary School", body: "Building confidence and curiosity.", img: "/kms-home/primary-school.jpg" },
-  { title: "Junior Secondary", body: "Developing skills for a brighter future.", img: "/kms-home/junior-secondary.jpg" },
-  { title: "Senior Secondary", body: "Preparing leaders and innovators.", img: "/kms-home/senior-secondary.jpg" },
-];
-
 const WHY = [
   { title: "Experienced Teachers", body: "Passionate, qualified staff who know every child.", icon: "💛" },
   { title: "Safe Environment", body: "A secure and conducive learning atmosphere.", icon: "🏫" },
   { title: "Modern Facilities", body: "Well-equipped library, labs and more.", icon: "✨" },
 ];
+
+function SchoolImg({
+  src,
+  fallback,
+  alt,
+  className,
+}: {
+  src: string;
+  fallback: string;
+  alt: string;
+  className?: string;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={(e) => {
+        const el = e.currentTarget;
+        if (el.dataset.fb === "1") return;
+        el.dataset.fb = "1";
+        el.src = fallback;
+      }}
+    />
+  );
+}
 
 export function SchoolPublicHome({
   branding,
@@ -45,6 +66,9 @@ export function SchoolPublicHome({
 
   const primary = branding.primaryColor || "#12345a";
   const accent = branding.accentColor || "#d2ae3b";
+  const programmes = schoolProgrammeImages(schoolSlug);
+  const aboutSrc = schoolImage(schoolSlug, "about-students.jpg");
+  const aboutFb = schoolImage(schoolSlug, "about-students.jpg", { forceDefault: true });
 
   return (
     <main className="min-h-screen bg-white text-[#1e2e43] flex flex-col">
@@ -84,9 +108,9 @@ export function SchoolPublicHome({
       <section id="about" className="py-16 sm:py-20">
         <div className="max-w-[1180px] mx-auto px-5 grid md:grid-cols-2 gap-10 items-center">
           <div className="relative h-[280px] sm:h-[390px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/kms-home/about-students.jpg"
+            <SchoolImg
+              src={aboutSrc}
+              fallback={aboutFb}
               alt={`Students at ${branding.name}`}
               className="w-full h-full object-cover rounded-xl"
             />
@@ -95,9 +119,7 @@ export function SchoolPublicHome({
             <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
               About us
             </p>
-            <h2 className="font-serif text-3xl text-[#12345a] mt-2 mb-4">
-              {branding.name}
-            </h2>
+            <h2 className="font-serif text-3xl text-[#12345a] mt-2 mb-4">{branding.name}</h2>
             <p className="text-[#627184] leading-relaxed mb-6">
               {branding.motto
                 ? `${branding.motto}. A nurturing environment where every child learns, builds integrity, and discovers their purpose.`
@@ -120,10 +142,14 @@ export function SchoolPublicHome({
           </p>
           <h2 className="font-serif text-3xl text-[#12345a] text-center mt-2 mb-10">Our programmes</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {PROGRAMMES.map((p) => (
+            {programmes.map((p) => (
               <div key={p.title} className="bg-white rounded-xl overflow-hidden border border-[#e3e8ed] shadow-sm">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.img} alt="" className="h-36 w-full object-cover" />
+                <SchoolImg
+                  src={p.img}
+                  fallback={p.fallback}
+                  alt={p.title}
+                  className="h-36 w-full object-cover"
+                />
                 <div className="p-4">
                   <h3 className="font-bold text-[#12345a] m-0">{p.title}</h3>
                   <p className="text-xs text-[#627184] mt-1 mb-0">{p.body}</p>
