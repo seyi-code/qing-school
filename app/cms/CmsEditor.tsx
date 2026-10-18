@@ -139,7 +139,7 @@ export function CmsEditor({
       {
         id: newId(),
         type: "paragraph",
-        text: "Share your school story, values, and what makes your community special.",
+        html: "Share your school story, values, and what makes your community special.",
       },
       {
         id: newId(),
@@ -319,10 +319,10 @@ export function CmsEditor({
                   <textarea
                     className="w-full border border-line px-2 py-1"
                     rows={3}
-                    value={b.text}
+                    value={b.html}
                     onChange={(e) =>
                       setBlocks((arr) =>
-                        arr.map((x, j) => (j === i ? { ...b, text: e.target.value } : x))
+                        arr.map((x, j) => (j === i ? { ...b, html: e.target.value } : x))
                       )
                     }
                   />
@@ -352,7 +352,7 @@ export function CmsEditor({
                   </div>
                 )}
                 {!["heading", "paragraph", "button"].includes(b.type) && (
-                  <p className="text-ink/40">Advanced block — edit via full editor after restore.</p>
+                  <p className="text-ink/40">Advanced block type — content preserved on save.</p>
                 )}
               </div>
             ))}
@@ -373,7 +373,7 @@ export function CmsEditor({
                 type="button"
                 className="border border-line px-2 py-1 text-xs"
                 onClick={() =>
-                  setBlocks((b) => [...b, { id: newId(), type: "paragraph", text: "" }])
+                  setBlocks((b) => [...b, { id: newId(), type: "paragraph", html: "" }])
                 }
               >
                 + Paragraph
