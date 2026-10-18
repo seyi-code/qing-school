@@ -3,6 +3,7 @@ import type { Branding } from "@/lib/branding";
 import { HeroSlider } from "@/components/marketing/HeroSlider";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import { SchoolImg } from "@/components/marketing/SchoolImg";
 import { schoolImage, schoolProgrammeImages } from "@/lib/school-images";
 
 const HIGHLIGHTS = [
@@ -17,33 +18,6 @@ const WHY = [
   { title: "Safe Environment", body: "A secure and conducive learning atmosphere.", icon: "🏫" },
   { title: "Modern Facilities", body: "Well-equipped library, labs and more.", icon: "✨" },
 ];
-
-function SchoolImg({
-  src,
-  fallback,
-  alt,
-  className,
-}: {
-  src: string;
-  fallback: string;
-  alt: string;
-  className?: string;
-}) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      className={className}
-      onError={(e) => {
-        const el = e.currentTarget;
-        if (el.dataset.fb === "1") return;
-        el.dataset.fb = "1";
-        el.src = fallback;
-      }}
-    />
-  );
-}
 
 export function SchoolPublicHome({
   branding,
