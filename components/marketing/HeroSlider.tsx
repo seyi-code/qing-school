@@ -105,7 +105,7 @@ export function HeroSlider({
             <Link
               href={`${home}#about`}
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-white text-sm font-extrabold hover:brightness-95 transition"
-              style={{ backgroundColor: preset.tone === "modern" ? preset.primary : "#b3234b" }}
+              style={{ backgroundColor: preset.id === "modern" ? preset.primary : "#b3234b" }}
             >
               {hero.ctaExplore}
             </Link>

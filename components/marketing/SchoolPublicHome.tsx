@@ -97,7 +97,7 @@ export function SchoolPublicHome({
             <Link
               href={admissionsHref}
               className="inline-flex items-center rounded-xl text-white px-5 py-3 text-sm font-bold hover:brightness-95"
-              style={{ backgroundColor: preset.tone === "modern" ? primary : "#b3234b" }}
+              style={{ backgroundColor: preset.id === "modern" ? primary : "#b3234b" }}
             >
               {preset.hero.ctaAdmit} →
             </Link>
