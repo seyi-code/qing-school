@@ -18,6 +18,7 @@ const PUBLIC_PATHS = [
   "/api/fees/payments/confirm",
   "/",
   "/saas",
+  "/site",
   "/admissions",
   "/complaints",
   "/contact",
@@ -26,12 +27,6 @@ const PUBLIC_PATHS = [
   "/p",
 ];
 
-/**
- * Path prefixes limited to specific roles.
- * PLATFORM_ADMIN may access school-ops paths (staff, payroll, settings)
- * while working as a tenant, but not student/parent/teacher portals.
- * Onboarding is platform-only — never public.
- */
 const PORTAL_RULES: Array<{ prefix: string; roles: string[] }> = [
   { prefix: "/onboarding", roles: ["PLATFORM_ADMIN"] },
   { prefix: "/platform", roles: ["PLATFORM_ADMIN"] },
@@ -73,7 +68,6 @@ export async function middleware(req: NextRequest) {
     schoolSlug = hostParts[0];
   }
 
-  // Phase 1: marketing host serves SaaS landing at `/` (rewrite — URL stays `/`)
   if (hostMode === "marketing" && pathname === "/") {
     const url = req.nextUrl.clone();
     url.pathname = "/saas";
@@ -82,7 +76,6 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  // Optional: send portal login from marketing site to app host when configured
   const appHost = getAppHost();
   if (
     hostMode === "marketing" &&
@@ -96,7 +89,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(dest);
   }
 
-  // Marketing host: block platform/onboarding entry (use app host)
   if (
     hostMode === "marketing" &&
     (pathname.startsWith("/platform") || pathname.startsWith("/onboarding"))
@@ -157,11 +149,6 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
-/**
- * Skip middleware for Next internals and static files under /public.
- * Previously only .png was excluded — .jpg under /kms-home was redirected to /login
- * (browser then showed broken images / alt text on the homepage).
- */
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|logo\\.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|woff2?)$).*)",
