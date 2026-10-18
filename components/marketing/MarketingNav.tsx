@@ -6,16 +6,29 @@ import type { Branding } from "@/lib/branding";
 import { defaultBranding } from "@/lib/branding";
 
 /** Optional `brand` enables per-school white-label (Phase 1b+). */
-export function MarketingNav({ brand }: { brand?: Branding }) {
+export function MarketingNav({
+  brand,
+  schoolSlug,
+}: {
+  brand?: Branding;
+  schoolSlug?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const b = brand || defaultBranding();
+  const home = schoolSlug ? `/site/${schoolSlug}` : "/";
+  const admissionsHref = schoolSlug
+    ? `/admissions?school=${encodeURIComponent(schoolSlug)}`
+    : "/admissions";
+  const contactHref = schoolSlug
+    ? `/contact?school=${encodeURIComponent(schoolSlug)}`
+    : "/contact";
   const LINKS = [
-    { href: "/#about", label: "About Us" },
-    { href: "/#programmes", label: "Academics" },
-    { href: `/#why`, label: `Why ${b.shortName}` },
-    { href: "/admissions", label: "Admissions" },
-    { href: "/#news", label: "News" },
-    { href: "/contact", label: "Contact" },
+    { href: `${home}#about`, label: "About Us" },
+    { href: `${home}#programmes`, label: "Academics" },
+    { href: `${home}#why`, label: `Why ${b.shortName}` },
+    { href: admissionsHref, label: "Admissions" },
+    { href: `${home}#news`, label: "News" },
+    { href: contactHref, label: "Contact" },
   ];
 
   return (
@@ -51,15 +64,11 @@ export function MarketingNav({ brand }: { brand?: Branding }) {
 
         <header className="bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
           <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[56px] sm:min-h-[72px] flex items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-2.5 min-w-0">
+            <Link href={home} className="flex items-center gap-2.5 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={b.logoUrl || "/kms-home/kms-school-crest.jpg"}
-                alt={b.name}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-contain bg-[#f7f5ef] border border-[#e8e4d8] shrink-0"
-              />
+              <img src={b.logoUrl || "/logo.svg"} alt="" className="h-9 w-9 sm:h-11 sm:w-11 object-contain" />
               <span className="min-w-0">
-                <span className="block font-serif font-bold text-[#12345a] text-[14px] sm:text-lg leading-tight truncate">
+                <span className="block text-sm sm:text-base font-bold text-[#12345a] truncate leading-tight">
                   {b.name}
                 </span>
                 <span className="block text-[8px] sm:text-[10px] font-extrabold tracking-[0.16em] text-[#9a7820] uppercase mt-0.5">
@@ -79,7 +88,7 @@ export function MarketingNav({ brand }: { brand?: Branding }) {
                 </Link>
               ))}
               <Link
-                href="/admissions"
+                href={admissionsHref}
                 className="inline-flex items-center px-4 py-2.5 rounded-lg bg-[#b3234b] text-white text-sm font-extrabold hover:brightness-95"
               >
                 Apply Now
@@ -109,7 +118,7 @@ export function MarketingNav({ brand }: { brand?: Branding }) {
                 </Link>
               ))}
               <Link
-                href="/admissions"
+                href={admissionsHref}
                 className="mt-1 text-center py-2.5 rounded-lg bg-[#b3234b] text-white text-sm font-extrabold"
                 onClick={() => setOpen(false)}
               >
