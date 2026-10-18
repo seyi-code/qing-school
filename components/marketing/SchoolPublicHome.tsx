@@ -49,7 +49,7 @@ export function SchoolPublicHome({
   return (
     <main className="min-h-screen bg-white text-[#1e2e43] flex flex-col">
       <MarketingNav brand={branding} schoolSlug={schoolSlug} />
-      <HeroSlider brand={branding} />
+      <HeroSlider brand={branding} schoolSlug={schoolSlug} />
 
       <section style={{ backgroundColor: primary }} className="text-white">
         <div className="max-w-[1180px] mx-auto grid grid-cols-2 lg:grid-cols-4">
