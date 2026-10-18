@@ -85,10 +85,10 @@ export async function POST(req: Request) {
     action: verify ? "VERIFY_CUSTOM_DOMAIN" : clear ? "CLEAR_CUSTOM_DOMAIN" : "SET_CUSTOM_DOMAIN",
     entity: "School",
     entityId: schoolId,
-    details: JSON.stringify({
+    details: {
       customDomain: updated.customDomain,
       verified: Boolean(updated.domainVerifiedAt),
-    }),
+    },
   });
 
   return NextResponse.json({ school: updated });
