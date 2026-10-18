@@ -11,7 +11,16 @@ const Schema = z.object({
     .string()
     .min(1)
     .max(80)
-    .regex(/^[a-z0-9-]+$/, "slug: lowercase, numbers, hyphens"),
+    .transform((s) =>
+      s
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+    )
+    .refine((s) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s), {
+      message: "slug: use lowercase letters, numbers, hyphens only (e.g. about or home)",
+    }),
   title: z.string().min(1).max(200),
   body: z.string().min(1),
   published: z.boolean().default(false),
@@ -79,7 +88,10 @@ export async function POST(req: Request) {
 
   const parsed = Schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid page data" }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message || "Invalid page data" },
+      { status: 400 }
+    );
   }
 
   const data = {
