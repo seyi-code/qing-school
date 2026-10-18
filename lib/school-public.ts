@@ -40,14 +40,19 @@ export async function findSchoolForPublic(opts: {
   const host = normalizeHost(opts.host);
   if (!host) return null;
 
-  const byDomain = await prisma.school.findFirst({
-    where: {
-      isActive: true,
-      customDomain: host,
-      domainVerifiedAt: { not: null },
-    },
-  });
-  if (byDomain) return byDomain;
+  // customDomain requires schema fields (Phase 4). Guard so missing columns don't crash.
+  try {
+    const byDomain = await prisma.school.findFirst({
+      where: {
+        isActive: true,
+        customDomain: host,
+        domainVerifiedAt: { not: null },
+      },
+    });
+    if (byDomain) return byDomain;
+  } catch (err) {
+    console.warn("[findSchoolForPublic] customDomain lookup skipped:", err);
+  }
 
   return null;
 }
