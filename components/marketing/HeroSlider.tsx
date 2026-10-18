@@ -20,10 +20,21 @@ const SLIDES = [
   },
 ];
 
-export function HeroSlider({ brand }: { brand?: Branding }) {
+export function HeroSlider({
+  brand,
+  schoolSlug,
+}: {
+  brand?: Branding;
+  schoolSlug?: string | null;
+}) {
   const b = brand || defaultBranding();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+
+  const home = schoolSlug ? `/site/${schoolSlug}` : "/";
+  const admissionsHref = schoolSlug
+    ? `/admissions?school=${encodeURIComponent(schoolSlug)}`
+    : "/admissions";
 
   const show = useCallback((n: number) => {
     setIndex((n + SLIDES.length) % SLIDES.length);
@@ -78,13 +89,13 @@ export function HeroSlider({ brand }: { brand?: Branding }) {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/#about"
+              href={`${home}#about`}
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#b3234b] text-white text-sm font-extrabold hover:brightness-95 transition"
             >
               Explore Our School →
             </Link>
             <Link
-              href="/admissions"
+              href={admissionsHref}
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-white text-white text-sm font-extrabold hover:bg-white/10 transition"
             >
               Admissions Enquiry
