@@ -127,6 +127,9 @@ export default async function PlatformPage() {
           <Link href="/onboarding" className="btn-primary">
             Onboard school
           </Link>
+          <Link href="/platform/domains" className="btn-ghost">
+            Custom domains
+          </Link>
           <Link href="/dashboard" className="btn-ghost">
             School dashboard
           </Link>
@@ -156,6 +159,12 @@ export default async function PlatformPage() {
               icon="➕"
               description="Create tenant + first admin"
               primary
+            />
+            <ActionTile
+              href="/platform/domains"
+              label="Custom domains"
+              icon="🌐"
+              description="Map verified domains to schools"
             />
             <ActionTile
               href="/dashboard"
