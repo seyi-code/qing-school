@@ -123,9 +123,10 @@ function LoginForm({
               <PasswordInput
                 id="password"
                 value={password}
-                onChange={setPassword}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
+                className="w-full border border-[#e3e8ed] bg-white px-3 py-2.5 text-sm rounded-lg focus:border-[#12345a] outline-none"
               />
             </div>
             <div className="text-right">
