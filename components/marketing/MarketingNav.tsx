@@ -22,6 +22,9 @@ export function MarketingNav({
   const contactHref = schoolSlug
     ? `/contact?school=${encodeURIComponent(schoolSlug)}`
     : "/contact";
+  const loginHref = schoolSlug
+    ? `/login?school=${encodeURIComponent(schoolSlug)}`
+    : "/login";
   const LINKS = [
     { href: `${home}#about`, label: "About Us" },
     { href: `${home}#programmes`, label: "Academics" },
@@ -49,13 +52,13 @@ export function MarketingNav({
               ) : null}
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 font-semibold">
-              <Link href="/login" className="hover:text-[#f2d66e]">
+              <Link href={loginHref} className="hover:text-[#f2d66e]">
                 Student portal
               </Link>
-              <Link href="/login" className="hover:text-[#f2d66e]">
+              <Link href={loginHref} className="hover:text-[#f2d66e]">
                 Parent portal
               </Link>
-              <Link href="/login" className="hover:text-[#f2d66e]">
+              <Link href={loginHref} className="hover:text-[#f2d66e]">
                 Staff portal
               </Link>
             </div>
@@ -125,7 +128,7 @@ export function MarketingNav({
                 Apply Now
               </Link>
               <Link
-                href="/login"
+                href={loginHref}
                 className="text-center py-2 text-sm font-bold text-[#12345a]"
                 onClick={() => setOpen(false)}
               >
