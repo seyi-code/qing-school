@@ -30,19 +30,25 @@ export function SchoolPublicHome({
   cmsHtml,
   cmsTitle,
   isTenantSite,
+  schoolSlug,
 }: {
   branding: Branding;
   notices: Array<{ id: string; title: string; body: string; createdAt: Date }>;
   cmsHtml: string | null;
   cmsTitle: string | null;
   isTenantSite?: boolean;
+  schoolSlug?: string | null;
 }) {
+  const admissionsHref = schoolSlug
+    ? `/admissions?school=${encodeURIComponent(schoolSlug)}`
+    : "/admissions";
+
   const primary = branding.primaryColor || "#12345a";
   const accent = branding.accentColor || "#d2ae3b";
 
   return (
     <main className="min-h-screen bg-white text-[#1e2e43] flex flex-col">
-      <MarketingNav brand={branding} />
+      <MarketingNav brand={branding} schoolSlug={schoolSlug} />
       <HeroSlider brand={branding} />
 
       <section style={{ backgroundColor: primary }} className="text-white">
@@ -66,6 +72,15 @@ export function SchoolPublicHome({
         </div>
       </section>
 
+      {cmsHtml ? (
+        <section className="py-12 sm:py-16 bg-[#f7f9fc]">
+          <div className="max-w-[800px] mx-auto px-5 prose prose-sm">
+            {cmsTitle ? <h2 className="font-serif text-2xl text-[#12345a]">{cmsTitle}</h2> : null}
+            <div dangerouslySetInnerHTML={{ __html: cmsHtml }} />
+          </div>
+        </section>
+      ) : null}
+
       <section id="about" className="py-16 sm:py-20">
         <div className="max-w-[1180px] mx-auto px-5 grid md:grid-cols-2 gap-10 items-center">
           <div className="relative h-[280px] sm:h-[390px]">
@@ -78,32 +93,19 @@ export function SchoolPublicHome({
           </div>
           <div>
             <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
-              About {branding.shortName}
+              About us
             </p>
-            <h2 className="font-serif text-[clamp(1.85rem,3.5vw,2.75rem)] leading-tight mt-2 mb-4" style={{ color: primary }}>
-              More than education.
-              <br />
-              <em className="not-italic text-[#b3234b]">A foundation for life.</em>
+            <h2 className="font-serif text-3xl text-[#12345a] mt-2 mb-4">
+              {branding.name}
             </h2>
-            <p className="text-[#627184] text-[15px] leading-relaxed">
-              {branding.name} is committed to excellent education that equips students with knowledge,
-              skills and values.
-              {branding.motto ? (
-                <>
-                  {" "}
-                  <strong style={{ color: primary }}>{branding.motto}</strong>
-                </>
-              ) : null}
+            <p className="text-[#627184] leading-relaxed mb-6">
+              {branding.motto
+                ? `${branding.motto}. A nurturing environment where every child learns, builds integrity, and discovers their purpose.`
+                : "A nurturing environment where every child learns, builds integrity, and discovers their purpose."}
             </p>
-            {isTenantSite ? (
-              <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#627184]">
-                School site · {branding.shortName}
-              </p>
-            ) : null}
             <Link
-              href="/admissions"
-              className="inline-flex mt-6 items-center gap-2 px-5 py-3 rounded-lg text-white text-sm font-extrabold"
-              style={{ backgroundColor: primary }}
+              href={admissionsHref}
+              className="inline-flex items-center rounded-xl bg-[#b3234b] text-white px-5 py-3 text-sm font-bold hover:brightness-95"
             >
               Admissions →
             </Link>
@@ -111,105 +113,79 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {cmsHtml ? (
-        <section className="py-12 bg-[#f7f9fc] border-y border-[#e3e8ed]">
-          <div className="max-w-[1180px] mx-auto px-5 prose prose-slate max-w-none">
-            {cmsTitle ? (
-              <h2 className="font-serif text-2xl mb-4" style={{ color: primary }}>
-                {cmsTitle}
-              </h2>
-            ) : null}
-            <div dangerouslySetInnerHTML={{ __html: cmsHtml }} />
-          </div>
-        </section>
-      ) : null}
-
-      <section id="programmes" className="py-16 sm:py-20 bg-gradient-to-br from-[#f0f6fb] to-[#fbfcfd]">
+      <section id="programmes" className="py-16 bg-[#f7f9fc]">
         <div className="max-w-[1180px] mx-auto px-5">
-          <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
-            Our programmes
+          <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-center" style={{ color: accent }}>
+            Academics
           </p>
-          <h2 className="font-serif text-[clamp(1.75rem,3vw,2.5rem)] mt-2 mb-8" style={{ color: primary }}>
-            Holistic Education for Every Learner
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h2 className="font-serif text-3xl text-[#12345a] text-center mt-2 mb-10">Our programmes</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {PROGRAMMES.map((p) => (
-              <article key={p.title} className="rounded-xl overflow-hidden border border-[#e3e8ed] bg-white shadow-sm">
+              <div key={p.title} className="bg-white rounded-xl overflow-hidden border border-[#e3e8ed] shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.img} alt={p.title} className="h-36 w-full object-cover" />
+                <img src={p.img} alt="" className="h-36 w-full object-cover" />
                 <div className="p-4">
-                  <h3 className="font-bold text-sm" style={{ color: primary }}>
-                    {p.title}
-                  </h3>
-                  <p className="text-xs text-[#627184] mt-1">{p.body}</p>
+                  <h3 className="font-bold text-[#12345a] m-0">{p.title}</h3>
+                  <p className="text-xs text-[#627184] mt-1 mb-0">{p.body}</p>
                 </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="why" className="py-16 sm:py-20">
-        <div className="max-w-[1180px] mx-auto px-5">
-          <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
-            Why {branding.shortName}
-          </p>
-          <h2 className="font-serif text-[clamp(1.75rem,3vw,2.5rem)] mt-2 mb-8" style={{ color: primary }}>
-            Why families choose us
-          </h2>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {WHY.map((w) => (
-              <div key={w.title} className="rounded-2xl border border-[#e3e8ed] p-5 bg-[#f7f9fc]">
-                <span className="text-2xl" aria-hidden>
-                  {w.icon}
-                </span>
-                <h3 className="font-bold mt-2" style={{ color: primary }}>
-                  {w.title}
-                </h3>
-                <p className="text-sm text-[#627184] mt-1">{w.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="news" className="py-16 sm:py-20 bg-[#f0f6fb]">
+      <section id="why" className="py-16">
+        <div className="max-w-[1180px] mx-auto px-5">
+          <h2 className="font-serif text-3xl text-[#12345a] text-center mb-10">Why families choose us</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {WHY.map((w) => (
+              <div key={w.title} className="rounded-xl border border-[#e3e8ed] p-6 bg-white">
+                <span className="text-2xl" aria-hidden>
+                  {w.icon}
+                </span>
+                <h3 className="font-bold text-[#12345a] mt-3">{w.title}</h3>
+                <p className="text-sm text-[#627184] mt-1 mb-0">{w.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="news" className="py-16 bg-[#f0f4f8]">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
             News
           </p>
-          <h2 className="font-serif text-2xl mt-2 mb-6" style={{ color: primary }}>
-            Latest from {branding.shortName}
+          <h2 className="font-serif text-3xl text-[#12345a] mt-2 mb-8">
+            Latest from {branding.shortName || branding.name}
           </h2>
           {notices.length === 0 ? (
-            <p className="text-sm text-[#627184]">No public notices yet.</p>
+            <p className="text-[#627184]">No public notices yet.</p>
           ) : (
-            <ul className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
               {notices.map((n) => (
-                <li key={n.id} className="rounded-xl border border-[#e3e8ed] bg-white p-4 shadow-sm">
-                  <h3 className="font-bold text-sm" style={{ color: primary }}>
-                    {n.title}
-                  </h3>
-                  <p className="text-xs text-[#627184] mt-1 line-clamp-3">{n.body}</p>
-                </li>
+                <article key={n.id} className="bg-white border border-[#e3e8ed] rounded-xl p-5">
+                  <h3 className="font-bold text-[#12345a] m-0">{n.title}</h3>
+                  <p className="text-sm text-[#627184] mt-2 mb-0 line-clamp-3">{n.body}</p>
+                </article>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       </section>
 
-      <section className="py-12 text-center" style={{ backgroundColor: primary }}>
-        <p className="text-white/90 text-sm mb-4">Ready to join {branding.shortName}?</p>
+      <section className="py-14 text-center text-white" style={{ backgroundColor: primary }}>
+        <p className="text-lg mb-4">Ready to join {branding.shortName || branding.name}?</p>
         <Link
-          href="/admissions"
-          className="inline-flex px-6 py-3 rounded-lg font-extrabold text-sm"
-          style={{ backgroundColor: accent, color: primary }}
+          href={admissionsHref}
+          className="inline-flex rounded-xl px-6 py-3 text-sm font-bold"
+          style={{ backgroundColor: accent, color: "#12345a" }}
         >
           Start application
         </Link>
       </section>
 
-      <MarketingFooter brand={branding} />
+      <MarketingFooter brand={branding} schoolSlug={schoolSlug} />
     </main>
   );
 }
