@@ -5,19 +5,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { SchoolImg } from "@/components/marketing/SchoolImg";
 import { schoolImage, schoolProgrammeImages } from "@/lib/school-images";
-
-const HIGHLIGHTS = [
-  { icon: "📚", title: "Academic Excellence", body: "Quality education for a brighter future" },
-  { icon: "🛡️", title: "Strong Values", body: "Integrity, discipline and godliness" },
-  { icon: "👥", title: "Supportive Community", body: "Partnership between school and home" },
-  { icon: "💻", title: "Modern Facilities", body: "A safe and conducive learning environment" },
-];
-
-const WHY = [
-  { title: "Experienced Teachers", body: "Passionate, qualified staff who know every child.", icon: "💛" },
-  { title: "Safe Environment", body: "A secure and conducive learning atmosphere.", icon: "🏫" },
-  { title: "Modern Facilities", body: "Well-equipped library, labs and more.", icon: "✨" },
-];
+import { presetForSlug } from "@/lib/school-presets";
 
 export function SchoolPublicHome({
   branding,
@@ -38,11 +26,18 @@ export function SchoolPublicHome({
     ? `/admissions?school=${encodeURIComponent(schoolSlug)}`
     : "/admissions";
 
-  const primary = branding.primaryColor || "#12345a";
-  const accent = branding.accentColor || "#d2ae3b";
-  const programmes = schoolProgrammeImages(schoolSlug);
+  const preset = presetForSlug(schoolSlug);
+  const primary = branding.primaryColor || preset.primary;
+  const accent = branding.accentColor || preset.accent;
+  const programmes = schoolProgrammeImages(schoolSlug).map((img, i) => ({
+    ...img,
+    title: preset.programmes[i]?.title ?? img.title,
+    body: preset.programmes[i]?.body ?? img.body,
+  }));
   const aboutSrc = schoolImage(schoolSlug, "about-students.jpg");
   const aboutFb = schoolImage(schoolSlug, "about-students.jpg", { forceDefault: true });
+  const highlights = preset.highlights;
+  const why = preset.why;
 
   return (
     <main className="min-h-screen bg-white text-[#1e2e43] flex flex-col">
@@ -51,11 +46,11 @@ export function SchoolPublicHome({
 
       <section style={{ backgroundColor: primary }} className="text-white">
         <div className="max-w-[1180px] mx-auto grid grid-cols-2 lg:grid-cols-4">
-          {HIGHLIGHTS.map((h, i) => (
+          {highlights.map((h, i) => (
             <div
               key={h.title}
               className={`flex items-center gap-3 px-4 sm:px-5 py-5 ${
-                i < HIGHLIGHTS.length - 1 ? "lg:border-r border-white/20" : ""
+                i < highlights.length - 1 ? "lg:border-r border-white/20" : ""
               }`}
             >
               <span className="text-2xl sm:text-3xl shrink-0" style={{ color: accent }} aria-hidden>
@@ -85,7 +80,7 @@ export function SchoolPublicHome({
             <SchoolImg
               src={aboutSrc}
               fallback={aboutFb}
-              alt={`Students at ${branding.name}`}
+              alt={`${branding.name}`}
               className="w-full h-full object-cover rounded-xl"
             />
           </div>
@@ -96,14 +91,15 @@ export function SchoolPublicHome({
             <h2 className="font-serif text-3xl text-[#12345a] mt-2 mb-4">{branding.name}</h2>
             <p className="text-[#627184] leading-relaxed mb-6">
               {branding.motto
-                ? `${branding.motto}. A nurturing environment where every child learns, builds integrity, and discovers their purpose.`
-                : "A nurturing environment where every child learns, builds integrity, and discovers their purpose."}
+                ? `${branding.motto}. ${preset.hero.blurb}`
+                : preset.hero.blurb}
             </p>
             <Link
               href={admissionsHref}
-              className="inline-flex items-center rounded-xl bg-[#b3234b] text-white px-5 py-3 text-sm font-bold hover:brightness-95"
+              className="inline-flex items-center rounded-xl text-white px-5 py-3 text-sm font-bold hover:brightness-95"
+              style={{ backgroundColor: preset.tone === "modern" ? primary : "#b3234b" }}
             >
-              Admissions →
+              {preset.hero.ctaAdmit} →
             </Link>
           </div>
         </div>
@@ -138,7 +134,7 @@ export function SchoolPublicHome({
         <div className="max-w-[1180px] mx-auto px-5">
           <h2 className="font-serif text-3xl text-[#12345a] text-center mb-10">Why families choose us</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {WHY.map((w) => (
+            {why.map((w) => (
               <div key={w.title} className="rounded-xl border border-[#e3e8ed] p-6 bg-white">
                 <span className="text-2xl" aria-hidden>
                   {w.icon}
@@ -181,7 +177,7 @@ export function SchoolPublicHome({
           className="inline-flex rounded-xl px-6 py-3 text-sm font-bold"
           style={{ backgroundColor: accent, color: "#12345a" }}
         >
-          Start application
+          {preset.hero.ctaAdmit}
         </Link>
       </section>
 
