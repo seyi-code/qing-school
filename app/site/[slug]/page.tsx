@@ -27,6 +27,7 @@ export default async function SchoolSitePreviewPage({
       cmsHtml={data.cmsHtml}
       cmsTitle={data.cmsTitle}
       isTenantSite
+      schoolSlug={data.schoolSlug || slug}
     />
   );
 }

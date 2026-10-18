@@ -17,6 +17,7 @@ export default async function PublicHomePage() {
       cmsHtml={data.cmsHtml}
       cmsTitle={data.cmsTitle}
       isTenantSite={data.isTenantSite}
+      schoolSlug={data.schoolSlug}
     />
   );
 }
