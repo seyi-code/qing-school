@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Branding } from "@/lib/branding";
 import { defaultBranding } from "@/lib/branding";
 import { schoolHeroSlides } from "@/lib/school-images";
+import { presetForSlug } from "@/lib/school-presets";
 
 export function HeroSlider({
   brand,
@@ -14,6 +15,8 @@ export function HeroSlider({
   schoolSlug?: string | null;
 }) {
   const b = brand || defaultBranding();
+  const preset = presetForSlug(schoolSlug);
+  const hero = preset.hero;
   const slides = schoolHeroSlides(schoolSlug);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -43,6 +46,12 @@ export function HeroSlider({
     }, 5000);
     return () => clearInterval(t);
   }, [paused, slides.length]);
+
+  const accent = b.accentColor || preset.accent;
+  const titleClass =
+    preset.font === "sans"
+      ? "font-sans text-white text-[clamp(2rem,5vw,3.25rem)] leading-tight mb-4 font-bold"
+      : "font-serif text-white text-[clamp(2rem,5vw,3.25rem)] leading-tight mb-4";
 
   return (
     <section
@@ -76,39 +85,44 @@ export function HeroSlider({
 
       <div className="relative z-[2] max-w-[1180px] mx-auto px-5 py-16 sm:py-24">
         <div className="max-w-xl">
-          <p className="text-[#f1d264] text-xs font-extrabold tracking-[0.16em] uppercase mb-3">
+          <p
+            className="text-xs font-extrabold tracking-[0.16em] uppercase mb-3"
+            style={{ color: accent }}
+          >
             Welcome to {b.shortName}
           </p>
-          <h1 className="font-serif text-white text-[clamp(2rem,5vw,3.25rem)] leading-tight mb-4">
-            Nurturing minds.
+          <h1 className={titleClass}>
+            {hero.line1}
             <br />
-            <span className="text-[#f1d264]">Building character.</span>
+            <span style={{ color: accent }}>{hero.line2}</span>
             <br />
-            Shaping tomorrow.
+            {hero.line3}
           </h1>
           <p className="text-[15px] sm:text-base text-[#e2eaf3] max-w-md mb-6 leading-relaxed">
-            At {b.name}, we provide a nurturing and inspiring environment where every child learns,
-            builds integrity, and discovers their purpose.
+            At {b.name}, {hero.blurb.replace(/^At [^,]+,\s*/i, "")}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href={`${home}#about`}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#b3234b] text-white text-sm font-extrabold hover:brightness-95 transition"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-white text-sm font-extrabold hover:brightness-95 transition"
+              style={{ backgroundColor: preset.tone === "modern" ? preset.primary : "#b3234b" }}
             >
-              Explore Our School →
+              {hero.ctaExplore}
             </Link>
             <Link
               href={admissionsHref}
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-white text-white text-sm font-extrabold hover:bg-white/10 transition"
             >
-              Admissions Enquiry
+              {hero.ctaAdmit}
             </Link>
           </div>
         </div>
       </div>
 
       <div className="absolute right-4 bottom-8 z-[3] hidden sm:flex items-center gap-2.5 bg-white text-[#12345a] px-3.5 py-2.5 rounded-xl shadow-lg text-xs font-extrabold">
-        <span className="text-2xl text-[#d2ae3b]">🎓</span>
+        <span className="text-2xl" style={{ color: accent }}>
+          🎓
+        </span>
         <span>
           {b.motto || "Excellence in learning"}
           <br />
