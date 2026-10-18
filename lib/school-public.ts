@@ -1,5 +1,6 @@
 /**
  * Public school site resolution (Phase 1b–4).
+ * Redeploy trigger: ensure /site/[slug] is on staging Preview.
  * Isolates CMS + notices + branding by schoolId.
  */
 import { headers } from "next/headers";
