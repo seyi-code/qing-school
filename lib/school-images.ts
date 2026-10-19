@@ -1,21 +1,23 @@
 /**
  * Per-school public marketing images.
- * Place assets under public/school-home/{slug}/ then fall back to public/kms-home/.
- *
- * Expected filenames (optional per school):
- *   hero-classroom.jpg | about-students.jpg | admissions-students.jpg
- *   early-years.jpg | primary-school.jpg | junior-secondary.jpg | senior-secondary.jpg
+ * Only slugs listed in HAS_CUSTOM_IMAGES use /school-home/{slug}/.
+ * Everyone else uses sharp /kms-home/ assets (no broken images).
  */
 
 const DEFAULT_PREFIX = "/kms-home";
+
+/** Slugs that have real files under public/school-home/{slug}/ */
+const HAS_CUSTOM_IMAGES = new Set<string>([
+  // "dms", // enable when files are committed
+  // "test",
+]);
 
 function prefixFor(slug: string | null | undefined): string {
   if (!slug) return DEFAULT_PREFIX;
   const s = slug.trim().toLowerCase();
   if (!s || s === "kms") return DEFAULT_PREFIX;
-  // Prefer dedicated folder; browser 404 falls back via onError where wired,
-  // but we also allow schools that only customize some files.
-  return `/school-home/${s}`;
+  if (HAS_CUSTOM_IMAGES.has(s)) return `/school-home/${s}`;
+  return DEFAULT_PREFIX;
 }
 
 export function schoolImage(
