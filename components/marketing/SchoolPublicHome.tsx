@@ -36,6 +36,10 @@ export function SchoolPublicHome({
   }));
   const aboutSrc = schoolImage(schoolSlug, "about-students.jpg");
   const aboutFb = schoolImage(schoolSlug, "about-students.jpg", { forceDefault: true });
+  const admissionsBg = schoolImage(schoolSlug, "admissions-students.jpg");
+  const admissionsBgFb = schoolImage(schoolSlug, "admissions-students.jpg", {
+    forceDefault: true,
+  });
   const highlights = preset.highlights;
 
   return (
@@ -70,7 +74,11 @@ export function SchoolPublicHome({
       {cmsHtml ? (
         <section className="py-12 sm:py-16 bg-[#f7f9fc]">
           <div className="max-w-[800px] mx-auto px-5 prose prose-sm">
-            {cmsTitle ? <h2 className="font-serif text-2xl" style={{ color: primary }}>{cmsTitle}</h2> : null}
+            {cmsTitle ? (
+              <h2 className="font-serif text-2xl" style={{ color: primary }}>
+                {cmsTitle}
+              </h2>
+            ) : null}
             <div dangerouslySetInnerHTML={{ __html: cmsHtml }} />
           </div>
         </section>
@@ -127,7 +135,7 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Programmes — always 2×2 (matches polished KMS video on mobile) */}
+      {/* Programmes — always 2×2 */}
       <section id="programmes" className="py-16 bg-[#f7f9fc]">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-center" style={{ color: accent }}>
@@ -234,19 +242,37 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Admissions CTA */}
-      <section className="py-16 text-center text-white relative overflow-hidden" style={{ backgroundColor: primary }}>
+      {/* Admissions CTA — photo background + dark overlay (matches polished KMS) */}
+      <section className="relative py-20 sm:py-24 text-center text-white overflow-hidden">
+        <div className="absolute inset-0">
+          <SchoolImg
+            src={admissionsBg}
+            fallback={admissionsBgFb}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(12,31,56,0.88) 0%, rgba(12,31,56,0.82) 50%, rgba(12,31,56,0.92) 100%)",
+            }}
+          />
+        </div>
         <div className="relative z-[1] max-w-[640px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
             Admissions
           </p>
-          <h2 className="font-serif text-3xl mb-3">Join our {branding.shortName || "school"} family.</h2>
-          <p className="text-white/85 text-sm mb-6 leading-relaxed">
+          <h2 className="font-serif text-3xl sm:text-4xl mb-3">
+            Join our {branding.shortName || "school"} family.
+          </h2>
+          <p className="text-white/90 text-sm mb-8 leading-relaxed">
             Give your child the opportunity to learn, grow in character and build a brighter future.
+            Contact the school to ask about availability, placement and the admissions process.
           </p>
           <Link
             href={admissionsHref}
-            className="inline-flex rounded-xl px-6 py-3 text-sm font-bold hover:brightness-95"
+            className="inline-flex rounded-xl px-7 py-3.5 text-sm font-bold hover:brightness-95 shadow-lg"
             style={{ backgroundColor: "#b3234b", color: "#fff" }}
           >
             {preset.hero.ctaAdmit}
