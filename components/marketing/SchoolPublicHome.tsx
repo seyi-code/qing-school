@@ -247,12 +247,10 @@ export function SchoolPublicHome({
       </section>
 
       {/*
-        Admissions — A | B two-column grid:
-        A = CTA (headline + button)
-        B = contact list (vertical items)
-        Mobile: A stacked above B. md+: side by side.
+        Admissions — always A | B (two columns on all screen sizes).
+        A = CTA left, B = contact list right (matches polished mobile reference).
       */}
-      <section className="relative py-14 sm:py-16 text-white overflow-hidden">
+      <section className="relative py-12 sm:py-16 text-white overflow-hidden">
         <div className="absolute inset-0">
           <SchoolImg
             src={admissionsBg}
@@ -269,22 +267,25 @@ export function SchoolPublicHome({
           />
         </div>
 
-        <div className="relative z-[1] max-w-[1180px] mx-auto px-5 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center">
+        <div className="relative z-[1] max-w-[1180px] mx-auto px-4 sm:px-5 grid grid-cols-2 gap-4 sm:gap-8 md:gap-12 items-center">
           {/* A — CTA */}
-          <div className="text-center md:text-left">
-            <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
+          <div className="min-w-0">
+            <p
+              className="text-[10px] sm:text-xs font-extrabold tracking-[0.16em] uppercase mb-1.5 sm:mb-2"
+              style={{ color: accent }}
+            >
               Admissions
             </p>
-            <h2 className="font-serif text-3xl sm:text-4xl mb-3">
+            <h2 className="font-serif text-xl sm:text-3xl md:text-4xl mb-2 sm:mb-3 leading-tight">
               Join our {branding.shortName || "school"} family.
             </h2>
-            <p className="text-white/90 text-sm mb-7 leading-relaxed max-w-md md:max-w-none mx-auto md:mx-0">
+            <p className="text-white/90 text-[11px] sm:text-sm mb-4 sm:mb-7 leading-relaxed">
               Give your child the opportunity to learn, grow in character and build a brighter future.
               Contact the school to ask about availability, placement and the admissions process.
             </p>
             <Link
               href={admissionsHref}
-              className="inline-flex rounded-xl px-7 py-3.5 text-sm font-bold hover:brightness-95 shadow-lg"
+              className="inline-flex rounded-lg sm:rounded-xl px-3 sm:px-7 py-2 sm:py-3.5 text-[11px] sm:text-sm font-bold hover:brightness-95 shadow-lg"
               style={{ backgroundColor: "#b3234b", color: "#fff" }}
             >
               Start an Enquiry →
@@ -292,36 +293,59 @@ export function SchoolPublicHome({
           </div>
 
           {/* B — vertical contact list */}
-          <div className="border-t md:border-t-0 md:border-l border-white/20 pt-8 md:pt-0 md:pl-10 space-y-5">
-            <Link href={admissionsHref} className="flex items-start gap-3 group">
-              <span className="text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
+          <div className="border-l border-white/20 pl-3 sm:pl-8 space-y-3 sm:space-y-5 min-w-0">
+            <Link href={admissionsHref} className="flex items-start gap-2 sm:gap-3 group">
+              <span
+                className="text-sm sm:text-xl shrink-0 mt-0.5"
+                style={{ color: accent }}
+                aria-hidden
+              >
                 ✎
               </span>
-              <div>
-                <p className="font-bold text-sm m-0 text-white group-hover:underline">Admissions Enquiry</p>
-                <p className="text-xs text-white/70 m-0 mt-0.5">Ask about classes and availability</p>
+              <div className="min-w-0">
+                <p className="font-bold text-[11px] sm:text-sm m-0 text-white group-hover:underline">
+                  Admissions Enquiry
+                </p>
+                <p className="text-[10px] sm:text-xs text-white/70 m-0 mt-0.5 leading-snug">
+                  Ask about classes and availability
+                </p>
               </div>
             </Link>
 
-            <Link href={contactHref} className="flex items-start gap-3 group">
-              <span className="text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
+            <Link href={contactHref} className="flex items-start gap-2 sm:gap-3 group">
+              <span
+                className="text-sm sm:text-xl shrink-0 mt-0.5"
+                style={{ color: accent }}
+                aria-hidden
+              >
                 ⌖
               </span>
-              <div>
-                <p className="font-bold text-sm m-0 text-white group-hover:underline">Visit Our School</p>
-                <p className="text-xs text-white/70 m-0 mt-0.5">Contact us to arrange a visit</p>
+              <div className="min-w-0">
+                <p className="font-bold text-[11px] sm:text-sm m-0 text-white group-hover:underline">
+                  Visit Our School
+                </p>
+                <p className="text-[10px] sm:text-xs text-white/70 m-0 mt-0.5 leading-snug">
+                  Contact us to arrange a visit
+                </p>
               </div>
             </Link>
 
-            <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex items-start gap-3 group">
-              <span className="text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
+            <a
+              href={`tel:${phone.replace(/\s/g, "")}`}
+              className="flex items-start gap-2 sm:gap-3 group"
+            >
+              <span
+                className="text-sm sm:text-xl shrink-0 mt-0.5"
+                style={{ color: accent }}
+                aria-hidden
+              >
                 ☎
               </span>
-              <div>
-                <p className="font-bold text-sm m-0 text-white group-hover:underline">
+              <div className="min-w-0">
+                <p className="font-bold text-[11px] sm:text-sm m-0 text-white group-hover:underline">
                   Contact {branding.shortName || "school"}
                 </p>
-                <p className="text-xs text-white/70 m-0 mt-0.5">{phone}</p>
+                <p className="text-[10px] sm:text-xs text-white/70 m-0 mt-0.5">{phone}</p>
               </div>
             </a>
           </div>

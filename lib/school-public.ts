@@ -1,7 +1,7 @@
 /**
  * Public school site resolution (Phase 1b–4).
- * Redeploy trigger: ensure /site/[slug] is on staging Preview.
  * Isolates CMS + notices + branding by schoolId.
+ * Root host (no slug/custom domain) defaults to KMS so other tenants never leak onto the platform homepage.
  */
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
@@ -62,10 +62,19 @@ export async function loadPublicHome(opts: {
   slug?: string | null;
   host?: string | null;
 }): Promise<PublicHomeData> {
-  const school = await findSchoolForPublic(opts).catch((err) => {
+  let school = await findSchoolForPublic(opts).catch((err) => {
     console.error("[findSchoolForPublic]", err);
     return null;
   });
+
+  // Platform root (no tenant slug / verified domain) → default to KMS only.
+  // Never load another tenant's CMS or notices onto the shared homepage.
+  if (!school && !(opts.slug || "").trim()) {
+    school = await prisma.school
+      .findFirst({ where: { slug: "kms", isActive: true } })
+      .catch(() => null);
+  }
+
   const schoolId = school?.id ?? null;
   const branding = schoolId
     ? await getBrandingForSchoolId(schoolId)
@@ -76,25 +85,22 @@ export async function loadPublicHome(opts: {
   let cmsTitle: string | null = null;
 
   try {
-    const [n, home] = await Promise.all([
-      prisma.notice.findMany({
-        where: schoolId
-          ? { publishToWeb: true, schoolId }
-          : { publishToWeb: true },
-        orderBy: { createdAt: "desc" },
-        take: 4,
-      }),
-      schoolId
-        ? prisma.cmsPage.findFirst({ where: { slug: "home", schoolId } })
-        : prisma.cmsPage.findFirst({ where: { slug: "home" } }),
-    ]);
-    notices = n;
-    if (home && isLive(home)) {
-      if (!schoolId || home.schoolId === schoolId) {
+    if (schoolId) {
+      const [n, home] = await Promise.all([
+        prisma.notice.findMany({
+          where: { publishToWeb: true, schoolId },
+          orderBy: { createdAt: "desc" },
+          take: 4,
+        }),
+        prisma.cmsPage.findFirst({ where: { slug: "home", schoolId } }),
+      ]);
+      notices = n;
+      if (home && isLive(home) && home.schoolId === schoolId) {
         cmsTitle = home.title;
         cmsHtml = blocksToHtml(parseBlocks(home.body));
       }
     }
+    // No schoolId → no CMS/notices (avoid cross-tenant leak)
   } catch (err) {
     console.error("[loadPublicHome]", err);
   }
