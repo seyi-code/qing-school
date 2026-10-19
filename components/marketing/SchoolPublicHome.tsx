@@ -246,7 +246,11 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Admissions CTA — photo bg + side-by-side contact cards */}
+      {/*
+        Admissions — two blocks on photo background (matches polished reference):
+        UPPER: headline + CTA button
+        LOWER: vertical contact list (stacked on mobile, not a 3-column grid)
+      */}
       <section className="relative py-16 sm:py-20 text-white overflow-hidden">
         <div className="absolute inset-0">
           <SchoolImg
@@ -264,8 +268,9 @@ export function SchoolPublicHome({
           />
         </div>
 
-        <div className="relative z-[1] max-w-[1180px] mx-auto px-5">
-          <div className="max-w-[640px] mx-auto text-center mb-10">
+        <div className="relative z-[1] max-w-[640px] mx-auto px-5">
+          {/* UPPER */}
+          <div className="text-center mb-10">
             <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
               Admissions
             </p>
@@ -281,59 +286,40 @@ export function SchoolPublicHome({
               className="inline-flex rounded-xl px-7 py-3.5 text-sm font-bold hover:brightness-95 shadow-lg"
               style={{ backgroundColor: "#b3234b", color: "#fff" }}
             >
-              {preset.hero.ctaAdmit}
+              Start an Enquiry →
             </Link>
           </div>
 
-          {/* Three contact cards — side by side */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            <Link
-              href={admissionsHref}
-              className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/15 px-4 py-4 hover:bg-white/10 transition"
-            >
-              <span
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg"
-                style={{ backgroundColor: "rgba(210,174,59,0.2)", color: accent }}
-                aria-hidden
-              >
+          {/* LOWER — vertical list */}
+          <div className="border-t border-white/20 pt-6 space-y-5">
+            <Link href={admissionsHref} className="flex items-start gap-3 group">
+              <span className="text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
                 ✎
               </span>
               <div>
-                <p className="font-bold text-sm m-0 text-white">Admissions Enquiry</p>
+                <p className="font-bold text-sm m-0 text-white group-hover:underline">Admissions Enquiry</p>
                 <p className="text-xs text-white/70 m-0 mt-0.5">Ask about classes and availability</p>
               </div>
             </Link>
 
-            <Link
-              href={contactHref}
-              className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/15 px-4 py-4 hover:bg-white/10 transition"
-            >
-              <span
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg"
-                style={{ backgroundColor: "rgba(210,174,59,0.2)", color: accent }}
-                aria-hidden
-              >
+            <Link href={contactHref} className="flex items-start gap-3 group">
+              <span className="text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
                 ⌖
               </span>
               <div>
-                <p className="font-bold text-sm m-0 text-white">Visit Our School</p>
+                <p className="font-bold text-sm m-0 text-white group-hover:underline">Visit Our School</p>
                 <p className="text-xs text-white/70 m-0 mt-0.5">Contact us to arrange a visit</p>
               </div>
             </Link>
 
-            <a
-              href={`tel:${phone.replace(/\s/g, "")}`}
-              className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/15 px-4 py-4 hover:bg-white/10 transition"
-            >
-              <span
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg"
-                style={{ backgroundColor: "rgba(210,174,59,0.2)", color: accent }}
-                aria-hidden
-              >
+            <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex items-start gap-3 group">
+              <span className="text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
                 ☎
               </span>
               <div>
-                <p className="font-bold text-sm m-0 text-white">Contact {branding.shortName || "school"}</p>
+                <p className="font-bold text-sm m-0 text-white group-hover:underline">
+                  Contact {branding.shortName || "school"}
+                </p>
                 <p className="text-xs text-white/70 m-0 mt-0.5">{phone}</p>
               </div>
             </a>
