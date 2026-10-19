@@ -127,7 +127,7 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Programmes */}
+      {/* Programmes — always 2×2 (matches polished KMS video on mobile) */}
       <section id="programmes" className="py-16 bg-[#f7f9fc]">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-center" style={{ color: accent }}>
@@ -139,7 +139,7 @@ export function SchoolPublicHome({
           <p className="text-center text-[#627184] max-w-2xl mx-auto mb-8 text-sm leading-relaxed">
             {preset.programmesIntro.body}
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5">
             {programmes.map((p) => (
               <div
                 key={p.title}
@@ -149,14 +149,14 @@ export function SchoolPublicHome({
                   src={p.img}
                   fallback={p.fallback}
                   alt={p.title}
-                  className="h-40 w-full object-cover"
+                  className="h-28 sm:h-40 w-full object-cover"
                 />
-                <div className="p-4">
-                  <h3 className="font-bold m-0" style={{ color: primary }}>
+                <div className="p-3 sm:p-4">
+                  <h3 className="font-bold m-0 text-sm sm:text-base" style={{ color: primary }}>
                     {p.title}
                   </h3>
-                  <p className="text-xs text-[#627184] mt-1 mb-2">{p.body}</p>
-                  <span className="text-xs font-bold" style={{ color: "#b3234b" }}>
+                  <p className="text-[11px] sm:text-xs text-[#627184] mt-1 mb-2">{p.body}</p>
+                  <span className="text-[11px] sm:text-xs font-bold" style={{ color: "#b3234b" }}>
                     Learn more →
                   </span>
                 </div>
@@ -220,7 +220,7 @@ export function SchoolPublicHome({
               Contact the school for current events, term dates and programme updates.
             </p>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {notices.map((n) => (
                 <article key={n.id} className="bg-white border border-[#e3e8ed] rounded-xl p-5">
                   <h3 className="font-bold m-0" style={{ color: primary }}>
