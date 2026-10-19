@@ -622,3 +622,15 @@ model AuditLog {
   @@index([schoolId])
   @@index([createdAt])
 }
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  schoolId  String?
+  source    String   @default("website")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([isActive])
+}
