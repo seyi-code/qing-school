@@ -56,17 +56,31 @@ async function getSessionFromCookie(req: NextRequest): Promise<{
   }
 }
 
+/** Tenant subdomain only on real custom hosts — never *.vercel.app deployment names. */
+function schoolSlugFromHost(hostNoPort: string): string | null {
+  if (!hostNoPort) return null;
+  if (
+    hostNoPort.endsWith(".vercel.app") ||
+    hostNoPort.endsWith(".vercel.sh") ||
+    hostNoPort === "localhost" ||
+    hostNoPort.endsWith(".localhost")
+  ) {
+    return null;
+  }
+  const hostParts = hostNoPort.split(".");
+  if (hostParts.length >= 3 && !["www", "app", "api"].includes(hostParts[0])) {
+    return hostParts[0];
+  }
+  return null;
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const hostHeader = req.headers.get("host") || "";
   const hostNoPort = normalizeHost(hostHeader);
   const hostMode = classifyHost(hostHeader);
-  const hostParts = hostNoPort.split(".");
-  let schoolSlug: string | null = null;
-  if (hostParts.length >= 3 && !["www", "app", "api"].includes(hostParts[0])) {
-    schoolSlug = hostParts[0];
-  }
+  const schoolSlug = schoolSlugFromHost(hostNoPort);
 
   if (hostMode === "marketing" && pathname === "/") {
     const url = req.nextUrl.clone();
@@ -104,6 +118,7 @@ export async function middleware(req: NextRequest) {
     PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/kms-home") ||
+    pathname.startsWith("/school-home") ||
     pathname.startsWith("/campus")
   ) {
     const res = NextResponse.next();

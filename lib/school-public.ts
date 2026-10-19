@@ -1,7 +1,7 @@
 /**
  * Public school site resolution (Phase 1b–4).
  * Isolates CMS + notices + branding by schoolId.
- * Root host (no slug/custom domain) defaults to KMS so other tenants never leak onto the platform homepage.
+ * Root host (no real tenant slug) defaults to KMS.
  */
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
@@ -25,13 +25,23 @@ function isLive(page: { published: boolean; publishAt: Date | null }) {
   return true;
 }
 
+/** True for deployment / noise slugs that are not real schools. */
+function isBogusTenantSlug(slug: string): boolean {
+  const s = slug.toLowerCase();
+  if (!s) return true;
+  if (s.includes("qing-school")) return true;
+  if (s.includes("vercel")) return true;
+  if (s.length > 48) return true;
+  return false;
+}
+
 /** Resolve School by slug or verified custom domain (host). */
 export async function findSchoolForPublic(opts: {
   slug?: string | null;
   host?: string | null;
 }) {
   const slug = (opts.slug || "").trim().toLowerCase();
-  if (slug) {
+  if (slug && !isBogusTenantSlug(slug)) {
     const bySlug = await prisma.school.findFirst({
       where: { slug, isActive: true },
     });
@@ -41,7 +51,6 @@ export async function findSchoolForPublic(opts: {
   const host = normalizeHost(opts.host);
   if (!host) return null;
 
-  // customDomain requires schema fields (Phase 4). Guard so missing columns don't crash.
   try {
     const byDomain = await prisma.school.findFirst({
       where: {
@@ -58,21 +67,32 @@ export async function findSchoolForPublic(opts: {
   return null;
 }
 
+async function resolveDefaultKms() {
+  return prisma.school
+    .findFirst({ where: { slug: "kms", isActive: true } })
+    .catch(() => null);
+}
+
 export async function loadPublicHome(opts: {
   slug?: string | null;
   host?: string | null;
+  /** When true, missing school stays null (for /site/[slug] 404). */
+  requireSlug?: boolean;
 }): Promise<PublicHomeData> {
+  const requestedSlug = (opts.slug || "").trim().toLowerCase();
+
   let school = await findSchoolForPublic(opts).catch((err) => {
     console.error("[findSchoolForPublic]", err);
     return null;
   });
 
-  // Platform root (no tenant slug / verified domain) → default to KMS only.
-  // Never load another tenant's CMS or notices onto the shared homepage.
-  if (!school && !(opts.slug || "").trim()) {
-    school = await prisma.school
-      .findFirst({ where: { slug: "kms", isActive: true } })
-      .catch(() => null);
+  // Root / bogus vercel subdomain → KMS. Explicit /site/{real-slug} keeps null for 404.
+  if (!school) {
+    const explicitTenant =
+      opts.requireSlug && requestedSlug && !isBogusTenantSlug(requestedSlug);
+    if (!explicitTenant) {
+      school = await resolveDefaultKms();
+    }
   }
 
   const schoolId = school?.id ?? null;
@@ -87,8 +107,8 @@ export async function loadPublicHome(opts: {
 
   try {
     if (schoolId) {
-      // KMS (including platform root): tenant notices + legacy rows with null schoolId.
-      // Other schools: only their own schoolId (no null = no cross-tenant leak).
+      // KMS: tenant notices + legacy null schoolId rows.
+      // Other schools: only their schoolId.
       const noticeWhere =
         schoolSlug === "kms"
           ? {

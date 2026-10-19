@@ -17,8 +17,8 @@ export default async function SchoolSitePreviewPage({
   const slug = (params.slug || "").toLowerCase().trim();
   if (!slug || slug === "www" || slug === "app" || slug === "api") notFound();
 
-  const data = await loadPublicHome({ slug });
-  if (!data.schoolId) notFound();
+  const data = await loadPublicHome({ slug, requireSlug: true });
+  if (!data.schoolId || data.schoolSlug !== slug) notFound();
 
   return (
     <SchoolPublicHome
