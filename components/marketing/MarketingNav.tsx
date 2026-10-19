@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { SCHOOL } from "@/lib/school-config";
+import { DarkModeToggle } from "./DarkModeToggle";
 
 const LINKS = [
   { href: "/#about", label: "About Us" },
@@ -50,7 +51,7 @@ export function MarketingNav() {
         </div>
 
         {/* Brand bar */}
-        <header className="bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
+        <header className="bg-white/95 dark:bg-[#0f1c2e]/95 backdrop-blur-md border-b border-[#e3e8ed] dark:border-white/10">
           <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[56px] sm:min-h-[72px] flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2.5 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -62,7 +63,7 @@ export function MarketingNav() {
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-contain bg-[#f7f5ef] border border-[#e8e4d8] shrink-0"
               />
               <span className="min-w-0">
-                <span className="block font-serif font-bold text-[#12345a] text-[14px] sm:text-lg leading-tight truncate">
+                <span className="block font-serif font-bold text-[#12345a] dark:text-[#e8eef5] text-[14px] sm:text-lg leading-tight truncate">
                   {SCHOOL.name}
                 </span>
                 <span className="block text-[8px] sm:text-[10px] font-extrabold tracking-[0.16em] text-[#9a7820] uppercase mt-0.5">
@@ -76,7 +77,7 @@ export function MarketingNav() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="text-[13px] font-bold text-[#29415c] hover:text-[#b3234b] whitespace-nowrap"
+                  className="text-[13px] font-bold text-[#29415c] dark:text-[#c5d0dc] hover:text-[#b3234b] whitespace-nowrap"
                 >
                   {l.label}
                 </Link>
@@ -87,25 +88,29 @@ export function MarketingNav() {
               >
                 Apply Now
               </Link>
+              <DarkModeToggle />
             </nav>
 
-            <button
-              type="button"
-              className="lg:hidden w-10 h-10 rounded-lg border border-[#e3e8ed] bg-[#f6f5f0] text-[#12345a] text-xl shrink-0"
-              aria-expanded={open}
-              aria-label={open ? "Close navigation" : "Open navigation"}
-              onClick={() => setOpen((v) => !v)}
-            >
-              {open ? "×" : "☰"}
-            </button>
+            <div className="flex items-center gap-2 lg:hidden">
+              <DarkModeToggle />
+              <button
+                type="button"
+                className="w-10 h-10 rounded-lg border border-[#e3e8ed] dark:border-white/15 bg-[#f6f5f0] dark:bg-white/10 text-[#12345a] dark:text-[#e8eef5] text-xl shrink-0"
+                aria-expanded={open}
+                aria-label={open ? "Close navigation" : "Open navigation"}
+                onClick={() => setOpen((v) => !v)}
+              >
+                {open ? "×" : "☰"}
+              </button>
+            </div>
           </div>
           {open && (
-            <div className="lg:hidden border-t border-[#e3e8ed] bg-white px-4 py-3 flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
+            <div className="lg:hidden border-t border-[#e3e8ed] dark:border-white/10 bg-white dark:bg-[#0f1c2e] px-4 py-3 flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
               {LINKS.map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="py-2 text-sm font-bold text-[#29415c]"
+                  className="py-2 text-sm font-bold text-[#29415c] dark:text-[#c5d0dc]"
                   onClick={() => setOpen(false)}
                 >
                   {l.label}
@@ -120,7 +125,7 @@ export function MarketingNav() {
               </Link>
               <Link
                 href="/login"
-                className="text-center py-2 text-sm font-bold text-[#12345a]"
+                className="text-center py-2 text-sm font-bold text-[#12345a] dark:text-[#e8eef5]"
                 onClick={() => setOpen(false)}
               >
                 Portal login
