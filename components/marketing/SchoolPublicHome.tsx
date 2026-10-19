@@ -25,6 +25,9 @@ export function SchoolPublicHome({
   const admissionsHref = schoolSlug
     ? `/admissions?school=${encodeURIComponent(schoolSlug)}`
     : "/admissions";
+  const contactHref = schoolSlug
+    ? `/contact?school=${encodeURIComponent(schoolSlug)}`
+    : "/contact";
 
   const preset = presetForSlug(schoolSlug);
   const primary = branding.primaryColor || preset.primary;
@@ -41,6 +44,7 @@ export function SchoolPublicHome({
     forceDefault: true,
   });
   const highlights = preset.highlights;
+  const phone = branding.phone || "+234 803 123 4567";
 
   return (
     <main className="min-h-screen bg-white text-[#1e2e43] flex flex-col">
@@ -242,8 +246,8 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Admissions CTA — photo background + dark overlay (matches polished KMS) */}
-      <section className="relative py-20 sm:py-24 text-center text-white overflow-hidden">
+      {/* Admissions CTA — photo bg + side-by-side contact cards */}
+      <section className="relative py-16 sm:py-20 text-white overflow-hidden">
         <div className="absolute inset-0">
           <SchoolImg
             src={admissionsBg}
@@ -255,28 +259,85 @@ export function SchoolPublicHome({
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, rgba(12,31,56,0.88) 0%, rgba(12,31,56,0.82) 50%, rgba(12,31,56,0.92) 100%)",
+                "linear-gradient(180deg, rgba(12,31,56,0.90) 0%, rgba(12,31,56,0.85) 45%, rgba(12,31,56,0.94) 100%)",
             }}
           />
         </div>
-        <div className="relative z-[1] max-w-[640px] mx-auto px-5">
-          <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
-            Admissions
-          </p>
-          <h2 className="font-serif text-3xl sm:text-4xl mb-3">
-            Join our {branding.shortName || "school"} family.
-          </h2>
-          <p className="text-white/90 text-sm mb-8 leading-relaxed">
-            Give your child the opportunity to learn, grow in character and build a brighter future.
-            Contact the school to ask about availability, placement and the admissions process.
-          </p>
-          <Link
-            href={admissionsHref}
-            className="inline-flex rounded-xl px-7 py-3.5 text-sm font-bold hover:brightness-95 shadow-lg"
-            style={{ backgroundColor: "#b3234b", color: "#fff" }}
-          >
-            {preset.hero.ctaAdmit}
-          </Link>
+
+        <div className="relative z-[1] max-w-[1180px] mx-auto px-5">
+          <div className="max-w-[640px] mx-auto text-center mb-10">
+            <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
+              Admissions
+            </p>
+            <h2 className="font-serif text-3xl sm:text-4xl mb-3">
+              Join our {branding.shortName || "school"} family.
+            </h2>
+            <p className="text-white/90 text-sm mb-7 leading-relaxed">
+              Give your child the opportunity to learn, grow in character and build a brighter future.
+              Contact the school to ask about availability, placement and the admissions process.
+            </p>
+            <Link
+              href={admissionsHref}
+              className="inline-flex rounded-xl px-7 py-3.5 text-sm font-bold hover:brightness-95 shadow-lg"
+              style={{ backgroundColor: "#b3234b", color: "#fff" }}
+            >
+              {preset.hero.ctaAdmit}
+            </Link>
+          </div>
+
+          {/* Three contact cards — side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <Link
+              href={admissionsHref}
+              className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/15 px-4 py-4 hover:bg-white/10 transition"
+            >
+              <span
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg"
+                style={{ backgroundColor: "rgba(210,174,59,0.2)", color: accent }}
+                aria-hidden
+              >
+                ✎
+              </span>
+              <div>
+                <p className="font-bold text-sm m-0 text-white">Admissions Enquiry</p>
+                <p className="text-xs text-white/70 m-0 mt-0.5">Ask about classes and availability</p>
+              </div>
+            </Link>
+
+            <Link
+              href={contactHref}
+              className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/15 px-4 py-4 hover:bg-white/10 transition"
+            >
+              <span
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg"
+                style={{ backgroundColor: "rgba(210,174,59,0.2)", color: accent }}
+                aria-hidden
+              >
+                ⌖
+              </span>
+              <div>
+                <p className="font-bold text-sm m-0 text-white">Visit Our School</p>
+                <p className="text-xs text-white/70 m-0 mt-0.5">Contact us to arrange a visit</p>
+              </div>
+            </Link>
+
+            <a
+              href={`tel:${phone.replace(/\s/g, "")}`}
+              className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/15 px-4 py-4 hover:bg-white/10 transition"
+            >
+              <span
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg"
+                style={{ backgroundColor: "rgba(210,174,59,0.2)", color: accent }}
+                aria-hidden
+              >
+                ☎
+              </span>
+              <div>
+                <p className="font-bold text-sm m-0 text-white">Contact {branding.shortName || "school"}</p>
+                <p className="text-xs text-white/70 m-0 mt-0.5">{phone}</p>
+              </div>
+            </a>
+          </div>
         </div>
       </section>
 

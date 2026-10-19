@@ -39,7 +39,7 @@ export function MarketingNav({
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="bg-[#082442] text-[#eef4fb] text-[11px] sm:text-xs">
           <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-9 flex items-center justify-between gap-3 flex-wrap py-1.5">
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 items-center">
               {b.phone ? (
                 <a href={`tel:${b.phone}`} className="hover:text-[#f2d66e]">
                   {b.phone}
@@ -51,27 +51,54 @@ export function MarketingNav({
                 </a>
               ) : null}
             </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 font-semibold">
-              <Link href={loginHref} className="hover:text-[#f2d66e]">
-                Student portal
-              </Link>
-              <Link href={loginHref} className="hover:text-[#f2d66e]">
-                Parent portal
-              </Link>
-              <Link href={loginHref} className="hover:text-[#f2d66e]">
-                Staff portal
+            <div className="flex items-center gap-3">
+              {/* Socials instead of three identical portal links */}
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] font-bold hover:bg-white/10 hover:border-[#f2d66e]"
+              >
+                f
+              </a>
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] hover:bg-white/10 hover:border-[#f2d66e]"
+              >
+                ◉
+              </a>
+              <a
+                href="#"
+                aria-label="YouTube"
+                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[9px] hover:bg-white/10 hover:border-[#f2d66e]"
+              >
+                ▶
+              </a>
+              <span className="hidden sm:inline text-white/30">|</span>
+              <Link href={loginHref} className="font-semibold hover:text-[#f2d66e]">
+                Portal login
               </Link>
             </div>
           </div>
         </div>
 
         <header className="bg-white/95 backdrop-blur-md border-b border-[#e3e8ed]">
-          <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[56px] sm:min-h-[72px] flex items-center justify-between gap-4">
-            <Link href={home} className="flex items-center gap-2.5 min-w-0">
+          <div className="max-w-[1180px] mx-auto px-4 sm:px-5 h-14 sm:h-16 flex items-center justify-between gap-3">
+            <Link href={home} className="flex items-center gap-2 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={b.logoUrl || "/logo.svg"} alt="" className="h-9 w-9 sm:h-11 sm:w-11 object-contain" />
+              <img
+                src={b.logoUrl || "/logo.svg"}
+                alt=""
+                className="w-9 h-9 sm:w-10 sm:h-10 object-contain shrink-0"
+                onError={(e) => {
+                  const el = e.currentTarget;
+                  if (el.dataset.fb === "1") return;
+                  el.dataset.fb = "1";
+                  el.src = "/logo.svg";
+                }}
+              />
               <span className="min-w-0">
-                <span className="block text-sm sm:text-base font-bold text-[#12345a] truncate leading-tight">
+                <span className="block text-sm sm:text-base font-bold text-[#12345a] leading-tight truncate">
                   {b.name}
                 </span>
                 <span className="block text-[8px] sm:text-[10px] font-extrabold tracking-[0.16em] text-[#9a7820] uppercase mt-0.5">

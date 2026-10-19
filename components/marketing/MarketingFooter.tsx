@@ -17,99 +17,142 @@ export function MarketingFooter({
   const contactHref = schoolSlug
     ? `/contact?school=${encodeURIComponent(schoolSlug)}`
     : "/contact";
+  const loginHref = schoolSlug
+    ? `/login?school=${encodeURIComponent(schoolSlug)}`
+    : "/login";
+
   return (
     <footer className="bg-[#0c1f38] text-[#b8c5d4] pt-12 pb-8">
-      <div className="max-w-[1180px] mx-auto px-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div>
-          <p className="text-white font-semibold text-sm mb-1">{b.name}</p>
-          <p className="text-[#d2ae3b] text-xs uppercase tracking-wide mb-3">{b.motto}</p>
-          <p className="text-xs leading-relaxed opacity-80">
-            Quality education rooted in character and service for every learner we serve.
+      <div className="max-w-[1180px] mx-auto px-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+          {/* Brand */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={b.logoUrl || "/logo.svg"}
+                alt=""
+                className="w-10 h-10 object-contain rounded-full bg-white/10"
+                onError={(e) => {
+                  const el = e.currentTarget;
+                  if (el.dataset.fb === "1") return;
+                  el.dataset.fb = "1";
+                  el.src = "/logo.svg";
+                }}
+              />
+              <p className="text-white font-semibold text-sm m-0">{b.name}</p>
+            </div>
+            <p className="text-xs leading-relaxed opacity-90">
+              {b.motto ? `${b.motto}. ` : ""}
+              Growing minds, building character and shaping tomorrow.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <p className="text-white text-xs font-semibold uppercase tracking-wide mb-3">
+              Quick Links
+            </p>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href={home} className="hover:text-white">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href={`${home}#about`} className="hover:text-white">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href={`${home}#programmes`} className="hover:text-white">
+                  Academics
+                </Link>
+              </li>
+              <li>
+                <Link href={admissionsHref} className="hover:text-white">
+                  Admissions
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Discover */}
+          <div>
+            <p className="text-white text-xs font-semibold uppercase tracking-wide mb-3">
+              Discover {b.shortName}
+            </p>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href={`${home}#why`} className="hover:text-white">
+                  Why {b.shortName}
+                </Link>
+              </li>
+              <li>
+                <Link href={`${home}#about`} className="hover:text-white">
+                  Mission &amp; Values
+                </Link>
+              </li>
+              <li>
+                <Link href={contactHref} className="hover:text-white">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href={loginHref} className="hover:text-white">
+                  Portal login
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Stay Connected */}
+          <div>
+            <p className="text-white text-xs font-semibold uppercase tracking-wide mb-3">
+              Stay Connected
+            </p>
+            <p className="text-xs leading-relaxed opacity-80 mb-4">
+              For current school updates, contact the school office.
+            </p>
+            <div className="flex gap-3">
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="w-9 h-9 rounded-full border border-white/25 flex items-center justify-center text-sm font-bold text-white hover:bg-white/10 hover:border-[#d2ae3b]"
+              >
+                f
+              </a>
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="w-9 h-9 rounded-full border border-white/25 flex items-center justify-center text-sm text-white hover:bg-white/10 hover:border-[#d2ae3b]"
+              >
+                ◉
+              </a>
+              <a
+                href="#"
+                aria-label="YouTube"
+                className="w-9 h-9 rounded-full border border-white/25 flex items-center justify-center text-xs text-white hover:bg-white/10 hover:border-[#d2ae3b]"
+              >
+                ▶
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+          <p className="m-0 opacity-80">
+            © {new Date().getFullYear()} {b.name}. All rights reserved.
           </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="text-[#d2ae3b] font-semibold tracking-wide">
+              Knowledge · Character · Service
+            </span>
+            <a href="#" className="hover:text-white underline-offset-2 hover:underline">
+              Back to top ↑
+            </a>
+          </div>
         </div>
-        <div>
-          <p className="text-white text-xs font-semibold uppercase tracking-wide mb-3">Quick links</p>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link href={home} className="hover:text-white">
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link href={`${home}#about`} className="hover:text-white">
-                About
-              </Link>
-            </li>
-            <li>
-              <Link href={`${home}#programmes`} className="hover:text-white">
-                Academics
-              </Link>
-            </li>
-            <li>
-              <Link href={admissionsHref} className="hover:text-white">
-                Admissions
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <p className="text-white text-xs font-semibold uppercase tracking-wide mb-3">Explore</p>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link href={`${home}#why`} className="hover:text-white">
-                Why us
-              </Link>
-            </li>
-            <li>
-              <Link href={`${home}#news`} className="hover:text-white">
-                News
-              </Link>
-            </li>
-            <li>
-              <Link href="/login" className="hover:text-white">
-                Portal login
-              </Link>
-            </li>
-            <li>
-              <Link href="/result-checker" className="hover:text-white">
-                Result checker
-              </Link>
-            </li>
-            <li>
-              <Link href={contactHref} className="hover:text-white">
-                Contact
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <p className="text-white text-xs font-semibold uppercase tracking-wide mb-3">Contact</p>
-          <ul className="space-y-2 text-sm">
-            {b.phone ? (
-              <li>
-                <a href={`tel:${b.phone}`} className="hover:text-white">
-                  {b.phone}
-                </a>
-              </li>
-            ) : null}
-            {b.email ? (
-              <li>
-                <a href={`mailto:${b.email}`} className="hover:text-white break-all">
-                  {b.email}
-                </a>
-              </li>
-            ) : null}
-            {b.address ? <li className="opacity-80 text-xs">{b.address}</li> : null}
-            <li>
-              <Link href={contactHref} className="hover:text-white underline text-xs">
-                Contact form
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div className="max-w-[1180px] mx-auto px-5 mt-10 pt-6 border-t border-white/10 text-xs opacity-60">
-        © {new Date().getFullYear()} {b.name}. All rights reserved.
       </div>
     </footer>
   );
