@@ -33,12 +33,6 @@ export function MarketingFooter({
                 src={b.logoUrl || "/logo.svg"}
                 alt=""
                 className="w-10 h-10 object-contain rounded-full bg-white/10"
-                onError={(e) => {
-                  const el = e.currentTarget;
-                  if (el.dataset.fb === "1") return;
-                  el.dataset.fb = "1";
-                  el.src = "/logo.svg";
-                }}
               />
               <p className="text-white font-semibold text-sm m-0">{b.name}</p>
             </div>
@@ -90,7 +84,7 @@ export function MarketingFooter({
               </li>
               <li>
                 <Link href={`${home}#about`} className="hover:text-white">
-                  Mission &amp; Values
+                  Mission & Values
                 </Link>
               </li>
               <li>
