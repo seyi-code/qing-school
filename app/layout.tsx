@@ -3,6 +3,7 @@ import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { SCHOOL } from "@/lib/school-config";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ThemeProvider } from "@/components/marketing/ThemeProvider";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -35,8 +36,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
-      <body className="font-sans"><ToastProvider>{children}</ToastProvider></body>
+    <html lang="en" className={`${fraunces.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("kms-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="font-sans bg-paper text-ink dark:bg-[#0a1524] dark:text-[#e8eef5] transition-colors">
+        <ThemeProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
