@@ -76,6 +76,7 @@ export async function loadPublicHome(opts: {
   }
 
   const schoolId = school?.id ?? null;
+  const schoolSlug = school?.slug ?? null;
   const branding = schoolId
     ? await getBrandingForSchoolId(schoolId)
     : defaultBranding();
@@ -86,9 +87,19 @@ export async function loadPublicHome(opts: {
 
   try {
     if (schoolId) {
+      // KMS (including platform root): tenant notices + legacy rows with null schoolId.
+      // Other schools: only their own schoolId (no null = no cross-tenant leak).
+      const noticeWhere =
+        schoolSlug === "kms"
+          ? {
+              publishToWeb: true as const,
+              OR: [{ schoolId }, { schoolId: null }],
+            }
+          : { publishToWeb: true as const, schoolId };
+
       const [n, home] = await Promise.all([
         prisma.notice.findMany({
-          where: { publishToWeb: true, schoolId },
+          where: noticeWhere,
           orderBy: { createdAt: "desc" },
           take: 4,
         }),
@@ -100,7 +111,6 @@ export async function loadPublicHome(opts: {
         cmsHtml = blocksToHtml(parseBlocks(home.body));
       }
     }
-    // No schoolId → no CMS/notices (avoid cross-tenant leak)
   } catch (err) {
     console.error("[loadPublicHome]", err);
   }
@@ -108,7 +118,7 @@ export async function loadPublicHome(opts: {
   return {
     branding,
     schoolId,
-    schoolSlug: school?.slug ?? null,
+    schoolSlug,
     notices,
     cmsHtml,
     cmsTitle,
