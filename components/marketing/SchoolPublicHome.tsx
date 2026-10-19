@@ -247,11 +247,12 @@ export function SchoolPublicHome({
       </section>
 
       {/*
-        Admissions — two blocks on photo background (matches polished reference):
-        UPPER: headline + CTA button
-        LOWER: vertical contact list (stacked on mobile, not a 3-column grid)
+        Admissions — A | B two-column grid:
+        A = CTA (headline + button)
+        B = contact list (vertical items)
+        Mobile: A stacked above B. md+: side by side.
       */}
-      <section className="relative py-16 sm:py-20 text-white overflow-hidden">
+      <section className="relative py-14 sm:py-16 text-white overflow-hidden">
         <div className="absolute inset-0">
           <SchoolImg
             src={admissionsBg}
@@ -268,16 +269,16 @@ export function SchoolPublicHome({
           />
         </div>
 
-        <div className="relative z-[1] max-w-[640px] mx-auto px-5">
-          {/* UPPER */}
-          <div className="text-center mb-10">
+        <div className="relative z-[1] max-w-[1180px] mx-auto px-5 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center">
+          {/* A — CTA */}
+          <div className="text-center md:text-left">
             <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
               Admissions
             </p>
             <h2 className="font-serif text-3xl sm:text-4xl mb-3">
               Join our {branding.shortName || "school"} family.
             </h2>
-            <p className="text-white/90 text-sm mb-7 leading-relaxed">
+            <p className="text-white/90 text-sm mb-7 leading-relaxed max-w-md md:max-w-none mx-auto md:mx-0">
               Give your child the opportunity to learn, grow in character and build a brighter future.
               Contact the school to ask about availability, placement and the admissions process.
             </p>
@@ -290,8 +291,8 @@ export function SchoolPublicHome({
             </Link>
           </div>
 
-          {/* LOWER — vertical list */}
-          <div className="border-t border-white/20 pt-6 space-y-5">
+          {/* B — vertical contact list */}
+          <div className="border-t md:border-t-0 md:border-l border-white/20 pt-8 md:pt-0 md:pl-10 space-y-5">
             <Link href={admissionsHref} className="flex items-start gap-3 group">
               <span className="text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
                 ✎
