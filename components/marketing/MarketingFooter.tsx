@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { SCHOOL } from "@/lib/school-config";
+import { NewsletterSignup } from "./NewsletterSignup";
 
 /** Shared public-site footer (matches homepage design). */
 export function MarketingFooter() {
   return (
     <footer id="contact" className="bg-[#082442] text-[#d6e0ec] pt-12 pb-6 mt-auto">
-      <div className="max-w-[1180px] mx-auto px-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+      <div className="max-w-[1180px] mx-auto px-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
         <div>
           <div className="flex items-center gap-2.5 mb-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -25,62 +26,41 @@ export function MarketingFooter() {
         <div>
           <h3 className="text-white font-bold text-sm mb-3">Quick links</h3>
           <div className="flex flex-col gap-1.5 text-sm">
-            <Link href="/" className="hover:text-white">
-              Home
-            </Link>
-            <Link href="/#about" className="hover:text-white">
-              About Us
-            </Link>
-            <Link href="/#programmes" className="hover:text-white">
-              Academics
-            </Link>
-            <Link href="/admissions" className="hover:text-white">
-              Admissions
-            </Link>
+            <Link href="/" className="hover:text-white">Home</Link>
+            <Link href="/#about" className="hover:text-white">About Us</Link>
+            <Link href="/#programmes" className="hover:text-white">Academics</Link>
+            <Link href="/admissions" className="hover:text-white">Admissions</Link>
           </div>
         </div>
         <div>
           <h3 className="text-white font-bold text-sm mb-3">More</h3>
           <div className="flex flex-col gap-1.5 text-sm">
-            <Link href="/#why" className="hover:text-white">
-              Why {SCHOOL.shortName}
-            </Link>
-            <Link href="/#news" className="hover:text-white">
-              News & Events
-            </Link>
-            <Link href="/login" className="hover:text-white">
-              Portal login
-            </Link>
-            <Link href="/result-checker" className="hover:text-white">
-              Result checker
-            </Link>
-            <Link href="/contact" className="hover:text-white">
-              Contact
-            </Link>
+            <Link href="/#why" className="hover:text-white">Why {SCHOOL.shortName}</Link>
+            <Link href="/#news" className="hover:text-white">News & Events</Link>
+            <Link href="/login" className="hover:text-white">Portal login</Link>
+            <Link href="/result-checker" className="hover:text-white">Result checker</Link>
+            <Link href="/contact" className="hover:text-white">Contact</Link>
           </div>
         </div>
         <div>
           <h3 className="text-white font-bold text-sm mb-3">Contact</h3>
           <p className="text-sm">{SCHOOL.contact.address}</p>
           <p className="text-sm mt-2">
-            <a href={`tel:${SCHOOL.contact.phone}`} className="hover:text-white">
-              {SCHOOL.contact.phone}
-            </a>
+            <a href={`tel:${SCHOOL.contact.phone}`} className="hover:text-white">{SCHOOL.contact.phone}</a>
           </p>
           <p className="text-sm">
-            <a href={`mailto:${SCHOOL.contact.email}`} className="hover:text-white break-all">
-              {SCHOOL.contact.email}
-            </a>
+            <a href={`mailto:${SCHOOL.contact.email}`} className="hover:text-white break-all">{SCHOOL.contact.email}</a>
           </p>
           <Link href="/contact" className="inline-block mt-2 text-sm text-[#d2ae3b] font-semibold hover:underline">
             Message the office →
           </Link>
         </div>
+        <div className="sm:col-span-2 lg:col-span-1">
+          <NewsletterSignup variant="footer" />
+        </div>
       </div>
       <div className="max-w-[1180px] mx-auto px-5 pt-6 border-t border-white/10 flex flex-col sm:flex-row gap-2 justify-between text-xs text-[#8a9aab]">
-        <span>
-          © {new Date().getFullYear()} {SCHOOL.name}. All rights reserved.
-        </span>
+        <span>© {new Date().getFullYear()} {SCHOOL.name}. All rights reserved.</span>
         <strong className="text-[#d2ae3b] font-semibold">Knowledge · Character · Service</strong>
       </div>
     </footer>
