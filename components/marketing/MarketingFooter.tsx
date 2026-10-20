@@ -2,8 +2,6 @@ import Link from "next/link";
 import { SCHOOL } from "@/lib/school-config";
 import { NewsletterSignup } from "./NewsletterSignup";
 
-/** Shared public-site footer (matches homepage design). */
-export function MarketingFooter() {
   return (
     <footer id="contact" className="bg-[#082442] text-[#d6e0ec] pt-12 pb-6 mt-auto">
       <div className="max-w-[1180px] mx-auto px-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">

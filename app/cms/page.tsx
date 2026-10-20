@@ -34,9 +34,11 @@ export default async function CmsPage() {
   let pages: Awaited<ReturnType<typeof prisma.cmsPage.findMany>> = [];
   let media: Awaited<ReturnType<typeof prisma.mediaAsset.findMany>> = [];
   let theme = DEFAULT_THEME;
+  let schoolSlug: string | null = null;
+  let schoolName: string | null = null;
 
   try {
-    const [pageRows, themeRow, mediaRows] = await Promise.all([
+    const [pageRows, themeRow, mediaRows, school] = await Promise.all([
       prisma.cmsPage.findMany({ where: sw, orderBy: { updatedAt: "desc" } }),
       prisma.siteTheme.findFirst(),
       schoolId
@@ -46,28 +48,55 @@ export default async function CmsPage() {
             take: 100,
           })
         : prisma.mediaAsset.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+      schoolId
+        ? prisma.school.findUnique({
+            where: { id: schoolId },
+            select: { slug: true, name: true },
+          })
+        : Promise.resolve(null),
     ]);
     pages = pageRows;
     media = mediaRows;
     theme = safeTheme(themeRow?.configJson);
+    schoolSlug = school?.slug ?? null;
+    schoolName = school?.name ?? null;
   } catch (err) {
     console.error("[cms] load failed", err);
   }
+
+  const homePage = pages.find((p) => p.slug === "home") ?? null;
 
   return (
     <PortalShell
       role={session.role}
       title="Website CMS"
-      subtitle="Pages, media, SEO for this school"
+      subtitle={
+        schoolName
+          ? `Pages & public homepage for ${schoolName}`
+          : 'Pages, media, SEO — use slug "home" for the public homepage'
+      }
       email={session.email}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
         <Kpi label="Pages" value={String(pages.length)} tone="navy" icon="📄" />
-        <Kpi label="Published" value={String(pages.filter((p) => p.published).length)} tone="sage" icon="✓" />
-        <Kpi label="Media" value={String(media.length)} tone="gold" icon="🖼" className="col-span-2 sm:col-span-1" />
+        <Kpi
+          label="Published"
+          value={String(pages.filter((p) => p.published).length)}
+          tone="sage"
+          icon="✓"
+        />
+        <Kpi
+          label="Public home"
+          value={homePage ? (homePage.published ? "Live" : "Draft") : "None"}
+          tone="gold"
+          icon="🏠"
+          className="col-span-2 sm:col-span-1"
+        />
       </div>
       <CmsEditor
         theme={theme}
+        schoolSlug={schoolSlug}
+        schoolName={schoolName}
         media={media.map((m) => ({ id: m.id, url: m.url, filename: m.filename }))}
         pages={pages.map((p) => ({
           id: p.id,

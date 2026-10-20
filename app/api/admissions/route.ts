@@ -30,7 +30,11 @@ export async function POST(req: Request) {
   }
 
   const d = parsed.data;
-  const schoolId = await resolveSchoolIdFromRequest(req);
+  const bodySlug =
+    typeof (body as { schoolSlug?: string })?.schoolSlug === "string"
+      ? (body as { schoolSlug: string }).schoolSlug
+      : null;
+  const schoolId = await resolveSchoolIdFromRequest(req, { bodySlug });
   const school = await prisma.school.findUnique({ where: { id: schoolId } });
   if (!school || !school.isActive) {
     return NextResponse.json({ error: "School not available for admissions." }, { status: 403 });

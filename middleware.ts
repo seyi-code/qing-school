@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { classifyHost, getAppHost, normalizeHost } from "@/lib/host-mode";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -16,6 +17,8 @@ const PUBLIC_PATHS = [
   "/api/webhooks",
   "/api/fees/payments/confirm",
   "/",
+  "/saas",
+  "/site",
   "/admissions",
   "/complaints",
   "/contact",
@@ -24,12 +27,6 @@ const PUBLIC_PATHS = [
   "/p",
 ];
 
-/**
- * Path prefixes limited to specific roles.
- * PLATFORM_ADMIN may access school-ops paths (staff, payroll, settings)
- * while working as a tenant, but not student/parent/teacher portals.
- * Onboarding is platform-only — never public.
- */
 const PORTAL_RULES: Array<{ prefix: string; roles: string[] }> = [
   { prefix: "/onboarding", roles: ["PLATFORM_ADMIN"] },
   { prefix: "/platform", roles: ["PLATFORM_ADMIN"] },
@@ -59,25 +56,74 @@ async function getSessionFromCookie(req: NextRequest): Promise<{
   }
 }
 
+/** Tenant subdomain only on real custom hosts — never *.vercel.app deployment names. */
+function schoolSlugFromHost(hostNoPort: string): string | null {
+  if (!hostNoPort) return null;
+  if (
+    hostNoPort.endsWith(".vercel.app") ||
+    hostNoPort.endsWith(".vercel.sh") ||
+    hostNoPort === "localhost" ||
+    hostNoPort.endsWith(".localhost")
+  ) {
+    return null;
+  }
+  const hostParts = hostNoPort.split(".");
+  if (hostParts.length >= 3 && !["www", "app", "api"].includes(hostParts[0])) {
+    return hostParts[0];
+  }
+  return null;
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const host = req.headers.get("host") || "";
-  const hostNoPort = host.split(":")[0];
-  const hostParts = hostNoPort.split(".");
-  let schoolSlug: string | null = null;
-  if (hostParts.length >= 3 && !["www", "app", "api"].includes(hostParts[0])) {
-    schoolSlug = hostParts[0];
+  const hostHeader = req.headers.get("host") || "";
+  const hostNoPort = normalizeHost(hostHeader);
+  const hostMode = classifyHost(hostHeader);
+  const schoolSlug = schoolSlugFromHost(hostNoPort);
+
+  if (hostMode === "marketing" && pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/saas";
+    const res = NextResponse.rewrite(url);
+    res.headers.set("x-host-mode", hostMode);
+    return res;
+  }
+
+  const appHost = getAppHost();
+  if (
+    hostMode === "marketing" &&
+    appHost &&
+    (pathname === "/login" || pathname.startsWith("/login/"))
+  ) {
+    const dest = new URL(req.url);
+    dest.host = appHost;
+    dest.protocol = "https:";
+    dest.port = "";
+    return NextResponse.redirect(dest);
+  }
+
+  if (
+    hostMode === "marketing" &&
+    (pathname.startsWith("/platform") || pathname.startsWith("/onboarding"))
+  ) {
+    if (appHost) {
+      const dest = new URL(pathname, `https://${appHost}`);
+      return NextResponse.redirect(dest);
+    }
+    return NextResponse.redirect(new URL("/saas", req.url));
   }
 
   if (
     PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/kms-home") ||
+    pathname.startsWith("/school-home") ||
     pathname.startsWith("/campus")
   ) {
     const res = NextResponse.next();
     if (schoolSlug) res.headers.set("x-school-slug", schoolSlug);
+    res.headers.set("x-host-mode", hostMode);
     return res;
   }
 
@@ -86,6 +132,11 @@ export async function middleware(req: NextRequest) {
   if (!role) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("next", pathname);
+    if (hostMode === "marketing" && appHost) {
+      loginUrl.host = appHost;
+      loginUrl.protocol = "https:";
+      loginUrl.port = "";
+    }
     return NextResponse.redirect(loginUrl);
   }
 
@@ -109,14 +160,10 @@ export async function middleware(req: NextRequest) {
 
   const res = NextResponse.next();
   if (schoolSlug) res.headers.set("x-school-slug", schoolSlug);
+  res.headers.set("x-host-mode", hostMode);
   return res;
 }
 
-/**
- * Skip middleware for Next internals and static files under /public.
- * Previously only .png was excluded — .jpg under /kms-home was redirected to /login
- * (browser then showed broken images / alt text on the homepage).
- */
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|logo\\.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|woff2?)$).*)",

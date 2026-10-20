@@ -78,8 +78,7 @@ export async function assertStudentInTenant(
     select: { id: true, schoolId: true },
   });
   if (!student) return { ok: false, status: 404, error: "Student not found" };
-  if (!schoolId) return { ok: true };
-  if (student.schoolId !== schoolId) {
+  if (schoolId && student.schoolId && student.schoolId !== schoolId) {
     return { ok: false, status: 404, error: "Student not found" };
   }
   return { ok: true };
@@ -95,20 +94,34 @@ export async function assertStaffInTenant(
     select: { id: true, schoolId: true },
   });
   if (!staff) return { ok: false, status: 404, error: "Staff not found" };
-  if (!schoolId) return { ok: true };
-  if (staff.schoolId !== schoolId) {
+  if (schoolId && staff.schoolId && staff.schoolId !== schoolId) {
     return { ok: false, status: 404, error: "Staff not found" };
   }
   return { ok: true };
 }
 
-export async function resolveSchoolIdFromRequest(req: Request): Promise<string> {
-  const slug = req.headers.get("x-school-slug");
+/**
+ * Resolve school for public / unauthenticated requests.
+ * Order: body/query schoolSlug → x-school-slug header (subdomain) → default KMS.
+ */
+export async function resolveSchoolIdFromRequest(
+  req: Request,
+  opts?: { bodySlug?: string | null }
+): Promise<string> {
   const { prisma } = await import("@/lib/db");
+  const url = new URL(req.url);
+  const fromQuery = (url.searchParams.get("school") || "").trim().toLowerCase();
+  const fromBody = (opts?.bodySlug || "").trim().toLowerCase();
+  const fromHeader = (req.headers.get("x-school-slug") || "").trim().toLowerCase();
+  const slug = fromBody || fromQuery || fromHeader;
+
   if (slug) {
-    const bySlug = await prisma.school.findUnique({ where: { slug } });
+    const bySlug = await prisma.school.findFirst({
+      where: { slug, isActive: true },
+    });
     if (bySlug) return bySlug.id;
   }
+
   const school = await ensureDefaultSchool();
   return school.id;
 }
@@ -129,7 +142,6 @@ export async function isSchoolSuspended(schoolId: string): Promise<boolean> {
   if (!school.isActive) return true;
   const st = (school.subscriptionStatus || "").toUpperCase();
   if (st === "PAST_DUE" || st === "CANCELLED" || st === "SUSPENDED") return true;
-  // Trial past end date → treat as suspended until they subscribe / platform extends
   if (isTrialExpired(st, school.planRenewsAt)) return true;
   return false;
 }

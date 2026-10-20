@@ -95,45 +95,15 @@ function SortableBlock({
       {block.type === "paragraph" && (
         <div>
           <div className="flex gap-1 mb-1">
-            <button
-              type="button"
-              className="text-xs border border-line px-2 py-0.5 font-bold"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                document.execCommand("bold");
-              }}
-            >
-              B
-            </button>
-            <button
-              type="button"
-              className="text-xs border border-line px-2 py-0.5 italic"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                document.execCommand("italic");
-              }}
-            >
-              I
-            </button>
-            <button
-              type="button"
-              className="text-xs border border-line px-2 py-0.5 underline"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const url = prompt("Link URL");
-                if (url) document.execCommand("createLink", false, url);
-              }}
-            >
-              Link
-            </button>
+            <button type="button" className="text-xs border border-line px-2 py-0.5 font-bold" onMouseDown={(e) => { e.preventDefault(); document.execCommand("bold"); }}>B</button>
+            <button type="button" className="text-xs border border-line px-2 py-0.5 italic" onMouseDown={(e) => { e.preventDefault(); document.execCommand("italic"); }}>I</button>
+            <button type="button" className="text-xs border border-line px-2 py-0.5 underline" onMouseDown={(e) => { e.preventDefault(); const url = prompt("Link URL"); if (url) document.execCommand("createLink", false, url); }}>Link</button>
           </div>
           <div
             className="border border-line px-2 py-2 min-h-[4rem] text-sm outline-none"
             contentEditable
             suppressContentEditableWarning
-            onBlur={(e) =>
-              onChange({ ...block, html: sanitizeBasicHtml(e.currentTarget.innerHTML) })
-            }
+            onBlur={(e) => onChange({ ...block, html: sanitizeBasicHtml(e.currentTarget.innerHTML) })}
             dangerouslySetInnerHTML={{ __html: block.html }}
           />
         </div>
@@ -143,30 +113,15 @@ function SortableBlock({
         <div className="text-xs">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={block.url} alt={block.alt} className="max-h-28 mb-1" />
-          <input
-            className="w-full border border-line px-2 py-1 mb-1"
-            value={block.alt}
-            placeholder="Alt text"
-            onChange={(e) => onChange({ ...block, alt: e.target.value })}
-          />
+          <input className="w-full border border-line px-2 py-1 mb-1" value={block.alt} placeholder="Alt text" onChange={(e) => onChange({ ...block, alt: e.target.value })} />
           <div className="break-all text-ink/40">{block.url}</div>
         </div>
       )}
 
       {block.type === "button" && (
         <div className="grid grid-cols-2 gap-1">
-          <input
-            value={block.label}
-            onChange={(e) => onChange({ ...block, label: e.target.value })}
-            className="border border-line px-2 py-1"
-            placeholder="Label"
-          />
-          <input
-            value={block.href}
-            onChange={(e) => onChange({ ...block, href: e.target.value })}
-            className="border border-line px-2 py-1"
-            placeholder="/path or https://"
-          />
+          <input value={block.label} onChange={(e) => onChange({ ...block, label: e.target.value })} className="border border-line px-2 py-1" placeholder="Label" />
+          <input value={block.href} onChange={(e) => onChange({ ...block, href: e.target.value })} className="border border-line px-2 py-1" placeholder="/path or https://" />
         </div>
       )}
 
@@ -174,93 +129,40 @@ function SortableBlock({
 
       {block.type === "quote" && (
         <div className="space-y-1">
-          <textarea
-            rows={2}
-            className="w-full border border-line px-2 py-1"
-            value={block.text}
-            onChange={(e) => onChange({ ...block, text: e.target.value })}
-          />
-          <input
-            className="w-full border border-line px-2 py-1"
-            placeholder="Citation (optional)"
-            value={block.cite || ""}
-            onChange={(e) => onChange({ ...block, cite: e.target.value })}
-          />
+          <textarea rows={2} className="w-full border border-line px-2 py-1" value={block.text} onChange={(e) => onChange({ ...block, text: e.target.value })} />
+          <input className="w-full border border-line px-2 py-1" placeholder="Citation (optional)" value={block.cite || ""} onChange={(e) => onChange({ ...block, cite: e.target.value })} />
         </div>
       )}
 
       {block.type === "list" && (
         <div className="space-y-1">
           <label className="flex gap-2 text-xs">
-            <input
-              type="checkbox"
-              checked={block.ordered}
-              onChange={(e) => onChange({ ...block, ordered: e.target.checked })}
-            />
+            <input type="checkbox" checked={block.ordered} onChange={(e) => onChange({ ...block, ordered: e.target.checked })} />
             Numbered list
           </label>
-          <textarea
-            rows={4}
-            className="w-full border border-line px-2 py-1 font-mono text-xs"
-            value={block.items.join("\n")}
-            placeholder="One item per line"
-            onChange={(e) =>
-              onChange({
-                ...block,
-                items: e.target.value.split("\n").filter((x) => x.length > 0),
-              })
-            }
-          />
+          <textarea rows={4} className="w-full border border-line px-2 py-1 font-mono text-xs" value={block.items.join("\n")} placeholder="One item per line" onChange={(e) => onChange({ ...block, items: e.target.value.split("\n").filter((x) => x.length > 0) })} />
         </div>
       )}
 
       {block.type === "video" && (
-        <input
-          className="w-full border border-line px-2 py-1"
-          placeholder="YouTube URL"
-          value={block.url}
-          onChange={(e) => onChange({ ...block, url: e.target.value })}
-        />
+        <input className="w-full border border-line px-2 py-1" placeholder="YouTube URL" value={block.url} onChange={(e) => onChange({ ...block, url: e.target.value })} />
       )}
 
       {block.type === "columns" && (
         <div className="grid grid-cols-2 gap-2">
-          <textarea
-            rows={3}
-            className="border border-line px-2 py-1"
-            placeholder="Left column"
-            value={block.left}
-            onChange={(e) => onChange({ ...block, left: e.target.value })}
-          />
-          <textarea
-            rows={3}
-            className="border border-line px-2 py-1"
-            placeholder="Right column"
-            value={block.right}
-            onChange={(e) => onChange({ ...block, right: e.target.value })}
-          />
+          <textarea rows={3} className="border border-line px-2 py-1" placeholder="Left column" value={block.left} onChange={(e) => onChange({ ...block, left: e.target.value })} />
+          <textarea rows={3} className="border border-line px-2 py-1" placeholder="Right column" value={block.right} onChange={(e) => onChange({ ...block, right: e.target.value })} />
         </div>
       )}
 
       {block.type === "callout" && (
         <div className="space-y-1">
-          <select
-            value={block.tone}
-            onChange={(e) =>
-              onChange({ ...block, tone: e.target.value as "info" | "warn" | "success" })
-            }
-            className="border border-line text-xs"
-          >
+          <select value={block.tone} onChange={(e) => onChange({ ...block, tone: e.target.value as "info" | "warn" | "success" })} className="border border-line text-xs">
             <option value="info">Info</option>
             <option value="warn">Warning</option>
             <option value="success">Success</option>
           </select>
-          <textarea
-            rows={2}
-            className="w-full border border-line px-2 py-1"
-            value={block.text}
-            onChange={(e) => onChange({ ...block, text: e.target.value })}
-          />
+          <textarea rows={2} className="w-full border border-line px-2 py-1" value={block.text} onChange={(e) => onChange({ ...block, text: e.target.value })} />
         </div>
       )}
     </div>
@@ -271,10 +173,14 @@ export function CmsEditor({
   pages,
   theme,
   media: initialMedia,
+  schoolSlug = null,
+  schoolName = null,
 }: {
   pages: Page[];
   theme: { primary: string; accent: string; font: string };
   media: Media[];
+  schoolSlug?: string | null;
+  schoolName?: string | null;
 }) {
   const router = useRouter();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -291,10 +197,12 @@ export function CmsEditor({
   const [editId, setEditId] = useState<string | null>(null);
   const [themeForm, setThemeForm] = useState(theme);
   const [media, setMedia] = useState(initialMedia);
-  const [versions, setVersions] = useState<
-    { id: string; title: string; createdAt: string }[]
-  >([]);
+  const [versions, setVersions] = useState<{ id: string; title: string; createdAt: string }[]>([]);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+
+  const homePage = pages.find((p) => p.slug === "home") ?? null;
+  const isEditingHome = slug === "home";
+  const publicHomePreviewHref = schoolSlug ? `/site/${schoolSlug}` : "/";
 
   function loadPage(p: Page) {
     setEditId(p.id);
@@ -317,6 +225,27 @@ export function CmsEditor({
         )
       )
       .catch(() => setVersions([]));
+  }
+
+  function startPublicHomepage() {
+    if (homePage) {
+      loadPage(homePage);
+      return;
+    }
+    setEditId(null);
+    setSlug("home");
+    setTitle(schoolName ? `${schoolName} — Home` : "Public homepage");
+    setPublished(true);
+    setMetaTitle("");
+    setMetaDescription("");
+    setPublishAt("");
+    setBlocks([
+      { id: newId(), type: "heading", text: schoolName ? `Welcome to ${schoolName}` : "Welcome", level: 1 },
+      { id: newId(), type: "paragraph", html: "Share your school story, values, and what makes your community special." },
+      { id: newId(), type: "button", label: "Admissions enquiry", href: schoolSlug ? `/admissions?school=${schoolSlug}` : "/admissions" },
+    ]);
+    setVersions([]);
+    setMsg("Editing public homepage (slug locked to home). Publish when ready.");
   }
 
   function onDragEnd(event: DragEndEvent) {
@@ -353,10 +282,7 @@ export function CmsEditor({
     setEditId(data.page.id);
     setMsg("Saved (+ history snapshot)");
     router.refresh();
-    loadPage({
-      ...data.page,
-      publishAt: data.page.publishAt,
-    });
+    loadPage({ ...data.page, publishAt: data.page.publishAt });
   }
 
   async function saveTheme(e: FormEvent) {
@@ -380,10 +306,7 @@ export function CmsEditor({
       return;
     }
     setMedia((m) => [data.asset, ...m]);
-    setBlocks((b) => [
-      ...b,
-      { id: newId(), type: "image", url: data.asset.url, alt: data.asset.filename },
-    ]);
+    setBlocks((b) => [...b, { id: newId(), type: "image", url: data.asset.url, alt: data.asset.filename }]);
   }
 
   async function deleteMedia(id: string) {
@@ -418,86 +341,93 @@ export function CmsEditor({
 
   return (
     <div className="space-y-8">
+      <section className="ledger-block mb-4 border border-[#d2ae3b]/40 bg-[#fffdf5]">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div>
+            <h2 className="font-serif text-lg m-0">Public homepage</h2>
+            <p className="text-xs text-ink/60 mt-1 mb-0">
+              Slug <code className="bg-white/80 px-1 rounded">home</code>
+              {schoolSlug ? (<> → <code className="bg-white/80 px-1 rounded">/site/{schoolSlug}</code></>) : null}
+              {schoolName ? ` (${schoolName})` : ""}.
+            </p>
+            {homePage ? (
+              <p className="text-xs mt-2 mb-0">
+                Status:{" "}
+                <strong className={homePage.published ? "text-sage" : "text-brick"}>
+                  {homePage.published ? "Published" : "Draft"}
+                </strong>
+                {" · "}{homePage.title}
+              </p>
+            ) : (
+              <p className="text-xs mt-2 mb-0 text-ink/50">No public homepage yet for this school.</p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <button type="button" onClick={startPublicHomepage} className="rounded-lg bg-[#12345a] text-white px-3 py-2 text-sm font-medium">
+              {homePage ? "Edit public homepage" : "Create public homepage"}
+            </button>
+            {schoolSlug ? (
+              <a href={publicHomePreviewHref} target="_blank" rel="noreferrer" className="rounded-lg border border-[#12345a]/25 bg-white px-3 py-2 text-sm font-medium text-[#12345a]">
+                Preview site ↗
+              </a>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
       <form onSubmit={saveTheme} className="ledger-block grid sm:grid-cols-4 gap-2 text-sm items-end">
         <h2 className="font-serif text-lg sm:col-span-4">Theme</h2>
         <div>
           <label className="text-xs text-ink/50">Primary</label>
-          <input
-            type="color"
-            value={themeForm.primary}
-            onChange={(e) => setThemeForm({ ...themeForm, primary: e.target.value })}
-            className="w-full h-10 border border-line"
-          />
+          <input type="color" value={themeForm.primary} onChange={(e) => setThemeForm({ ...themeForm, primary: e.target.value })} className="w-full h-10 border border-line" />
         </div>
         <div>
           <label className="text-xs text-ink/50">Accent</label>
-          <input
-            type="color"
-            value={themeForm.accent}
-            onChange={(e) => setThemeForm({ ...themeForm, accent: e.target.value })}
-            className="w-full h-10 border border-line"
-          />
+          <input type="color" value={themeForm.accent} onChange={(e) => setThemeForm({ ...themeForm, accent: e.target.value })} className="w-full h-10 border border-line" />
         </div>
         <div>
           <label className="text-xs text-ink/50">Font</label>
-          <select
-            value={themeForm.font}
-            onChange={(e) => setThemeForm({ ...themeForm, font: e.target.value })}
-            className="w-full border border-line px-2 py-2 bg-white"
-          >
+          <select value={themeForm.font} onChange={(e) => setThemeForm({ ...themeForm, font: e.target.value })} className="w-full border border-line px-2 py-2 bg-white">
             <option value="serif">Serif</option>
             <option value="sans">Sans</option>
           </select>
         </div>
-        <button type="submit" className="bg-navy text-paper py-2">
-          Save theme
-        </button>
+        <button type="submit" className="bg-navy text-paper py-2">Save theme</button>
       </form>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <form onSubmit={save} className="ledger-block space-y-3 text-sm">
-          <h2 className="font-serif text-lg">{editId ? "Edit page" : "New page"}</h2>
+          <h2 className="font-serif text-lg">{isEditingHome ? "Edit public homepage" : editId ? "Edit page" : "New page"}</h2>
           {msg && <p className="text-xs text-sage">{msg}</p>}
 
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            required
-            placeholder="slug (home = homepage)"
-            className="w-full border border-line px-3 py-2"
-          />
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            placeholder="Title"
-            className="w-full border border-line px-3 py-2"
-          />
+          <div>
+            <input
+              value={slug}
+              onChange={(e) => {
+                if (isEditingHome && editId) return;
+                setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, ""));
+              }}
+              required
+              readOnly={isEditingHome && Boolean(editId)}
+              placeholder="slug (home = public homepage)"
+              className={`w-full border border-line px-3 py-2 ${isEditingHome ? "bg-[#f7f9fc] font-mono" : ""}`}
+            />
+            {isEditingHome ? (
+              <p className="text-[11px] text-[#b3234b] mt-1 mb-0">Slug home is reserved for the public homepage.</p>
+            ) : (
+              <p className="text-[11px] text-ink/40 mt-1 mb-0">Lowercase letters, numbers, hyphens only (e.g. about).</p>
+            )}
+          </div>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Title" className="w-full border border-line px-3 py-2" />
 
           <details className="border border-line p-2">
             <summary className="text-xs cursor-pointer">SEO & schedule</summary>
             <div className="space-y-2 mt-2">
-              <input
-                value={metaTitle}
-                onChange={(e) => setMetaTitle(e.target.value)}
-                placeholder="Meta title"
-                className="w-full border border-line px-2 py-1"
-              />
-              <textarea
-                value={metaDescription}
-                onChange={(e) => setMetaDescription(e.target.value)}
-                placeholder="Meta description"
-                rows={2}
-                className="w-full border border-line px-2 py-1"
-              />
+              <input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="Meta title" className="w-full border border-line px-2 py-1" />
+              <textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} placeholder="Meta description" rows={2} className="w-full border border-line px-2 py-1" />
               <label className="text-xs text-ink/50 block">
-                Publish at (optional — page stays draft until then if set)
-                <input
-                  type="datetime-local"
-                  value={publishAt}
-                  onChange={(e) => setPublishAt(e.target.value)}
-                  className="w-full border border-line px-2 py-1 mt-1"
-                />
+                Publish at (optional)
+                <input type="datetime-local" value={publishAt} onChange={(e) => setPublishAt(e.target.value)} className="w-full border border-line px-2 py-1 mt-1" />
               </label>
             </div>
           </details>
@@ -512,16 +442,11 @@ export function CmsEditor({
                 ["video", () => ({ id: newId(), type: "video" as const, url: "" })],
                 ["columns", () => ({ id: newId(), type: "columns" as const, left: "", right: "" })],
                 ["callout", () => ({ id: newId(), type: "callout" as const, text: "", tone: "info" as const })],
-                ["button", () => ({ id: newId(), type: "button" as const, label: "Learn more", href: "/admissions" })],
+                ["button", () => ({ id: newId(), type: "button" as const, label: "Learn more", href: schoolSlug ? `/admissions?school=${schoolSlug}` : "/admissions" })],
                 ["divider", () => ({ id: newId(), type: "divider" as const })],
               ] as const
             ).map(([label, factory]) => (
-              <button
-                key={label}
-                type="button"
-                className="border border-line px-2 py-1 text-xs capitalize"
-                onClick={() => setBlocks((b) => [...b, factory()])}
-              >
+              <button key={label} type="button" className="border border-line px-2 py-1 text-xs capitalize" onClick={() => setBlocks((b) => [...b, factory()])}>
                 + {label}
               </button>
             ))}
@@ -538,9 +463,7 @@ export function CmsEditor({
                     onRemove={() => setBlocks((bs) => bs.filter((x) => x.id !== block.id))}
                   />
                 ))}
-                {blocks.length === 0 && (
-                  <p className="text-ink/40 text-xs p-2">Add blocks or drag from media library</p>
-                )}
+                {blocks.length === 0 && <p className="text-ink/40 text-xs p-2">Add blocks or drag from media library</p>}
               </div>
             </SortableContext>
           </DndContext>
@@ -555,15 +478,13 @@ export function CmsEditor({
           </button>
 
           {versions.length > 0 && (
-            <div className="border-t border-line pt-2">
-              <p className="text-xs uppercase text-ink/50 mb-1">History</p>
-              <ul className="text-xs space-y-1 max-h-28 overflow-y-auto">
+            <div className="border-t border-line pt-3">
+              <p className="text-xs text-ink/50 mb-2">Version history</p>
+              <ul className="space-y-1 text-xs">
                 {versions.map((v) => (
                   <li key={v.id} className="flex justify-between gap-2">
-                    <span>{new Date(v.createdAt).toLocaleString()}</span>
-                    <button type="button" className="underline" onClick={() => restore(v.id)}>
-                      Restore
-                    </button>
+                    <span className="truncate">{v.title} · {new Date(v.createdAt).toLocaleString()}</span>
+                    <button type="button" className="underline shrink-0" onClick={() => restore(v.id)}>Restore</button>
                   </li>
                 ))}
               </ul>
@@ -574,81 +495,32 @@ export function CmsEditor({
         <div className="space-y-4">
           <section className="ledger-block">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="font-serif text-lg">Preview</h2>
+              <h2 className="font-serif text-lg m-0">Preview</h2>
               <div className="flex gap-1 text-xs">
-                <button
-                  type="button"
-                  className={`px-2 py-1 border ${previewMode === "desktop" ? "border-navy" : "border-line"}`}
-                  onClick={() => setPreviewMode("desktop")}
-                >
-                  Desktop
-                </button>
-                <button
-                  type="button"
-                  className={`px-2 py-1 border ${previewMode === "mobile" ? "border-navy" : "border-line"}`}
-                  onClick={() => setPreviewMode("mobile")}
-                >
-                  Mobile
-                </button>
+                <button type="button" className={`border px-2 py-1 ${previewMode === "desktop" ? "border-navy" : "border-line"}`} onClick={() => setPreviewMode("desktop")}>Desktop</button>
+                <button type="button" className={`border px-2 py-1 ${previewMode === "mobile" ? "border-navy" : "border-line"}`} onClick={() => setPreviewMode("mobile")}>Mobile</button>
               </div>
             </div>
-            <div
-              className={`border border-line p-4 min-h-[12rem] text-sm mx-auto transition-all ${
-                previewMode === "mobile" ? "max-w-[360px]" : "max-w-none"
-              }`}
-              style={{
-                fontFamily: themeForm.font === "sans" ? "system-ui,sans-serif" : "Georgia,serif",
-                // @ts-expect-error css var
-                "--cms-primary": themeForm.primary,
-                "--cms-accent": themeForm.accent,
-              }}
-              dangerouslySetInnerHTML={{ __html: blocksToHtml(blocks) }}
-            />
+            <div className={`prose prose-sm max-w-none border border-line p-3 bg-white mx-auto ${previewMode === "mobile" ? "max-w-[360px]" : ""}`} dangerouslySetInnerHTML={{ __html: blocksToHtml(blocks) }} />
           </section>
 
           <section className="ledger-block">
-            <h2 className="font-serif text-lg mb-2">Media library</h2>
-            <label className="inline-block border border-line px-3 py-1.5 text-xs cursor-pointer mb-3">
-              Upload image
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void uploadMedia(f);
-                }}
-              />
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+            <h2 className="font-serif text-lg">Media library</h2>
+            <input type="file" accept="image/*" className="text-xs mb-3" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadMedia(f); }} />
+            <div className="grid grid-cols-3 gap-2">
               {media.map((m) => (
                 <div key={m.id} className="border border-line p-1 text-[10px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={m.url}
-                    alt={m.filename}
-                    className="h-16 w-full object-cover cursor-pointer"
-                    onClick={() =>
-                      setBlocks((b) => [
-                        ...b,
-                        { id: newId(), type: "image", url: m.url, alt: m.filename },
-                      ])
-                    }
-                    title="Click to insert"
-                  />
-                  <button type="button" className="text-brick underline" onClick={() => deleteMedia(m.id)}>
-                    Del
-                  </button>
+                  <img src={m.url} alt="" className="h-16 w-full object-cover mb-1 cursor-pointer" onClick={() => setBlocks((b) => [...b, { id: newId(), type: "image", url: m.url, alt: m.filename }])} />
+                  <button type="button" className="text-brick underline" onClick={() => deleteMedia(m.id)}>Del</button>
                 </div>
               ))}
-              {media.length === 0 && <p className="text-ink/40 col-span-full text-xs">No media yet (needs Blob token)</p>}
             </div>
           </section>
 
           <section className="ledger-block !p-0 overflow-x-auto">
             <div className="p-4 pb-0">
               <h2 className="font-serif text-lg">Pages</h2>
-              <p className="text-xs text-ink/50">Slug <code>home</code> powers the public homepage</p>
             </div>
             <table className="ledger mt-3">
               <thead>
@@ -664,21 +536,18 @@ export function CmsEditor({
                     <td>{p.title}</td>
                     <td className="font-mono text-xs">
                       <a
-                        href={p.slug === "home" ? "/" : `/p/${p.slug}`}
+                        href={p.slug === "home" ? (schoolSlug ? `/site/${schoolSlug}` : "/") : `/p/${p.slug}`}
                         target="_blank"
                         rel="noreferrer"
                         className="underline"
                       >
-                        {p.slug === "home" ? "/" : `/p/${p.slug}`}
+                        {p.slug === "home" ? (schoolSlug ? `/site/${schoolSlug}` : "/") : `/p/${p.slug}`}
                       </a>
+                      {p.slug === "home" ? <span className="ml-1 text-[10px] uppercase text-[#b3234b]">public home</span> : null}
                     </td>
                     <td className="text-xs space-x-2">
-                      <button type="button" className="underline" onClick={() => loadPage(p)}>
-                        Edit
-                      </button>
-                      <button type="button" className="text-brick underline" onClick={() => removePage(p.id)}>
-                        Del
-                      </button>
+                      <button type="button" className="underline" onClick={() => loadPage(p)}>Edit</button>
+                      <button type="button" className="text-brick underline" onClick={() => removePage(p.id)}>Del</button>
                     </td>
                   </tr>
                 ))}

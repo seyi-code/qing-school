@@ -5,46 +5,78 @@ import { useState } from "react";
 import { SCHOOL } from "@/lib/school-config";
 import { DarkModeToggle } from "./DarkModeToggle";
 
-const LINKS = [
-  { href: "/#about", label: "About Us" },
-  { href: "/#programmes", label: "Academics" },
-  { href: "/#why", label: "Why KMS" },
-  { href: "/admissions", label: "Admissions" },
-  { href: "/#news", label: "News" },
-  { href: "/contact", label: "Contact" },
-];
-
-/**
- * Always-visible marketing chrome (matches standalone demo intent):
- * phone/portals + brand bar stay pinned while the page scrolls.
- * Uses position:fixed so mobile browsers cannot break it via overflow rules.
- */
-export function MarketingNav() {
+/** Optional `brand` enables per-school white-label (Phase 1b+). */
+export function MarketingNav({
+  brand,
+  schoolSlug,
+}: {
+  brand?: Branding;
+  schoolSlug?: string | null;
+}) {
   const [open, setOpen] = useState(false);
+  const b = brand || defaultBranding();
+  const home = schoolSlug ? `/site/${schoolSlug}` : "/";
+  const admissionsHref = schoolSlug
+    ? `/admissions?school=${encodeURIComponent(schoolSlug)}`
+    : "/admissions";
+  const contactHref = schoolSlug
+    ? `/contact?school=${encodeURIComponent(schoolSlug)}`
+    : "/contact";
+  const loginHref = schoolSlug
+    ? `/login?school=${encodeURIComponent(schoolSlug)}`
+    : "/login";
+  const LINKS = [
+    { href: `${home}#about`, label: "About Us" },
+    { href: `${home}#programmes`, label: "Academics" },
+    { href: `${home}#why`, label: `Why ${b.shortName}` },
+    { href: admissionsHref, label: "Admissions" },
+    { href: `${home}#news`, label: "News" },
+    { href: contactHref, label: "Contact" },
+  ];
 
   return (
     <>
       <div className="fixed top-0 left-0 right-0 z-50">
-        {/* Utility strip */}
         <div className="bg-[#082442] text-[#eef4fb] text-[11px] sm:text-xs">
           <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-9 flex items-center justify-between gap-3 flex-wrap py-1.5">
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              <a href={`tel:${SCHOOL.contact.phone}`} className="hover:text-[#f2d66e]">
-                {SCHOOL.contact.phone}
-              </a>
-              <a href={`mailto:${SCHOOL.contact.email}`} className="hover:text-[#f2d66e] hidden sm:inline">
-                {SCHOOL.contact.email}
-              </a>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 items-center">
+              {b.phone ? (
+                <a href={`tel:${b.phone}`} className="hover:text-[#f2d66e]">
+                  {b.phone}
+                </a>
+              ) : null}
+              {b.email ? (
+                <a href={`mailto:${b.email}`} className="hover:text-[#f2d66e] hidden sm:inline">
+                  {b.email}
+                </a>
+              ) : null}
             </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 font-semibold">
-              <Link href="/login" className="hover:text-[#f2d66e]">
-                Student portal
-              </Link>
-              <Link href="/login" className="hover:text-[#f2d66e]">
-                Parent portal
-              </Link>
-              <Link href="/login" className="hover:text-[#f2d66e]">
-                Staff portal
+            <div className="flex items-center gap-3">
+              {/* Socials instead of three identical portal links */}
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] font-bold hover:bg-white/10 hover:border-[#f2d66e]"
+              >
+                f
+              </a>
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] hover:bg-white/10 hover:border-[#f2d66e]"
+              >
+                ◉
+              </a>
+              <a
+                href="#"
+                aria-label="YouTube"
+                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[9px] hover:bg-white/10 hover:border-[#f2d66e]"
+              >
+                ▶
+              </a>
+              <span className="hidden sm:inline text-white/30">|</span>
+              <Link href={loginHref} className="font-semibold hover:text-[#f2d66e]">
+                Portal login
               </Link>
             </div>
           </div>
@@ -56,18 +88,22 @@ export function MarketingNav() {
             <Link href="/" className="flex items-center gap-2.5 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/kms-home/kms-school-crest.jpg"
+                src={b.logoUrl || "/logo.svg"}
                 alt=""
-                width={56}
-                height={56}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-contain bg-[#f7f5ef] border border-[#e8e4d8] shrink-0"
+                className="w-9 h-9 sm:w-10 sm:h-10 object-contain shrink-0"
+                onError={(e) => {
+                  const el = e.currentTarget;
+                  if (el.dataset.fb === "1") return;
+                  el.dataset.fb = "1";
+                  el.src = "/logo.svg";
+                }}
               />
               <span className="min-w-0">
                 <span className="block font-serif font-bold text-[#12345a] dark:text-[#e8eef5] text-[14px] sm:text-lg leading-tight truncate">
                   {SCHOOL.name}
                 </span>
                 <span className="block text-[8px] sm:text-[10px] font-extrabold tracking-[0.16em] text-[#9a7820] uppercase mt-0.5">
-                  {SCHOOL.motto}
+                  {b.motto || b.shortName}
                 </span>
               </span>
             </Link>
@@ -83,7 +119,7 @@ export function MarketingNav() {
                 </Link>
               ))}
               <Link
-                href="/admissions"
+                href={admissionsHref}
                 className="inline-flex items-center px-4 py-2.5 rounded-lg bg-[#b3234b] text-white text-sm font-extrabold hover:brightness-95"
               >
                 Apply Now
@@ -117,7 +153,7 @@ export function MarketingNav() {
                 </Link>
               ))}
               <Link
-                href="/admissions"
+                href={admissionsHref}
                 className="mt-1 text-center py-2.5 rounded-lg bg-[#b3234b] text-white text-sm font-extrabold"
                 onClick={() => setOpen(false)}
               >
@@ -134,7 +170,6 @@ export function MarketingNav() {
           )}
         </header>
       </div>
-      {/* Spacer matches fixed header height (utility + brand) */}
       <div className="h-[88px] sm:h-[100px]" aria-hidden />
     </>
   );

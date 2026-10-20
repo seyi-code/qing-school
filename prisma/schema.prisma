@@ -45,6 +45,9 @@ model School {
   paystackSubscriptionCode  String?
   subscriptionStatus        String   @default("NONE")
   planRenewsAt              DateTime?
+  // Phase 4: verified custom domain for school public site (host match)
+  customDomain      String?
+  domainVerifiedAt  DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   users           User[]
@@ -62,7 +65,9 @@ model School {
   expenses        ExpenseRecord[]
   branches        Branch[]
 
+  @@unique([customDomain])
   @@index([isActive])
+  @@index([customDomain])
 }
 
 model Branch {

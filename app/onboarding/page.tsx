@@ -1,155 +1,16 @@
-"use client";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
+import { OnboardingForm } from "./OnboardingForm";
 
-import Link from "next/link";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
-import { PasswordInput } from "@/components/ui/PasswordInput";
-import { MarketingNav } from "@/components/marketing/MarketingNav";
-import { MarketingFooter } from "@/components/marketing/MarketingFooter";
-
-export default function OnboardingPage() {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const fd = new FormData(e.currentTarget);
-    const body = {
-      schoolName: fd.get("schoolName"),
-      shortName: fd.get("shortName"),
-      slug: fd.get("slug"),
-      plan: fd.get("plan") || "STARTER",
-      adminName: fd.get("adminName"),
-      adminEmail: fd.get("adminEmail"),
-      adminPassword: fd.get("adminPassword"),
-      phone: fd.get("phone") || undefined,
-      address: fd.get("address") || undefined,
-    };
-    const res = await fetch("/api/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => ({}));
-    setBusy(false);
-    if (!res.ok) {
-      setError(data.error || "Could not create school");
-      return;
-    }
-    router.push(data.redirectTo || "/login");
+/**
+ * Platform-admin only.
+ * Not logged in or wrong role → /login (simple, no marketing chrome).
+ */
+export default async function OnboardingPage() {
+  const session = await getSession();
+  if (!session || session.role !== "PLATFORM_ADMIN") {
+    redirect("/login?next=/onboarding");
   }
 
-  return (
-    <main className="min-h-screen bg-[#f7f5ef] text-ink flex flex-col">
-      <MarketingNav />
-      <div className="max-w-lg mx-auto px-4 py-10 flex-1 w-full">
-        <p className="text-xs tracking-widest uppercase text-ink/40 mb-2">School ERP · Multi-tenant</p>
-        <h1 className="font-serif text-3xl text-navy mb-2">Onboard your school</h1>
-        <p className="text-sm text-ink/60 mb-6">
-          Isolated workspace with its own admin, branding, and data. New schools start with a{" "}
-          <strong>14-day free trial</strong> (configurable). After that, billing or platform approval is
-          required.
-        </p>
-        <form onSubmit={submit} className="bg-white border border-[#e3e8ed] rounded-2xl p-5 space-y-3.5 text-sm shadow-sm">
-          <label className="block">
-            School full name
-            <input
-              name="schoolName"
-              required
-              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
-            />
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block">
-              Short name
-              <input
-                name="shortName"
-                required
-                placeholder="KMS"
-                maxLength={12}
-                className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
-              />
-            </label>
-            <label className="block">
-              URL slug
-              <input
-                name="slug"
-                required
-                placeholder="my-school"
-                pattern="[a-z0-9\-]+"
-                className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white font-mono text-xs"
-              />
-            </label>
-          </div>
-          <label className="block">
-            Plan
-            <select name="plan" className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white">
-              <option value="STARTER">Starter (~300 students)</option>
-              <option value="PRO">Pro (~1,500)</option>
-              <option value="ENTERPRISE">Enterprise</option>
-            </select>
-          </label>
-          <label className="block">
-            Admin full name
-            <input
-              name="adminName"
-              required
-              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
-            />
-          </label>
-          <label className="block">
-            Admin email
-            <input
-              name="adminEmail"
-              type="email"
-              required
-              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
-            />
-          </label>
-          <label className="block">
-            Admin password (10+ chars, mixed)
-            <PasswordInput
-              name="adminPassword"
-              required
-              minLength={10}
-              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
-            />
-          </label>
-          <label className="block">
-            Phone (optional)
-            <input name="phone" className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white" />
-          </label>
-          <label className="block">
-            Address (optional)
-            <input
-              name="address"
-              className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white"
-            />
-          </label>
-          {error && <p className="text-brick text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-xl bg-[#12345a] text-white py-3 font-semibold disabled:opacity-60"
-          >
-            {busy ? "Creating…" : "Create school workspace"}
-          </button>
-        </form>
-        <p className="text-center text-sm text-ink/50 mt-6">
-          Already onboarded?{" "}
-          <Link href="/login" className="text-navy font-medium hover:underline">
-            Portal sign in
-          </Link>
-          {" · "}
-          <Link href="/" className="text-ink/40 hover:underline">
-            Marketing site
-          </Link>
-        </p>
-      </div>
-      <MarketingFooter />
-    </main>
-  );
+  return <OnboardingForm />;
 }
