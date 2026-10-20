@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { SCHOOL } from "@/lib/school-config";
+import type { Branding } from "@/lib/branding";
+import { defaultBranding } from "@/lib/branding";
 import { DarkModeToggle } from "./DarkModeToggle";
 
 /** Optional `brand` enables per-school white-label (Phase 1b+). */
@@ -52,7 +53,6 @@ export function MarketingNav({
               ) : null}
             </div>
             <div className="flex items-center gap-3">
-              {/* Socials instead of three identical portal links */}
               <a
                 href="#"
                 aria-label="Facebook"
@@ -82,10 +82,9 @@ export function MarketingNav({
           </div>
         </div>
 
-        {/* Brand bar */}
         <header className="bg-white/95 dark:bg-[#0f1c2e]/95 backdrop-blur-md border-b border-[#e3e8ed] dark:border-white/10">
           <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[56px] sm:min-h-[72px] flex items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-2.5 min-w-0">
+            <Link href={home} className="flex items-center gap-2.5 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={b.logoUrl || "/logo.svg"}
@@ -100,7 +99,7 @@ export function MarketingNav({
               />
               <span className="min-w-0">
                 <span className="block font-serif font-bold text-[#12345a] dark:text-[#e8eef5] text-[14px] sm:text-lg leading-tight truncate">
-                  {SCHOOL.name}
+                  {b.name}
                 </span>
                 <span className="block text-[8px] sm:text-[10px] font-extrabold tracking-[0.16em] text-[#9a7820] uppercase mt-0.5">
                   {b.motto || b.shortName}
@@ -160,7 +159,7 @@ export function MarketingNav({
                 Apply Now
               </Link>
               <Link
-                href="/login"
+                href={loginHref}
                 className="text-center py-2 text-sm font-bold text-[#12345a] dark:text-[#e8eef5]"
                 onClick={() => setOpen(false)}
               >
