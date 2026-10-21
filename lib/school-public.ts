@@ -73,8 +73,8 @@ async function resolveDefaultKms() {
     .catch(() => null);
 }
 
-/** Homepage shows many notices; no hard product limit of 4. */
-const PUBLIC_NEWS_TAKE = 100;
+/** Homepage fetches a modest batch; UI shows 4 then "Show more". */
+const PUBLIC_NEWS_TAKE = 12;
 
 export async function loadPublicHome(opts: {
   slug?: string | null;

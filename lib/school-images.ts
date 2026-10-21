@@ -1,28 +1,24 @@
 /**
  * Per-school public marketing images.
  *
- * Isolation rules:
- * - KMS (flagship) → /kms-home/
- * - Other tenants → /school-home/{slug}/ only if HAS_DISTINCT_PHOTOS
- *   otherwise neutral (campus or logo) — NEVER KMS people photos.
+ * - KMS → /kms-home/ (flagship real photos)
+ * - DMS → /school-home/dms/ (existing DMS pack; not KMS real people)
+ * - Test → /school-home/test/ when present, else /school-home/dms/ style paths
+ * - Other unknown slugs → /school-home/{slug}/ (no silent KMS people fallback)
  */
 
 const KMS_PREFIX = "/kms-home";
-const NEUTRAL_PREFIX = "/campus";
-const SAFE_PLACEHOLDER = "/logo.svg";
 
-/**
- * Enable only when public/school-home/{slug}/ has *that school's*
- * photos (not KMS copies).
- */
-const HAS_DISTINCT_PHOTOS = new Set<string>([
-  // "dms",
-  // "test",
-]);
+/** Tenants with files under public/school-home/{slug}/ */
+const SCHOOL_HOME_SLUGS = new Set<string>(["dms", "test"]);
 
-function neutralFile(_filename: string): string {
-  // campus/*.jpg may not exist yet — logo is safe, never a KMS student photo
-  return SAFE_PLACEHOLDER;
+function prefixFor(slug: string | null | undefined): string {
+  if (!slug) return KMS_PREFIX;
+  const s = slug.trim().toLowerCase();
+  if (!s || s === "kms") return KMS_PREFIX;
+  if (SCHOOL_HOME_SLUGS.has(s)) return `/school-home/${s}`;
+  // Prefer tenant folder path (empty → broken img → onError fallback), never KMS people
+  return `/school-home/${s}`;
 }
 
 export function schoolImage(
@@ -34,16 +30,14 @@ export function schoolImage(
   const isKms = !s || s === "kms";
 
   if (options?.forceDefault) {
-    return isKms ? `${KMS_PREFIX}/${filename}` : neutralFile(filename);
+    // KMS pack only for KMS. Other schools fall back within their own folder
+    // or the shared DMS stock pack — not KMS real photos.
+    if (isKms) return `${KMS_PREFIX}/${filename}`;
+    if (SCHOOL_HOME_SLUGS.has(s)) return `/school-home/${s}/${filename}`;
+    return `/school-home/dms/${filename}`;
   }
 
-  if (isKms) return `${KMS_PREFIX}/${filename}`;
-
-  if (HAS_DISTINCT_PHOTOS.has(s)) {
-    return `/school-home/${s}/${filename}`;
-  }
-
-  return neutralFile(filename);
+  return `${prefixFor(s)}/${filename}`;
 }
 
 export function schoolHeroSlides(slug: string | null | undefined) {
