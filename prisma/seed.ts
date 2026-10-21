@@ -4,6 +4,7 @@ import { DEFAULT_GRADE_BANDS } from "../lib/grading";
 
 const prisma = new PrismaClient();
 const DEMO_PASSWORD = "Password123!";
+const DEMO_ADMISSION = "KMS/MAT/2026/0001";
 
 /** Prefer KMS emails; migrate legacy @kms.legacy.test if present. */
 async function upsertUser(email: string, role: any, legacyEmail?: string) {
@@ -59,6 +60,21 @@ async function main() {
     },
   });
   const schoolId = school.id;
+
+  // Default Matogun branch for admission numbers KMS/MAT/YEAR/####
+  const existingBranch = await prisma.branch.findFirst({
+    where: { schoolId, code: "MAT" },
+  });
+  if (!existingBranch) {
+    await prisma.branch.create({
+      data: {
+        schoolId,
+        code: "MAT",
+        name: "Matogun campus",
+        isDefault: true,
+      },
+    });
+  }
 
   let session = await prisma.session.findFirst({ where: { name: "2025/2026", schoolId } });
   if (!session) {
@@ -142,8 +158,10 @@ async function main() {
   let demoStudent = await prisma.student.findFirst({
     where: {
       OR: [
+        { admissionNumber: DEMO_ADMISSION },
         { admissionNumber: "KMS/2025/0001" },
         { admissionNumber: "FS/2025/0001" },
+        { admissionNumber: "FS/2026/0003" },
         { userId: studentUser.id },
       ],
     },
@@ -151,7 +169,7 @@ async function main() {
   if (!demoStudent) {
     demoStudent = await prisma.student.create({
       data: {
-        admissionNumber: "KMS/2025/0001",
+        admissionNumber: DEMO_ADMISSION,
         firstName: "Chinedu",
         lastName: "Okafor",
         gender: "Male",
@@ -165,7 +183,7 @@ async function main() {
     demoStudent = await prisma.student.update({
       where: { id: demoStudent.id },
       data: {
-        admissionNumber: "KMS/2025/0001",
+        admissionNumber: DEMO_ADMISSION,
         userId: studentUser.id,
         status: "ACTIVE",
         armId: jss1Gold.id,
@@ -247,7 +265,7 @@ async function main() {
   console.log("Teacher:     teacher@kms.sch.ng");
   console.log("Student:     student@kms.sch.ng");
   console.log("Parent:      parent@kms.sch.ng");
-  console.log("Result PIN:  184-773-902  |  Admission: KMS/2025/0001");
+  console.log("Result PIN:  184-773-902  |  Admission:", DEMO_ADMISSION);
   void teacher;
 }
 
