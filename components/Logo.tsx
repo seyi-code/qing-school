@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SCHOOL } from "@/lib/school-config";
+import { KMS_LOGO_URL } from "@/lib/branding";
 
 type LogoProps = {
   variant?: "full" | "mark" | "text";
@@ -29,7 +30,7 @@ export function Logo({
   const mark = (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/logo.svg"
+      src={KMS_LOGO_URL}
       alt={SCHOOL.name}
       width={s.img}
       height={s.img}
