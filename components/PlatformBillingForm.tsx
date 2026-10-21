@@ -1,8 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { PLAN_STUDENT_CAPS } from "@/lib/plan-caps";
 
 type SchoolOpt = { id: string; name: string; slug: string; plan: string };
+
+function formatCap(n: number) {
+  return n.toLocaleString("en-US");
+}
 
 export function PlatformBillingForm({ schools }: { schools: SchoolOpt[] }) {
   const [schoolId, setSchoolId] = useState(schools[0]?.id || "");
@@ -90,9 +95,13 @@ export function PlatformBillingForm({ schools }: { schools: SchoolOpt[] }) {
           value={plan}
           onChange={(e) => setPlan(e.target.value as typeof plan)}
         >
-          <option value="STARTER">STARTER — 300 students</option>
-          <option value="PRO">PRO — 1,500 students</option>
-          <option value="ENTERPRISE">ENTERPRISE — 10,000 students</option>
+          <option value="STARTER">
+            STARTER — {formatCap(PLAN_STUDENT_CAPS.STARTER)} students
+          </option>
+          <option value="PRO">PRO — {formatCap(PLAN_STUDENT_CAPS.PRO)} students</option>
+          <option value="ENTERPRISE">
+            ENTERPRISE — {formatCap(PLAN_STUDENT_CAPS.ENTERPRISE)} students
+          </option>
         </select>
       </label>
       <label className="block">
