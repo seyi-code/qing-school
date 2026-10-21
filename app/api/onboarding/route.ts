@@ -6,6 +6,13 @@ import { logAudit } from "@/lib/audit";
 import { validatePassword } from "@/lib/password-policy";
 import { getTrialDays, trialEndsAt } from "@/lib/trial";
 
+/** Default student caps by plan (onboard + billing reference). */
+export const PLAN_STUDENT_CAPS = {
+  STARTER: 500,
+  PRO: 2000,
+  ENTERPRISE: 10000,
+} as const;
+
 const OnboardSchema = z.object({
   schoolName: z.string().min(3).max(120),
   shortName: z.string().min(2).max(12),
@@ -45,6 +52,7 @@ export async function POST(req: Request) {
   const passwordHash = await hashPassword(data.adminPassword);
   const [firstName, ...rest] = data.adminName.trim().split(/\s+/);
   const lastName = rest.join(" ") || firstName;
+  const maxStudents = PLAN_STUDENT_CAPS[data.plan];
 
   const result = await prisma.$transaction(async (tx) => {
     const school = await tx.school.create({
@@ -57,7 +65,7 @@ export async function POST(req: Request) {
         plan: data.plan,
         isActive: true,
         isDemo: false,
-        maxStudents: data.plan === "STARTER" ? 300 : data.plan === "PRO" ? 1500 : 10000,
+        maxStudents,
         subscriptionStatus: "TRIAL",
         planRenewsAt: trialEndsAt(),
       },
@@ -100,7 +108,7 @@ export async function POST(req: Request) {
     action: "ONBOARD_SCHOOL",
     entity: "School",
     entityId: result.school.id,
-    details: { slug: data.slug, plan: data.plan },
+    details: { slug: data.slug, plan: data.plan, maxStudents },
   });
 
   return NextResponse.json(
@@ -108,6 +116,7 @@ export async function POST(req: Request) {
       ok: true,
       schoolId: result.school.id,
       slug: result.school.slug,
+      maxStudents,
       message: `School created. ${getTrialDays()}-day trial started. Log in with your admin email.`,
       trialDays: getTrialDays(),
       trialEndsAt: trialEndsAt().toISOString(),
