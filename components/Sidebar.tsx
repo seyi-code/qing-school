@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
+import { KMS_LOGO_URL } from "@/lib/branding";
 
 interface NavItem {
   href: string;
@@ -39,7 +40,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/portal/student",
     label: "My Portal",
     icon: "🎓",
-    roles: ["STUDENT"],
+    roles: [ ["STUDENT"],
   },
   {
     href: "/portal/parent",
@@ -272,7 +273,7 @@ export function Sidebar({
         <div className="flex items-center gap-2.5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/kms-home/kms-school-crest.jpg"
+            src={KMS_LOGO_URL}
             alt=""
             className="w-10 h-10 rounded-full object-contain bg-white/10 border border-white/15 shrink-0"
           />
