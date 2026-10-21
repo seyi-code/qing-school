@@ -10,13 +10,15 @@
  */
 
 import { prisma } from "@/lib/db";
+import { PLAN_STUDENT_CAPS } from "@/lib/plan-caps";
 
 export type SaaSPlan = "STARTER" | "PRO" | "ENTERPRISE";
 
+/** Same caps as onboarding — single source of truth. */
 export const PLAN_LIMITS: Record<SaaSPlan, number> = {
-  STARTER: 300,
-  PRO: 1500,
-  ENTERPRISE: 10000,
+  STARTER: PLAN_STUDENT_CAPS.STARTER,
+  PRO: PLAN_STUDENT_CAPS.PRO,
+  ENTERPRISE: PLAN_STUDENT_CAPS.ENTERPRISE,
 };
 
 function planCode(plan: SaaSPlan): string | null {
