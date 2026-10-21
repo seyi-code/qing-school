@@ -25,13 +25,19 @@ export type Branding = {
   socialYoutube?: string;
 };
 
+/** Official KMS crest (public site + portals for Kayvlop only). */
+export const KMS_LOGO_URL = "/kms-home/logo.jpg";
+
+/** Fallback mark for non-KMS tenants without a custom logo. */
+export const DEFAULT_TENANT_LOGO_URL = "/logo.svg";
+
 export function defaultBranding(): Branding {
   const p = presetForSlug("kms");
   return {
     name: SCHOOL.name,
     shortName: SCHOOL.shortName,
     motto: SCHOOL.motto,
-    logoUrl: "/logo.svg",
+    logoUrl: KMS_LOGO_URL,
     primaryColor: SCHOOL.colors.primary,
     accentColor: SCHOOL.colors.gold,
     phone: SCHOOL.contact.phone,
@@ -51,11 +57,12 @@ export async function getBrandingForSchoolId(schoolId: string | null | undefined
   if (!s) return defaultBranding();
   const preset = presetForSlug(s.slug);
   const isKms = (s.slug || "").toLowerCase() === "kms";
+  const fallbackLogo = isKms ? KMS_LOGO_URL : DEFAULT_TENANT_LOGO_URL;
   return {
     name: s.name || SCHOOL.name,
     shortName: s.shortName || SCHOOL.shortName,
     motto: s.motto || SCHOOL.motto,
-    logoUrl: s.logoUrl || "/logo.svg",
+    logoUrl: s.logoUrl || fallbackLogo,
     primaryColor: s.primaryColor || preset.primary,
     accentColor: s.accentColor || preset.accent,
     phone: s.phone || SCHOOL.contact.phone,
