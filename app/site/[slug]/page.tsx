@@ -22,20 +22,13 @@ export default async function SchoolSitePreviewPage({
   if (!data.schoolId) notFound();
 
   // Allow URL slug to match DB slug OR shortName (case-insensitive).
-  // e.g. /site/dms when school.slug is still "debteb-montessori" but shortName is "DMS".
   const dbSlug = (data.schoolSlug || "").toLowerCase();
   const short = (data.branding.shortName || "").toLowerCase();
-  const matches =
-    dbSlug === slug ||
-    short === slug ||
-    // ensureKnownTenant may create slug "dms"
-    dbSlug.startsWith(slug);
+  const matches = dbSlug === slug || short === slug;
 
   if (!matches) notFound();
 
-  // Prefer the URL slug for public links so /site/dms stays consistent in nav
-  const publicSlug = dbSlug || slug;
-
+  // Use the path slug so nav links stay on /site/dms (not a long DB slug)
   return (
     <SchoolPublicHome
       branding={data.branding}
@@ -43,7 +36,7 @@ export default async function SchoolSitePreviewPage({
       cmsHtml={data.cmsHtml}
       cmsTitle={data.cmsTitle}
       isTenantSite
-      schoolSlug={publicSlug}
+      schoolSlug={slug}
     />
   );
 }
