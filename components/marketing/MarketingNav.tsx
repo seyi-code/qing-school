@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { Branding } from "@/lib/branding";
 import { defaultBranding } from "@/lib/branding";
 import { BrandSpinner } from "@/components/ui/BrandSpinner";
@@ -15,6 +16,9 @@ export function MarketingNav({
   brand?: Branding;
   schoolSlug?: string | null;
 }) {
+  const pathname = usePathname() || "";
+  const onLoginPage = pathname === "/login" || pathname.startsWith("/login/");
+
   const [open, setOpen] = useState(false);
   const [loginPending, setLoginPending] = useState(false);
   const [socialPending, setSocialPending] = useState<string | null>(null);
@@ -44,10 +48,31 @@ export function MarketingNav({
     { href: b.socialYoutube, label: "YouTube", glyph: "▶" },
   ].filter((s) => s.href);
 
+  // Always clear pending when route changes or we are already on login
+  useEffect(() => {
+    setLoginPending(false);
+    setSocialPending(null);
+  }, [pathname]);
+
+  // Safety timeout so "Opening…" never sticks forever
+  useEffect(() => {
+    if (!loginPending) return;
+    const t = window.setTimeout(() => setLoginPending(false), 4000);
+    return () => window.clearTimeout(t);
+  }, [loginPending]);
+
   function onSocialClick(label: string) {
     setSocialPending(label);
-    // External navigate — clear spinner shortly if user stays on page
     window.setTimeout(() => setSocialPending(null), 2500);
+  }
+
+  function onPortalLoginClick() {
+    if (onLoginPage) {
+      // Already here — no spinner loop
+      setLoginPending(false);
+      return;
+    }
+    setLoginPending(true);
   }
 
   return (
@@ -90,10 +115,10 @@ export function MarketingNav({
               ) : null}
               <Link
                 href={loginHref}
-                onClick={() => setLoginPending(true)}
+                onClick={onPortalLoginClick}
                 className="inline-flex items-center gap-1.5 font-semibold hover:text-[#f2d66e]"
               >
-                {loginPending ? (
+                {loginPending && !onLoginPage ? (
                   <>
                     <BrandSpinner size={12} label="Opening login" />
                     <span>Opening…</span>
@@ -186,11 +211,11 @@ export function MarketingNav({
                 href={loginHref}
                 className="text-center py-2 text-sm font-bold text-[#12345a] dark:text-[#e8eef5] inline-flex items-center justify-center gap-1.5"
                 onClick={() => {
-                  setLoginPending(true);
+                  onPortalLoginClick();
                   setOpen(false);
                 }}
               >
-                {loginPending ? (
+                {loginPending && !onLoginPage ? (
                   <>
                     <BrandSpinner size={12} label="Opening login" />
                     Opening…
