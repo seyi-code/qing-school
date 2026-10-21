@@ -26,7 +26,7 @@ export type Branding = {
 };
 
 /** Official KMS crest (public site + portals for Kayvlop only). */
-export const KMS_LOGO_URL = "/kms-home/logo.jpg";
+export const KMS_LOGO_URL = "/kms-home/logo.svg";
 
 /** Fallback mark for non-KMS tenants without a custom logo. */
 export const DEFAULT_TENANT_LOGO_URL = "/logo.svg";
@@ -70,7 +70,6 @@ export async function getBrandingForSchoolId(schoolId: string | null | undefined
     email: s.email || SCHOOL.contact.email,
     address: s.address || SCHOOL.contact.address,
     layoutPreset: preset.id,
-    // Non-KMS: omit KMS social defaults until school sets its own
     socialFacebook: isKms ? SCHOOL.social.facebook : undefined,
     socialInstagram: isKms ? SCHOOL.social.instagram : undefined,
     socialYoutube: isKms ? SCHOOL.social.youtube : undefined,
