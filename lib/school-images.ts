@@ -2,38 +2,27 @@
  * Per-school public marketing images.
  *
  * Isolation rules:
- * - KMS (flagship) → /kms-home/ (real school photos)
- * - Every other tenant → /campus/ neutral placeholders
- *   until they commit distinct files under /school-home/{slug}/
- *   and are listed in HAS_DISTINCT_PHOTOS.
- *
- * Never serve KMS people photos to DMS / Test / other tenants.
+ * - KMS (flagship) → /kms-home/
+ * - Other tenants → /school-home/{slug}/ only if HAS_DISTINCT_PHOTOS
+ *   otherwise neutral (campus or logo) — NEVER KMS people photos.
  */
 
 const KMS_PREFIX = "/kms-home";
 const NEUTRAL_PREFIX = "/campus";
+const SAFE_PLACEHOLDER = "/logo.svg";
 
 /**
- * Only enable a slug here when public/school-home/{slug}/ has *their own*
- * photos (not copies of KMS). Until then non-KMS uses neutral campus.
+ * Enable only when public/school-home/{slug}/ has *that school's*
+ * photos (not KMS copies).
  */
 const HAS_DISTINCT_PHOTOS = new Set<string>([
   // "dms",
   // "test",
 ]);
 
-function neutralFile(filename: string): string {
-  if (
-    filename.includes("hero") ||
-    filename.includes("about") ||
-    filename.includes("admission")
-  ) {
-    return `${NEUTRAL_PREFIX}/hero.jpg`;
-  }
-  if (filename.includes("early") || filename.includes("primary")) {
-    return `${NEUTRAL_PREFIX}/grounds-1.jpg`;
-  }
-  return `${NEUTRAL_PREFIX}/grounds-2.jpg`;
+function neutralFile(_filename: string): string {
+  // campus/*.jpg may not exist yet — logo is safe, never a KMS student photo
+  return SAFE_PLACEHOLDER;
 }
 
 export function schoolImage(
