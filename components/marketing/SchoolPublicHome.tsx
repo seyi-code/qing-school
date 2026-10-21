@@ -47,7 +47,7 @@ export function SchoolPublicHome({
   const phone = branding.phone || "+234 803 123 4567";
 
   return (
-    <main className="min-h-screen bg-white text-[#1e2e43] flex flex-col">
+    <main className="min-h-screen bg-white dark:bg-[#0a1524] text-[#1e2e43] dark:text-[#e8eef5] flex flex-col transition-colors">
       <MarketingNav brand={branding} schoolSlug={schoolSlug} />
       <HeroSlider brand={branding} schoolSlug={schoolSlug} />
 
@@ -76,8 +76,8 @@ export function SchoolPublicHome({
       </section>
 
       {cmsHtml ? (
-        <section className="py-12 sm:py-16 bg-[#f7f9fc]">
-          <div className="max-w-[800px] mx-auto px-5 prose prose-sm">
+        <section className="py-12 sm:py-16 bg-[#f7f9fc] dark:bg-[#0f1c2e]">
+          <div className="max-w-[800px] mx-auto px-5 prose prose-sm dark:prose-invert">
             {cmsTitle ? (
               <h2 className="font-serif text-2xl" style={{ color: primary }}>
                 {cmsTitle}
@@ -91,7 +91,7 @@ export function SchoolPublicHome({
       {/* About */}
       <section id="about" className="py-16 sm:py-20">
         <div className="max-w-[1180px] mx-auto px-5 grid md:grid-cols-2 gap-10 items-center">
-          <div className="relative h-[280px] sm:h-[390px] rounded-xl overflow-hidden shadow-md ring-1 ring-black/5">
+          <div className="relative h-[280px] sm:h-[390px] rounded-xl overflow-hidden shadow-md ring-1 ring-black/5 dark:ring-white/10">
             <SchoolImg
               src={aboutSrc}
               fallback={aboutFb}
@@ -103,17 +103,17 @@ export function SchoolPublicHome({
             <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
               {preset.about.eyebrow}
             </p>
-            <h2 className="font-serif text-3xl mt-2 mb-4 leading-tight" style={{ color: primary }}>
+            <h2 className="font-serif text-3xl mt-2 mb-4 leading-tight dark:text-[#e8eef5]" style={{ color: primary }}>
               {preset.about.title}{" "}
               <span style={{ color: "#b3234b" }}>{preset.about.titleAccent}</span>
             </h2>
-            <p className="text-[#627184] leading-relaxed mb-4">
+            <p className="text-[#627184] dark:text-[#a8b8c9] leading-relaxed mb-4">
               {branding.name} {preset.about.body}
             </p>
-            <p className="text-[#627184] leading-relaxed mb-6">
+            <p className="text-[#627184] dark:text-[#a8b8c9] leading-relaxed mb-6">
               {branding.motto ? (
                 <>
-                  Our motto, <strong style={{ color: primary }}>{branding.motto}</strong>,{" "}
+                  Our motto, <strong className="dark:text-[#e8eef5]" style={{ color: primary }}>{branding.motto}</strong>,{" "}
                   {preset.about.mottoLine.replace(/^Our motto[^,]*,?\s*/i, "")}
                 </>
               ) : (
@@ -140,22 +140,22 @@ export function SchoolPublicHome({
       </section>
 
       {/* Programmes — always 2×2 */}
-      <section id="programmes" className="py-16 bg-[#f7f9fc]">
+      <section id="programmes" className="py-16 bg-[#f7f9fc] dark:bg-[#0f1c2e]">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-center" style={{ color: accent }}>
             Our programmes
           </p>
-          <h2 className="font-serif text-3xl text-center mt-2 mb-3" style={{ color: primary }}>
+          <h2 className="font-serif text-3xl text-center mt-2 mb-3 dark:text-[#e8eef5]" style={{ color: primary }}>
             {preset.programmesIntro.title}
           </h2>
-          <p className="text-center text-[#627184] max-w-2xl mx-auto mb-8 text-sm leading-relaxed">
+          <p className="text-center text-[#627184] dark:text-[#a8b8c9] max-w-2xl mx-auto mb-8 text-sm leading-relaxed">
             {preset.programmesIntro.body}
           </p>
           <div className="grid grid-cols-2 gap-3 sm:gap-5">
             {programmes.map((p) => (
               <div
                 key={p.title}
-                className="bg-white rounded-xl overflow-hidden border border-[#e3e8ed] shadow-sm hover:shadow-md transition"
+                className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-[#e3e8ed] dark:border-white/10 shadow-sm hover:shadow-md transition"
               >
                 <SchoolImg
                   src={p.img}
@@ -164,10 +164,10 @@ export function SchoolPublicHome({
                   className="h-28 sm:h-40 w-full object-cover"
                 />
                 <div className="p-3 sm:p-4">
-                  <h3 className="font-bold m-0 text-sm sm:text-base" style={{ color: primary }}>
+                  <h3 className="font-bold m-0 text-sm sm:text-base dark:text-[#e8eef5]" style={{ color: primary }}>
                     {p.title}
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-[#627184] mt-1 mb-2">{p.body}</p>
+                  <p className="text-[11px] sm:text-xs text-[#627184] dark:text-[#a8b8c9] mt-1 mb-2">{p.body}</p>
                   <span className="text-[11px] sm:text-xs font-bold" style={{ color: "#b3234b" }}>
                     Learn more →
                   </span>
@@ -184,20 +184,20 @@ export function SchoolPublicHome({
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
             {preset.why.eyebrow}
           </p>
-          <h2 className="font-serif text-3xl mt-2 mb-3" style={{ color: primary }}>
+          <h2 className="font-serif text-3xl mt-2 mb-3 dark:text-[#e8eef5]" style={{ color: primary }}>
             {preset.why.title}
           </h2>
-          <p className="text-[#627184] max-w-2xl mb-10 text-sm leading-relaxed">{preset.why.body}</p>
+          <p className="text-[#627184] dark:text-[#a8b8c9] max-w-2xl mb-10 text-sm leading-relaxed">{preset.why.body}</p>
           <div className="grid md:grid-cols-3 gap-5">
             {preset.why.items.map((w) => (
-              <div key={w.title} className="rounded-xl border border-[#e3e8ed] p-6 bg-white shadow-sm">
+              <div key={w.title} className="rounded-xl border border-[#e3e8ed] dark:border-white/10 p-6 bg-white dark:bg-[#132338] shadow-sm">
                 <span className="text-2xl" aria-hidden>
                   {w.icon}
                 </span>
-                <h3 className="font-bold mt-3" style={{ color: primary }}>
+                <h3 className="font-bold mt-3 dark:text-[#e8eef5]" style={{ color: primary }}>
                   {w.title}
                 </h3>
-                <p className="text-sm text-[#627184] mt-1 mb-0">{w.body}</p>
+                <p className="text-sm text-[#627184] dark:text-[#a8b8c9] mt-1 mb-0">{w.body}</p>
               </div>
             ))}
           </div>
@@ -205,40 +205,43 @@ export function SchoolPublicHome({
       </section>
 
       {/* Promise */}
-      <section className="py-14 bg-[#faf6ee]">
+      <section className="py-14 bg-[#faf6ee] dark:bg-[#121a12]">
         <div className="max-w-[800px] mx-auto px-5 text-center">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
             Our promise
           </p>
-          <h2 className="font-serif text-3xl mb-4 leading-tight" style={{ color: primary }}>
+          <h2 className="font-serif text-3xl mb-4 leading-tight dark:text-[#e8eef5]" style={{ color: primary }}>
             {preset.promise.title}{" "}
             <span style={{ color: "#b3234b" }}>{preset.promise.titleAccent}</span>
           </h2>
-          <p className="text-[#627184] leading-relaxed">{preset.promise.body}</p>
+          <p className="text-[#627184] dark:text-[#a8b8c9] leading-relaxed">{preset.promise.body}</p>
         </div>
       </section>
 
       {/* News */}
-      <section id="news" className="py-16 bg-[#f0f4f8]">
+      <section id="news" className="py-16 bg-[#f0f4f8] dark:bg-[#0f1c2e]">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
             News
           </p>
-          <h2 className="font-serif text-3xl mt-2 mb-8" style={{ color: primary }}>
+          <h2 className="font-serif text-3xl mt-2 mb-8 dark:text-[#e8eef5]" style={{ color: primary }}>
             Latest from {branding.shortName || branding.name}
           </h2>
           {notices.length === 0 ? (
-            <p className="text-[#627184] text-sm">
+            <p className="text-[#627184] dark:text-[#a8b8c9] text-sm">
               Contact the school for current events, term dates and programme updates.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {notices.map((n) => (
-                <article key={n.id} className="bg-white border border-[#e3e8ed] rounded-xl p-5">
-                  <h3 className="font-bold m-0" style={{ color: primary }}>
+                <article
+                  key={n.id}
+                  className="bg-white dark:bg-[#132338] border border-[#e3e8ed] dark:border-white/10 rounded-xl p-5"
+                >
+                  <h3 className="font-bold m-0 dark:text-[#e8eef5]" style={{ color: primary }}>
                     {n.title}
                   </h3>
-                  <p className="text-sm text-[#627184] mt-2 mb-0 line-clamp-3">{n.body}</p>
+                  <p className="text-sm text-[#627184] dark:text-[#a8b8c9] mt-2 mb-0 line-clamp-3">{n.body}</p>
                 </article>
               ))}
             </div>
