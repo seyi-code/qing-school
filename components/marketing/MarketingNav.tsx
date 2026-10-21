@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Branding } from "@/lib/branding";
 import { defaultBranding } from "@/lib/branding";
+import { BrandSpinner } from "@/components/ui/BrandSpinner";
 import { DarkModeToggle } from "./DarkModeToggle";
 
 /** Optional `brand` enables per-school white-label (Phase 1b+). */
@@ -15,6 +16,8 @@ export function MarketingNav({
   schoolSlug?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [loginPending, setLoginPending] = useState(false);
+  const [socialPending, setSocialPending] = useState<string | null>(null);
   const b = brand || defaultBranding();
   const home = schoolSlug ? `/site/${schoolSlug}` : "/";
   const admissionsHref = schoolSlug
@@ -41,6 +44,12 @@ export function MarketingNav({
     { href: b.socialYoutube, label: "YouTube", glyph: "▶" },
   ].filter((s) => s.href);
 
+  function onSocialClick(label: string) {
+    setSocialPending(label);
+    // External navigate — clear spinner shortly if user stays on page
+    window.setTimeout(() => setSocialPending(null), 2500);
+  }
+
   return (
     <>
       <div className="fixed top-0 left-0 right-0 z-50">
@@ -66,16 +75,32 @@ export function MarketingNav({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
+                  onClick={() => onSocialClick(s.label)}
                   className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] font-bold hover:bg-white/10 hover:border-[#f2d66e]"
                 >
-                  {s.glyph}
+                  {socialPending === s.label ? (
+                    <BrandSpinner size={12} label={`Opening ${s.label}`} />
+                  ) : (
+                    s.glyph
+                  )}
                 </a>
               ))}
               {socials.length > 0 ? (
                 <span className="hidden sm:inline text-white/30">|</span>
               ) : null}
-              <Link href={loginHref} className="font-semibold hover:text-[#f2d66e]">
-                Portal login
+              <Link
+                href={loginHref}
+                onClick={() => setLoginPending(true)}
+                className="inline-flex items-center gap-1.5 font-semibold hover:text-[#f2d66e]"
+              >
+                {loginPending ? (
+                  <>
+                    <BrandSpinner size={12} label="Opening login" />
+                    <span>Opening…</span>
+                  </>
+                ) : (
+                  "Portal login"
+                )}
               </Link>
             </div>
           </div>
@@ -159,10 +184,20 @@ export function MarketingNav({
               </Link>
               <Link
                 href={loginHref}
-                className="text-center py-2 text-sm font-bold text-[#12345a] dark:text-[#e8eef5]"
-                onClick={() => setOpen(false)}
+                className="text-center py-2 text-sm font-bold text-[#12345a] dark:text-[#e8eef5] inline-flex items-center justify-center gap-1.5"
+                onClick={() => {
+                  setLoginPending(true);
+                  setOpen(false);
+                }}
               >
-                Portal login
+                {loginPending ? (
+                  <>
+                    <BrandSpinner size={12} label="Opening login" />
+                    Opening…
+                  </>
+                ) : (
+                  "Portal login"
+                )}
               </Link>
             </div>
           )}

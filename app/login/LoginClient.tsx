@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Branding } from "@/lib/branding";
 import { useToast } from "@/components/ui/Toast";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { BrandLoadingLabel } from "@/components/ui/BrandSpinner";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
@@ -113,7 +114,8 @@ function LoginForm({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-[#e3e8ed] bg-white px-3 py-2.5 text-sm rounded-lg focus:border-[#12345a] outline-none"
+                disabled={loading}
+                className="w-full border border-[#e3e8ed] bg-white px-3 py-2.5 text-sm rounded-lg focus:border-[#12345a] outline-none disabled:opacity-60"
               />
             </div>
             <div>
@@ -140,9 +142,13 @@ function LoginForm({
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-navy text-paper py-3 text-sm font-semibold hover:bg-navy-light disabled:opacity-60 shadow-sm transition-colors"
+              className="w-full inline-flex items-center justify-center rounded-xl bg-navy text-paper py-3 text-sm font-semibold hover:bg-navy-light disabled:opacity-70 disabled:cursor-wait shadow-sm transition-colors"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              <BrandLoadingLabel
+                loading={loading}
+                idleLabel="Sign in"
+                loadingLabel="Signing in…"
+              />
             </button>
           </form>
 

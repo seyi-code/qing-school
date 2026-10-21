@@ -1,23 +1,21 @@
 /**
  * Per-school public marketing images.
  *
- * - KMS → /kms-home/ (flagship real photos)
- * - DMS → /school-home/dms/ (existing DMS pack; not KMS real people)
- * - Test → /school-home/test/ when present, else /school-home/dms/ style paths
- * - Other unknown slugs → /school-home/{slug}/ (no silent KMS people fallback)
+ * - KMS → /kms-home/ (flagship)
+ * - DMS → /school-home/dms/ (existing pack; no hero-group.jpg — mapped carefully)
+ * - Test → /school-home/dms/ until test has its own files (folder is empty now)
+ * - Never point non-KMS at broken empty folders without a working fallback
  */
 
 const KMS_PREFIX = "/kms-home";
+const DMS_PREFIX = "/school-home/dms";
 
-/** Tenants with files under public/school-home/{slug}/ */
-const SCHOOL_HOME_SLUGS = new Set<string>(["dms", "test"]);
-
-function prefixFor(slug: string | null | undefined): string {
+function packPrefix(slug: string | null | undefined): string {
   if (!slug) return KMS_PREFIX;
   const s = slug.trim().toLowerCase();
   if (!s || s === "kms") return KMS_PREFIX;
-  if (SCHOOL_HOME_SLUGS.has(s)) return `/school-home/${s}`;
-  // Prefer tenant folder path (empty → broken img → onError fallback), never KMS people
+  // test has no committed jpgs yet — use DMS pack so images are not broken
+  if (s === "test" || s === "dms") return DMS_PREFIX;
   return `/school-home/${s}`;
 }
 
@@ -30,19 +28,49 @@ export function schoolImage(
   const isKms = !s || s === "kms";
 
   if (options?.forceDefault) {
-    // KMS pack only for KMS. Other schools fall back within their own folder
-    // or the shared DMS stock pack — not KMS real photos.
     if (isKms) return `${KMS_PREFIX}/${filename}`;
-    if (SCHOOL_HOME_SLUGS.has(s)) return `/school-home/${s}/${filename}`;
-    return `/school-home/dms/${filename}`;
+    // Safe working pack for any non-KMS tenant
+    return `${DMS_PREFIX}/${filename}`;
   }
 
-  return `${prefixFor(s)}/${filename}`;
+  return `${packPrefix(s)}/${filename}`;
 }
 
+/**
+ * Hero slides — only files that exist in each pack.
+ * DMS pack has no hero-group.jpg; using why-classroom avoids a duplicate about-students slide.
+ */
 export function schoolHeroSlides(slug: string | null | undefined) {
   const s = (slug || "").trim().toLowerCase();
+  const isKms = !s || s === "kms";
   const label = s && s !== "kms" ? s.toUpperCase() : "school";
+
+  if (isKms) {
+    return [
+      {
+        src: schoolImage(slug, "hero-classroom.jpg"),
+        fallback: schoolImage(slug, "hero-classroom.jpg", { forceDefault: true }),
+        alt: `Students learning at ${label}`,
+      },
+      {
+        src: schoolImage(slug, "hero-group.jpg"),
+        fallback: schoolImage(slug, "about-students.jpg", { forceDefault: true }),
+        alt: `School community at ${label}`,
+      },
+      {
+        src: schoolImage(slug, "about-students.jpg"),
+        fallback: schoolImage(slug, "about-students.jpg", { forceDefault: true }),
+        alt: "Students and staff together",
+      },
+      {
+        src: schoolImage(slug, "admissions-students.jpg"),
+        fallback: schoolImage(slug, "admissions-students.jpg", { forceDefault: true }),
+        alt: "Celebrating achievement",
+      },
+    ];
+  }
+
+  // DMS / Test: only filenames present under school-home/dms
   return [
     {
       src: schoolImage(slug, "hero-classroom.jpg"),
@@ -50,9 +78,9 @@ export function schoolHeroSlides(slug: string | null | undefined) {
       alt: `Students learning at ${label}`,
     },
     {
-      src: schoolImage(slug, "hero-group.jpg"),
-      fallback: schoolImage(slug, "about-students.jpg", { forceDefault: true }),
-      alt: `School community at ${label}`,
+      src: schoolImage(slug, "why-classroom.jpg"),
+      fallback: schoolImage(slug, "hero-classroom.jpg", { forceDefault: true }),
+      alt: `Learning spaces at ${label}`,
     },
     {
       src: schoolImage(slug, "about-students.jpg"),
