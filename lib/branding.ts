@@ -25,8 +25,8 @@ export type Branding = {
   socialYoutube?: string;
 };
 
-/** Official KMS crest (public site + portals for Kayvlop only). */
-export const KMS_LOGO_URL = "/kms-home/logo.svg";
+/** Official KMS crest (root / and /site/kms only). Other tenants use DEFAULT_TENANT_LOGO_URL. */
+export const KMS_LOGO_URL = "/kms-home/logo.jpg";
 
 /** Fallback mark for non-KMS tenants without a custom logo. */
 export const DEFAULT_TENANT_LOGO_URL = "/logo.svg";
