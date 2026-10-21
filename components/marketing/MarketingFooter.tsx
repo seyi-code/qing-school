@@ -22,10 +22,15 @@ export function MarketingFooter({
     ? `/login?school=${encodeURIComponent(schoolSlug)}`
     : "/login";
 
+  const socials = [
+    { href: b.socialFacebook, label: "Facebook", glyph: "f" },
+    { href: b.socialInstagram, label: "Instagram", glyph: "◉" },
+    { href: b.socialYoutube, label: "YouTube", glyph: "▶" },
+  ].filter((s) => s.href);
+
   return (
     <footer id="contact" className="bg-[#0c1f38] text-[#b8c5d4] pt-12 pb-8 mt-auto">
       <div className="max-w-[1180px] mx-auto px-5">
-        {/* Brand+socials | Quick Links | Discover | Newsletter */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-10">
           <div>
             <div className="flex items-center gap-2.5 mb-3">
@@ -41,32 +46,27 @@ export function MarketingFooter({
               {b.motto ? `${b.motto}. ` : ""}
               Growing minds, building character and shaping tomorrow.
             </p>
-            <p className="text-white text-[10px] font-semibold uppercase tracking-wide mb-2.5">
-              Stay connected
-            </p>
-            <div className="flex gap-2.5">
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="w-9 h-9 rounded-full border border-white/25 flex items-center justify-center text-sm font-bold text-white hover:bg-white/10 hover:border-[#d2ae3b] transition"
-              >
-                f
-              </a>
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="w-9 h-9 rounded-full border border-white/25 flex items-center justify-center text-sm text-white hover:bg-white/10 hover:border-[#d2ae3b] transition"
-              >
-                ◉
-              </a>
-              <a
-                href="#"
-                aria-label="YouTube"
-                className="w-9 h-9 rounded-full border border-white/25 flex items-center justify-center text-xs text-white hover:bg-white/10 hover:border-[#d2ae3b] transition"
-              >
-                ▶
-              </a>
-            </div>
+            {socials.length > 0 ? (
+              <>
+                <p className="text-white text-[10px] font-semibold uppercase tracking-wide mb-2.5">
+                  Stay connected
+                </p>
+                <div className="flex gap-2.5">
+                  {socials.map((s) => (
+                    <a
+                      key={s.label}
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={s.label}
+                      className="w-9 h-9 rounded-full border border-white/25 flex items-center justify-center text-sm font-bold text-white hover:bg-white/10 hover:border-[#d2ae3b] transition"
+                    >
+                      {s.glyph}
+                    </a>
+                  ))}
+                </div>
+              </>
+            ) : null}
           </div>
 
           <div>

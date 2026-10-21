@@ -35,6 +35,12 @@ export function MarketingNav({
     { href: contactHref, label: "Contact" },
   ];
 
+  const socials = [
+    { href: b.socialFacebook, label: "Facebook", glyph: "f" },
+    { href: b.socialInstagram, label: "Instagram", glyph: "◉" },
+    { href: b.socialYoutube, label: "YouTube", glyph: "▶" },
+  ].filter((s) => s.href);
+
   return (
     <>
       <div className="fixed top-0 left-0 right-0 z-50">
@@ -53,28 +59,21 @@ export function MarketingNav({
               ) : null}
             </div>
             <div className="flex items-center gap-3">
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] font-bold hover:bg-white/10 hover:border-[#f2d66e]"
-              >
-                f
-              </a>
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] hover:bg-white/10 hover:border-[#f2d66e]"
-              >
-                ◉
-              </a>
-              <a
-                href="#"
-                aria-label="YouTube"
-                className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[9px] hover:bg-white/10 hover:border-[#f2d66e]"
-              >
-                ▶
-              </a>
-              <span className="hidden sm:inline text-white/30">|</span>
+              {socials.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  className="w-6 h-6 rounded-full border border-white/30 flex items-center justify-center text-[10px] font-bold hover:bg-white/10 hover:border-[#f2d66e]"
+                >
+                  {s.glyph}
+                </a>
+              ))}
+              {socials.length > 0 ? (
+                <span className="hidden sm:inline text-white/30">|</span>
+              ) : null}
               <Link href={loginHref} className="font-semibold hover:text-[#f2d66e]">
                 Portal login
               </Link>
