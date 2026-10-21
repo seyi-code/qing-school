@@ -4,6 +4,11 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { PLAN_STUDENT_CAPS } from "@/lib/plan-caps";
+
+function formatCap(n: number) {
+  return n.toLocaleString("en-US");
+}
 
 /** Form UI for platform admins (session already verified on the server). */
 export function OnboardingForm() {
@@ -97,9 +102,13 @@ export function OnboardingForm() {
           <label className="block">
             Plan
             <select name="plan" className="mt-1 w-full border border-[#e3e8ed] px-3 py-2 rounded-lg bg-white">
-              <option value="STARTER">Starter (~300 students)</option>
-              <option value="PRO">Pro (~1,500)</option>
-              <option value="ENTERPRISE">Enterprise</option>
+              <option value="STARTER">
+                Starter ({formatCap(PLAN_STUDENT_CAPS.STARTER)} students)
+              </option>
+              <option value="PRO">Pro ({formatCap(PLAN_STUDENT_CAPS.PRO)} students)</option>
+              <option value="ENTERPRISE">
+                Enterprise ({formatCap(PLAN_STUDENT_CAPS.ENTERPRISE)} students)
+              </option>
             </select>
           </label>
           <label className="block">
