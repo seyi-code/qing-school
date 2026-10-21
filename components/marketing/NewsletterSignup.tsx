@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { BrandLoadingLabel } from "@/components/ui/BrandSpinner";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -41,6 +42,7 @@ export function NewsletterSignup({ variant = "footer" }: { variant?: "footer" | 
   }
 
   const isFooter = variant === "footer";
+  const loading = status === "loading";
 
   return (
     <div className={isFooter ? "" : "w-full max-w-md"}>
@@ -77,7 +79,7 @@ export function NewsletterSignup({ variant = "footer" }: { variant?: "footer" | 
             setEmail(e.target.value);
             if (status !== "idle" && status !== "loading") setStatus("idle");
           }}
-          disabled={status === "loading"}
+          disabled={loading}
           className={`flex-1 min-w-0 rounded-lg px-3 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#d2ae3b]/50 ${
             isFooter
               ? "bg-white/10 border-white/20 text-white placeholder:text-white/40"
@@ -86,10 +88,14 @@ export function NewsletterSignup({ variant = "footer" }: { variant?: "footer" | 
         />
         <button
           type="submit"
-          disabled={status === "loading"}
-          className="shrink-0 rounded-lg bg-[#b3234b] hover:brightness-95 disabled:opacity-60 text-white text-sm font-extrabold px-4 py-2.5"
+          disabled={loading}
+          className="shrink-0 inline-flex items-center justify-center min-w-[7.5rem] rounded-lg bg-[#b3234b] hover:brightness-95 disabled:opacity-70 disabled:cursor-wait text-white text-sm font-extrabold px-4 py-2.5"
         >
-          {status === "loading" ? "Joining…" : "Subscribe"}
+          <BrandLoadingLabel
+            loading={loading}
+            idleLabel="Subscribe"
+            loadingLabel="Joining…"
+          />
         </button>
       </form>
       {message && (

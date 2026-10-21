@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BrandLoadingLabel } from "@/components/ui/BrandSpinner";
 
 type Notice = { id: string; title: string; body: string };
 
@@ -16,8 +17,19 @@ export function HomeNewsSection({
   shortName: string;
 }) {
   const [visible, setVisible] = useState(INITIAL);
+  const [loading, setLoading] = useState(false);
   const shown = notices.slice(0, visible);
   const hasMore = notices.length > visible;
+
+  function onShowMore() {
+    if (loading) return;
+    setLoading(true);
+    // Brief branded pause so the indicator is visible (data is already local)
+    window.setTimeout(() => {
+      setVisible((v) => v + INITIAL);
+      setLoading(false);
+    }, 320);
+  }
 
   if (notices.length === 0) {
     return (
@@ -48,11 +60,17 @@ export function HomeNewsSection({
         <div className="mt-6 text-center">
           <button
             type="button"
-            onClick={() => setVisible((v) => v + INITIAL)}
-            className="inline-flex items-center rounded-xl border border-[#e3e8ed] dark:border-white/15 bg-white dark:bg-[#132338] px-5 py-2.5 text-sm font-bold hover:brightness-95"
+            onClick={onShowMore}
+            disabled={loading}
+            className="inline-flex items-center justify-center min-w-[10.5rem] rounded-xl border border-[#e3e8ed] dark:border-white/15 bg-white dark:bg-[#132338] px-5 py-2.5 text-sm font-bold hover:brightness-95 disabled:opacity-70 disabled:cursor-wait"
             style={{ color: primaryColor }}
           >
-            Show more news →
+            <BrandLoadingLabel
+              loading={loading}
+              idleLabel="Show more news →"
+              loadingLabel="Loading…"
+              color={primaryColor}
+            />
           </button>
           <p className="text-[11px] text-[#627184] dark:text-[#a8b8c9] mt-2 mb-0">
             Showing {shown.length} of {notices.length} from {shortName}
