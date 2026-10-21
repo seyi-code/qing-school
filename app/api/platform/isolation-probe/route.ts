@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { repairLegacyAdmissionNumbers } from "@/lib/admission";
 
 /**
  * PLATFORM_ADMIN only — multi-tenant isolation health check.
- * Run after onboarding ≥2 schools. Flags orphan rows and prefix collisions.
+ * Also repairs legacy admission numbers (FS/… → KMS/MAT/2026/0001).
  */
 export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "PLATFORM_ADMIN") {
     return NextResponse.json({ error: "Forbidden — platform admin only" }, { status: 403 });
   }
+
+  // Fix FS/… and other non-prefixed sample admissions before sampling
+  const admissionRepair = await repairLegacyAdmissionNumbers().catch((err) => {
+    console.error("[isolation-probe] admission repair failed", err);
+    return { fixed: 0, details: [] as Array<{ from: string; to: string }> };
+  });
 
   const schools = await prisma.school.findMany({
     orderBy: { name: "asc" },
@@ -94,14 +101,25 @@ export async function GET() {
       );
     }
   }
+  if (admissionRepair.fixed > 0) {
+    warnings.push(
+      `Repaired ${admissionRepair.fixed} legacy admission number(s) → SCHOOL/BRANCH/YEAR/####`
+    );
+  }
 
-  const ok = schools.length >= 2 && orphanStudents === 0 && orphanStaff === 0 && orphanClasses === 0;
+  const ok =
+    schools.length >= 2 &&
+    orphanStudents === 0 &&
+    orphanStaff === 0 &&
+    orphanClasses === 0 &&
+    perSchool.every((s) => s.prefixMismatches === 0);
 
   return NextResponse.json({
     ok,
     checkedAt: new Date().toISOString(),
     schoolCount: schools.length,
     orphans: { students: orphanStudents, staff: orphanStaff, classes: orphanClasses },
+    admissionRepair,
     schools: perSchool,
     warnings,
     checklist: [
