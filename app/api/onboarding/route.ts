@@ -5,13 +5,7 @@ import { getSession, hashPassword } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { validatePassword } from "@/lib/password-policy";
 import { getTrialDays, trialEndsAt } from "@/lib/trial";
-
-/** Default student caps by plan (onboard + billing reference). */
-export const PLAN_STUDENT_CAPS = {
-  STARTER: 500,
-  PRO: 2000,
-  ENTERPRISE: 10000,
-} as const;
+import { PLAN_STUDENT_CAPS } from "@/lib/plan-caps";
 
 const OnboardSchema = z.object({
   schoolName: z.string().min(3).max(120),
