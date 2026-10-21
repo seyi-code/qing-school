@@ -2,30 +2,32 @@
  * Per-school public marketing images.
  *
  * Isolation rules:
- * - KMS (flagship) → /kms-home/
- * - Other schools → /school-home/{slug}/ first, then /dms-home/ only for slug "dms",
- *   then neutral /campus/ — NEVER fall back to KMS people photos for other tenants.
+ * - KMS (flagship) → /kms-home/ (real school photos)
+ * - Every other tenant → /campus/ neutral placeholders
+ *   until they commit distinct files under /school-home/{slug}/
+ *   and are listed in HAS_DISTINCT_PHOTOS.
+ *
+ * Never serve KMS people photos to DMS / Test / other tenants.
  */
 
 const KMS_PREFIX = "/kms-home";
 const NEUTRAL_PREFIX = "/campus";
 
-/** Slugs that have committed assets under public/school-home/{slug}/ */
-const HAS_SCHOOL_HOME = new Set<string>(["dms", "test"]);
+/**
+ * Only enable a slug here when public/school-home/{slug}/ has *their own*
+ * photos (not copies of KMS). Until then non-KMS uses neutral campus.
+ */
+const HAS_DISTINCT_PHOTOS = new Set<string>([
+  // "dms",
+  // "test",
+]);
 
-function prefixFor(slug: string | null | undefined): string {
-  if (!slug) return KMS_PREFIX;
-  const s = slug.trim().toLowerCase();
-  if (!s || s === "kms") return KMS_PREFIX;
-  if (HAS_SCHOOL_HOME.has(s)) return `/school-home/${s}`;
-  if (s === "dms") return "/dms-home";
-  return `/school-home/${s}`;
-}
-
-/** Neutral fallback — never use KMS student photos for other schools. */
-function neutralFallback(filename: string): string {
-  // Map marketing filenames to campus placeholders when present
-  if (filename.includes("hero") || filename.includes("about") || filename.includes("admission")) {
+function neutralFile(filename: string): string {
+  if (
+    filename.includes("hero") ||
+    filename.includes("about") ||
+    filename.includes("admission")
+  ) {
     return `${NEUTRAL_PREFIX}/hero.jpg`;
   }
   if (filename.includes("early") || filename.includes("primary")) {
@@ -43,12 +45,16 @@ export function schoolImage(
   const isKms = !s || s === "kms";
 
   if (options?.forceDefault) {
-    // forceDefault means KMS pack only for KMS; neutral for everyone else
-    return isKms ? `${KMS_PREFIX}/${filename}` : neutralFallback(filename);
+    return isKms ? `${KMS_PREFIX}/${filename}` : neutralFile(filename);
   }
 
   if (isKms) return `${KMS_PREFIX}/${filename}`;
-  return `${prefixFor(s)}/${filename}`;
+
+  if (HAS_DISTINCT_PHOTOS.has(s)) {
+    return `/school-home/${s}/${filename}`;
+  }
+
+  return neutralFile(filename);
 }
 
 export function schoolHeroSlides(slug: string | null | undefined) {
