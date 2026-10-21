@@ -1,14 +1,15 @@
 /**
  * Per-school public marketing images.
- * Only slugs listed in HAS_CUSTOM_IMAGES use /school-home/{slug}/.
- * Everyone else uses sharp /kms-home/ assets (no broken images).
+ * KMS (flagship) uses /kms-home/ — replace those files with real school photos.
+ * Only slugs in HAS_CUSTOM_IMAGES use /school-home/{slug}/.
+ * Everyone else falls back to /kms-home/ (no broken images).
  */
 
 const DEFAULT_PREFIX = "/kms-home";
 
-/** Slugs that have real files under public/school-home/{slug}/ */
+/** Slu gs that have real files under public/school-home/{slug}/ */
 const HAS_CUSTOM_IMAGES = new Set<string>([
-  // "dms", // enable when files are committed
+  // "dms", // enable when distinct DMS files are committed
   // "test",
 ]);
 
@@ -34,17 +35,22 @@ export function schoolHeroSlides(slug: string | null | undefined) {
     {
       src: schoolImage(slug, "hero-classroom.jpg"),
       fallback: schoolImage(slug, "hero-classroom.jpg", { forceDefault: true }),
-      alt: "Students learning in class",
+      alt: "Kayvlop students in science practical",
+    },
+    {
+      src: schoolImage(slug, "hero-group.jpg"),
+      fallback: schoolImage(slug, "about-students.jpg", { forceDefault: true }),
+      alt: "Kayvlop Magnificent School community",
     },
     {
       src: schoolImage(slug, "about-students.jpg"),
       fallback: schoolImage(slug, "about-students.jpg", { forceDefault: true }),
-      alt: "Students smiling with books",
+      alt: "Students and staff together",
     },
     {
       src: schoolImage(slug, "admissions-students.jpg"),
       fallback: schoolImage(slug, "admissions-students.jpg", { forceDefault: true }),
-      alt: "Happy learners",
+      alt: "Celebrating achievement at Kayvlop",
     },
   ];
 }
