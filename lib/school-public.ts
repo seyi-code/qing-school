@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { getBrandingForSchoolId, defaultBranding, type Branding } from "@/lib/branding";
 import { blocksToHtml, parseBlocks } from "@/lib/cms-blocks";
 import { normalizeHost } from "@/lib/host-mode";
+import { presetForSlug } from "@/lib/school-presets";
 
 export type PublicHomeData = {
   branding: Branding;
@@ -35,6 +36,90 @@ function isBogusTenantSlug(slug: string): boolean {
   return false;
 }
 
+/** Known demo / product tenants that must resolve on /site/{slug}. */
+const KNOWN_TENANTS: Record<
+  string,
+  {
+    name: string;
+    shortName: string;
+    motto: string;
+    primaryColor: string;
+    accentColor: string;
+    isDemo: boolean;
+  }
+> = {
+  dms: {
+    name: "Debteb Montessori School",
+    shortName: "DMS",
+    motto: "Education with Godliness",
+    primaryColor: "#5c3d2e",
+    accentColor: "#c4783a",
+    isDemo: false,
+  },
+  test: {
+    name: "Test School",
+    shortName: "TEST",
+    motto: "Education with Godliness",
+    primaryColor: "#0f3d3e",
+    accentColor: "#2dd4bf",
+    isDemo: true,
+  },
+};
+
+/**
+ * If /site/dms (or /site/test) is requested but the row is missing,
+ * create the school so public preview works. Does not overwrite existing rows.
+ */
+async function ensureKnownTenant(slug: string) {
+  const key = slug.toLowerCase();
+  const def = KNOWN_TENANTS[key];
+  if (!def) return null;
+
+  const existing = await prisma.school.findFirst({
+    where: { slug: key },
+  });
+  if (existing) {
+    // Reactivate if someone suspended it
+    if (!existing.isActive) {
+      return prisma.school.update({
+        where: { id: existing.id },
+        data: { isActive: true },
+      });
+    }
+    return existing;
+  }
+
+  // Also match by shortName in case onboarded under a different slug
+  const byShort = await prisma.school.findFirst({
+    where: {
+      isActive: true,
+      OR: [
+        { shortName: { equals: def.shortName, mode: "insensitive" } },
+        { name: { contains: key === "dms" ? "Debteb" : "Test School", mode: "insensitive" } },
+      ],
+    },
+  });
+  if (byShort) {
+    // Prefer the real onboarded school; do not force-rename slug (may break domains)
+    return byShort;
+  }
+
+  return prisma.school.create({
+    data: {
+      slug: key,
+      name: def.name,
+      shortName: def.shortName,
+      motto: def.motto,
+      primaryColor: def.primaryColor,
+      accentColor: def.accentColor,
+      plan: "STARTER",
+      isActive: true,
+      isDemo: def.isDemo,
+      maxStudents: 500,
+    },
+  });
+}
+
 /** Resolve School by slug or verified custom domain (host). */
 export async function findSchoolForPublic(opts: {
   slug?: string | null;
@@ -46,6 +131,24 @@ export async function findSchoolForPublic(opts: {
       where: { slug, isActive: true },
     });
     if (bySlug) return bySlug;
+
+    // Known product tenants (dms / test) — create or recover if missing
+    if (KNOWN_TENANTS[slug]) {
+      const ensured = await ensureKnownTenant(slug).catch((err) => {
+        console.error("[ensureKnownTenant]", err);
+        return null;
+      });
+      if (ensured?.isActive) return ensured;
+    }
+
+    // shortName fallback (e.g. URL /site/dms but DB shortName DMS with different slug)
+    const byShort = await prisma.school.findFirst({
+      where: {
+        isActive: true,
+        shortName: { equals: slug, mode: "insensitive" },
+      },
+    });
+    if (byShort) return byShort;
   }
 
   const host = normalizeHost(opts.host);
@@ -99,10 +202,14 @@ export async function loadPublicHome(opts: {
   }
 
   const schoolId = school?.id ?? null;
+  // Prefer the school's real slug so branding/presets match DB even if URL used shortName alias
   const schoolSlug = school?.slug ?? null;
   const branding = schoolId
     ? await getBrandingForSchoolId(schoolId)
     : defaultBranding();
+
+  // Align preset colours when DB colours empty
+  void presetForSlug(schoolSlug);
 
   let notices: PublicHomeData["notices"] = [];
   let cmsHtml: string | null = null;
