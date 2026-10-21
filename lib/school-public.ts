@@ -73,6 +73,9 @@ async function resolveDefaultKms() {
     .catch(() => null);
 }
 
+/** Homepage shows many notices; no hard product limit of 4. */
+const PUBLIC_NEWS_TAKE = 100;
+
 export async function loadPublicHome(opts: {
   slug?: string | null;
   host?: string | null;
@@ -121,7 +124,7 @@ export async function loadPublicHome(opts: {
         prisma.notice.findMany({
           where: noticeWhere,
           orderBy: { createdAt: "desc" },
-          take: 4,
+          take: PUBLIC_NEWS_TAKE,
         }),
         prisma.cmsPage.findFirst({ where: { slug: "home", schoolId } }),
       ]);

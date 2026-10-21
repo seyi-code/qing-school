@@ -20,6 +20,9 @@ export type Branding = {
   address: string;
   /** Public layout preset id */
   layoutPreset?: "classic" | "montessori" | "modern";
+  socialFacebook?: string;
+  socialInstagram?: string;
+  socialYoutube?: string;
 };
 
 export function defaultBranding(): Branding {
@@ -36,6 +39,9 @@ export function defaultBranding(): Branding {
     email: SCHOOL.contact.email,
     address: SCHOOL.contact.address,
     layoutPreset: p.id,
+    socialFacebook: SCHOOL.social.facebook,
+    socialInstagram: SCHOOL.social.instagram,
+    socialYoutube: SCHOOL.social.youtube,
   };
 }
 
@@ -44,6 +50,7 @@ export async function getBrandingForSchoolId(schoolId: string | null | undefined
   const s = await prisma.school.findUnique({ where: { id: schoolId } });
   if (!s) return defaultBranding();
   const preset = presetForSlug(s.slug);
+  const isKms = (s.slug || "").toLowerCase() === "kms";
   return {
     name: s.name || SCHOOL.name,
     shortName: s.shortName || SCHOOL.shortName,
@@ -56,5 +63,9 @@ export async function getBrandingForSchoolId(schoolId: string | null | undefined
     email: s.email || SCHOOL.contact.email,
     address: s.address || SCHOOL.contact.address,
     layoutPreset: preset.id,
+    // Non-KMS: omit KMS social defaults until school sets its own
+    socialFacebook: isKms ? SCHOOL.social.facebook : undefined,
+    socialInstagram: isKms ? SCHOOL.social.instagram : undefined,
+    socialYoutube: isKms ? SCHOOL.social.youtube : undefined,
   };
 }

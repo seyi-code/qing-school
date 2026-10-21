@@ -31,6 +31,12 @@ export const SCHOOL = {
     email: "kayvlopmagnificentschool@gmail.com",
     address: "3, Olambe, Olamide Oladele Close, Matogun",
   },
+  /** Public social links — update when real pages exist */
+  social: {
+    facebook: "https://www.facebook.com/",
+    instagram: "https://www.instagram.com/",
+    youtube: "https://www.youtube.com/",
+  },
 } as const;
 
 export type SchoolConfig = typeof SCHOOL;
