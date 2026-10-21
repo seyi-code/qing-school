@@ -4,6 +4,7 @@ import { HeroSlider } from "@/components/marketing/HeroSlider";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { SchoolImg } from "@/components/marketing/SchoolImg";
+import { HomeNewsSection } from "@/components/marketing/HomeNewsSection";
 import { schoolImage, schoolProgrammeImages } from "@/lib/school-images";
 import { presetForSlug } from "@/lib/school-presets";
 
@@ -51,7 +52,6 @@ export function SchoolPublicHome({
       <MarketingNav brand={branding} schoolSlug={schoolSlug} />
       <HeroSlider brand={branding} schoolSlug={schoolSlug} />
 
-      {/* 2×2 highlights */}
       <section style={{ backgroundColor: primary }} className="text-white">
         <div className="max-w-[1180px] mx-auto grid grid-cols-2 lg:grid-cols-4">
           {highlights.map((h, i) => (
@@ -88,7 +88,6 @@ export function SchoolPublicHome({
         </section>
       ) : null}
 
-      {/* About */}
       <section id="about" className="py-16 sm:py-20">
         <div className="max-w-[1180px] mx-auto px-5 grid md:grid-cols-2 gap-10 items-center">
           <div className="relative h-[280px] sm:h-[390px] rounded-xl overflow-hidden shadow-md ring-1 ring-black/5 dark:ring-white/10">
@@ -113,8 +112,11 @@ export function SchoolPublicHome({
             <p className="text-[#627184] dark:text-[#a8b8c9] leading-relaxed mb-6">
               {branding.motto ? (
                 <>
-                  Our motto, <strong className="dark:text-[#e8eef5]" style={{ color: primary }}>{branding.motto}</strong>,{" "}
-                  {preset.about.mottoLine.replace(/^Our motto[^,]*,?\s*/i, "")}
+                  Our motto,{" "}
+                  <strong className="dark:text-[#e8eef5]" style={{ color: primary }}>
+                    {branding.motto}
+                  </strong>
+                  , {preset.about.mottoLine.replace(/^Our motto[^,]*,?\s*/i, "")}
                 </>
               ) : (
                 preset.about.mottoLine
@@ -139,7 +141,6 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Programmes — always 2×2 */}
       <section id="programmes" className="py-16 bg-[#f7f9fc] dark:bg-[#0f1c2e]">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase text-center" style={{ color: accent }}>
@@ -178,7 +179,6 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Why */}
       <section id="why" className="py-16">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
@@ -190,7 +190,10 @@ export function SchoolPublicHome({
           <p className="text-[#627184] dark:text-[#a8b8c9] max-w-2xl mb-10 text-sm leading-relaxed">{preset.why.body}</p>
           <div className="grid md:grid-cols-3 gap-5">
             {preset.why.items.map((w) => (
-              <div key={w.title} className="rounded-xl border border-[#e3e8ed] dark:border-white/10 p-6 bg-white dark:bg-[#132338] shadow-sm">
+              <div
+                key={w.title}
+                className="rounded-xl border border-[#e3e8ed] dark:border-white/10 p-6 bg-white dark:bg-[#132338] shadow-sm"
+              >
                 <span className="text-2xl" aria-hidden>
                   {w.icon}
                 </span>
@@ -204,7 +207,6 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* Promise */}
       <section className="py-14 bg-[#faf6ee] dark:bg-[#121a12]">
         <div className="max-w-[800px] mx-auto px-5 text-center">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: accent }}>
@@ -218,7 +220,6 @@ export function SchoolPublicHome({
         </div>
       </section>
 
-      {/* News */}
       <section id="news" className="py-16 bg-[#f0f4f8] dark:bg-[#0f1c2e]">
         <div className="max-w-[1180px] mx-auto px-5">
           <p className="text-xs font-extrabold tracking-[0.16em] uppercase" style={{ color: accent }}>
@@ -227,32 +228,14 @@ export function SchoolPublicHome({
           <h2 className="font-serif text-3xl mt-2 mb-8 dark:text-[#e8eef5]" style={{ color: primary }}>
             Latest from {branding.shortName || branding.name}
           </h2>
-          {notices.length === 0 ? (
-            <p className="text-[#627184] dark:text-[#a8b8c9] text-sm">
-              Contact the school for current events, term dates and programme updates.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {notices.map((n) => (
-                <article
-                  key={n.id}
-                  className="bg-white dark:bg-[#132338] border border-[#e3e8ed] dark:border-white/10 rounded-xl p-5"
-                >
-                  <h3 className="font-bold m-0 dark:text-[#e8eef5]" style={{ color: primary }}>
-                    {n.title}
-                  </h3>
-                  <p className="text-sm text-[#627184] dark:text-[#a8b8c9] mt-2 mb-0 line-clamp-3">{n.body}</p>
-                </article>
-              ))}
-            </div>
-          )}
+          <HomeNewsSection
+            notices={notices}
+            primaryColor={primary}
+            shortName={branding.shortName || branding.name}
+          />
         </div>
       </section>
 
-      {/*
-        Admissions — always A | B (two columns on all screen sizes).
-        A = CTA left, B = contact list right (matches polished mobile reference).
-      */}
       <section className="relative py-12 sm:py-16 text-white overflow-hidden">
         <div className="absolute inset-0">
           <SchoolImg
@@ -271,7 +254,6 @@ export function SchoolPublicHome({
         </div>
 
         <div className="relative z-[1] max-w-[1180px] mx-auto px-4 sm:px-5 grid grid-cols-2 gap-4 sm:gap-8 md:gap-12 items-center">
-          {/* A — CTA */}
           <div className="min-w-0">
             <p
               className="text-[10px] sm:text-xs font-extrabold tracking-[0.16em] uppercase mb-1.5 sm:mb-2"
@@ -295,14 +277,9 @@ export function SchoolPublicHome({
             </Link>
           </div>
 
-          {/* B — vertical contact list */}
           <div className="border-l border-white/20 pl-3 sm:pl-8 space-y-3 sm:space-y-5 min-w-0">
             <Link href={admissionsHref} className="flex items-start gap-2 sm:gap-3 group">
-              <span
-                className="text-sm sm:text-xl shrink-0 mt-0.5"
-                style={{ color: accent }}
-                aria-hidden
-              >
+              <span className="text-sm sm:text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
                 ✎
               </span>
               <div className="min-w-0">
@@ -316,11 +293,7 @@ export function SchoolPublicHome({
             </Link>
 
             <Link href={contactHref} className="flex items-start gap-2 sm:gap-3 group">
-              <span
-                className="text-sm sm:text-xl shrink-0 mt-0.5"
-                style={{ color: accent }}
-                aria-hidden
-              >
+              <span className="text-sm sm:text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
                 ⌖
               </span>
               <div className="min-w-0">
@@ -333,15 +306,8 @@ export function SchoolPublicHome({
               </div>
             </Link>
 
-            <a
-              href={`tel:${phone.replace(/\s/g, "")}`}
-              className="flex items-start gap-2 sm:gap-3 group"
-            >
-              <span
-                className="text-sm sm:text-xl shrink-0 mt-0.5"
-                style={{ color: accent }}
-                aria-hidden
-              >
+            <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex items-start gap-2 sm:gap-3 group">
+              <span className="text-sm sm:text-xl shrink-0 mt-0.5" style={{ color: accent }} aria-hidden>
                 ☎
               </span>
               <div className="min-w-0">
