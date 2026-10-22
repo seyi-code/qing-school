@@ -6,6 +6,7 @@ import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { CmsEditor } from "./CmsEditor";
 import { Kpi } from "@/components/ui/Kpi";
+import { InstallCmsPackButton } from "@/components/InstallCmsPackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,8 @@ export default async function CmsPage() {
       }
       email={session.email}
     >
+      <InstallCmsPackButton schoolName={schoolName} pageCount={pages.length} />
+
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
         <Kpi label="Pages" value={String(pages.length)} tone="navy" icon="📄" />
         <Kpi
