@@ -327,6 +327,7 @@ export default async function PlatformPage() {
             name: s.name,
             slug: s.slug,
             plan: s.plan,
+            maxStudents: s.maxStudents,
           }))}
         />
 
