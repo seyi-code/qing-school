@@ -22,7 +22,7 @@ export const PERMISSIONS = {
   MANAGE_HOSTEL: ["ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
   MANAGE_TRANSPORT: ["ADMIN", "IT", "SECRETARY", "PRINCIPAL", "ACCOUNTANT"],
   MANAGE_CBT: ["ADMIN", "IT", "TEACHER", "PRINCIPAL"],
-  MANAGE_CMS: ["ADMIN", "IT"],
+  MANAGE_CMS: ["ADMIN", "IT", "SECRETARY"],
 } as const;
 
 export type Permission = keyof typeof PERMISSIONS;
