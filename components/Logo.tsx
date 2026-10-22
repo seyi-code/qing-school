@@ -28,15 +28,20 @@ export function Logo({
   const muted = light ? "text-white/70" : "text-ink/55";
 
   const mark = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={KMS_LOGO_URL}
-      alt={SCHOOL.name}
-      width={s.img}
-      height={s.img}
-      className="object-contain shrink-0"
+    <span
+      className="inline-flex items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 overflow-hidden shrink-0"
       style={{ width: s.img, height: s.img }}
-    />
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={KMS_LOGO_URL}
+        alt={SCHOOL.name}
+        width={s.img}
+        height={s.img}
+        className="object-contain"
+        style={{ width: "92%", height: "92%" }}
+      />
+    </span>
   );
 
   // Header always shows short name (KMS) — full name is for page titles & footer
