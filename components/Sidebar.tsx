@@ -40,7 +40,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/portal/student",
     label: "My Portal",
     icon: "🎓",
-    roles: [ ["STUDENT"],
+    roles: ["STUDENT"],
   },
   {
     href: "/portal/parent",
@@ -351,7 +351,7 @@ export function Sidebar({
         <Link
           href="/account/profile"
           onClick={onNavigate}
-          className="block text-center text-xs font-semibold py-2 rounded-lg border border-white/15 text-white/80 hover:border-[#d2ae3b]/50 hover:text-[#f1d264]"
+          className="block text-center text-xs font-semibold py-2.5 rounded-lg border border-white/15 text-white/80 hover:border-[#d2ae3b]/50 hover:text-[#f1d264]"
         >
           My profile
         </Link>
