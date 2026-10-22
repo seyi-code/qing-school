@@ -134,18 +134,21 @@ export function MarketingNav({
         <header className="bg-white/95 dark:bg-[#0f1c2e]/95 backdrop-blur-md border-b border-[#e3e8ed] dark:border-white/10">
           <div className="max-w-[1180px] mx-auto px-4 sm:px-5 min-h-[56px] sm:min-h-[72px] flex items-center justify-between gap-4">
             <Link href={home} className="flex items-center gap-2.5 min-w-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={b.logoUrl || "/logo.svg"}
-                alt=""
-                className="w-9 h-9 sm:w-10 sm:h-10 object-contain shrink-0"
-                onError={(e) => {
-                  const el = e.currentTarget;
-                  if (el.dataset.fb === "1") return;
-                  el.dataset.fb = "1";
-                  el.src = "/logo.svg";
-                }}
-              />
+              {/* Circular crest — soft white pad so JPG square blends on light + dark */}
+              <span className="inline-flex w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white shadow-sm ring-1 ring-black/5 dark:ring-white/15 overflow-hidden shrink-0 items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={b.logoUrl || "/logo.svg"}
+                  alt=""
+                  className="w-[92%] h-[92%] object-contain"
+                  onError={(e) => {
+                    const el = e.currentTarget;
+                    if (el.dataset.fb === "1") return;
+                    el.dataset.fb = "1";
+                    el.src = "/logo.svg";
+                  }}
+                />
+              </span>
               <span className="min-w-0">
                 <span className="block font-serif font-bold text-[#12345a] dark:text-[#e8eef5] text-[14px] sm:text-lg leading-tight truncate">
                   {b.name}
