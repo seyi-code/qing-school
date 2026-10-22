@@ -15,6 +15,8 @@ const SetPlanSchema = z.object({
   action: z.literal("set_plan").optional(),
   schoolId: z.string(),
   plan: z.enum(["STARTER", "PRO", "ENTERPRISE"]),
+  /** Optional override — e.g. custom “full” cap without changing plan tier. */
+  maxStudents: z.number().int().min(1).max(100000).optional(),
 });
 
 const SubscribeSchema = z.object({
@@ -183,11 +185,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid plan change" }, { status: 400 });
   }
 
-  const maxStudents = PLAN_LIMITS[parsed.data.plan as SaaSPlan];
+  const plan = parsed.data.plan as SaaSPlan;
+  const maxStudents =
+    typeof parsed.data.maxStudents === "number"
+      ? parsed.data.maxStudents
+      : PLAN_LIMITS[plan];
+
   const school = await prisma.school.update({
     where: { id: parsed.data.schoolId },
     data: {
-      plan: parsed.data.plan,
+      plan,
       maxStudents,
       subscriptionStatus: "MANUAL",
     },
@@ -198,7 +205,7 @@ export async function POST(req: Request) {
     action: "SET_SCHOOL_PLAN",
     entity: "School",
     entityId: school.id,
-    details: { plan: school.plan, maxStudents },
+    details: { plan: school.plan, maxStudents, customCap: Boolean(parsed.data.maxStudents) },
   });
 
   return NextResponse.json({
