@@ -6,7 +6,12 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!session || !["ADMIN", "IT", "SECRETARY", "PRINCIPAL", "TEACHER"].includes(session.role)) {
+  if (
+    !session ||
+    !["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL", "TEACHER"].includes(
+      session.role
+    )
+  ) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
