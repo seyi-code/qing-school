@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { repairLegacyAdmissionNumbers } from "@/lib/admission";
+import { PLAN_STUDENT_CAPS } from "@/lib/plan-caps";
 
 /**
  * PLATFORM_ADMIN only — multi-tenant isolation health check.
  * Also repairs legacy admission numbers (FS/… → KMS/MAT/2026/0001).
+ * Aligns Test STARTER cap to 500 when still on old 300.
  */
 export async function GET() {
   const session = await getSession();
@@ -17,6 +19,15 @@ export async function GET() {
   const admissionRepair = await repairLegacyAdmissionNumbers().catch((err) => {
     console.error("[isolation-probe] admission repair failed", err);
     return { fixed: 0, details: [] as Array<{ from: string; to: string }> };
+  });
+
+  // Align Test (and any STARTER still under 500) to current STARTER cap
+  const capFix = await prisma.school.updateMany({
+    where: {
+      plan: "STARTER",
+      maxStudents: { lt: PLAN_STUDENT_CAPS.STARTER },
+    },
+    data: { maxStudents: PLAN_STUDENT_CAPS.STARTER },
   });
 
   const schools = await prisma.school.findMany({
@@ -106,6 +117,9 @@ export async function GET() {
       `Repaired ${admissionRepair.fixed} legacy admission number(s) → SCHOOL/BRANCH/YEAR/####`
     );
   }
+  if (capFix.count > 0) {
+    warnings.push(`Aligned ${capFix.count} STARTER tenant(s) to maxStudents ${PLAN_STUDENT_CAPS.STARTER}`);
+  }
 
   const ok =
     schools.length >= 2 &&
@@ -120,6 +134,7 @@ export async function GET() {
     schoolCount: schools.length,
     orphans: { students: orphanStudents, staff: orphanStaff, classes: orphanClasses },
     admissionRepair,
+    capFix: { count: capFix.count, maxStudents: PLAN_STUDENT_CAPS.STARTER },
     schools: perSchool,
     warnings,
     checklist: [
