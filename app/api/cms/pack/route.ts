@@ -132,6 +132,7 @@ export async function POST(req: Request) {
     });
 
     const data = {
+      slug: page.slug,
       title: page.title,
       body: page.body,
       published: page.published,
@@ -145,7 +146,16 @@ export async function POST(req: Request) {
         skipped.push(page.slug);
         continue;
       }
-      await prisma.cmsPage.update({ where: { id: existing.id }, data });
+      await prisma.cmsPage.update({
+        where: { id: existing.id },
+        data: {
+          title: data.title,
+          body: data.body,
+          published: data.published,
+          metaTitle: data.metaTitle,
+          metaDescription: data.metaDescription,
+        },
+      });
       await prisma.cmsPageVersion.create({
         data: {
           pageId: existing.id,
