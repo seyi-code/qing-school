@@ -1,3 +1,5 @@
+import { initializeFlutterwaveSubscription, isFlutterwaveLive } from "@/lib/integrations/flutterwave-billing";
+import { PLAN_PRICE_NGN_MONTHLY } from "@/lib/billing-catalog";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
@@ -15,12 +17,11 @@ const SetPlanSchema = z.object({
   action: z.literal("set_plan").optional(),
   schoolId: z.string(),
   plan: z.enum(["STARTER", "PRO", "ENTERPRISE"]),
-  /** Optional override — e.g. custom “full” cap without changing plan tier. */
   maxStudents: z.number().int().min(1).max(100000).optional(),
 });
 
 const SubscribeSchema = z.object({
-  action: z.literal("subscribe"),
+  action: z.enum(["subscribe", "subscribe_flutterwave"]),
   schoolId: z.string(),
   plan: z.enum(["STARTER", "PRO", "ENTERPRISE"]),
   email: z.string().email(),
@@ -51,11 +52,14 @@ export async function GET() {
   return NextResponse.json({
     schools,
     liveBilling: isSubscriptionLive(),
+    flutterwaveLive: isFlutterwaveLive(),
+    pricesNgn: PLAN_PRICE_NGN_MONTHLY,
     planLimits: PLAN_LIMITS,
     envHint: {
       PAYSTACK_PLAN_STARTER: Boolean(process.env.PAYSTACK_PLAN_STARTER),
       PAYSTACK_PLAN_PRO: Boolean(process.env.PAYSTACK_PLAN_PRO),
       PAYSTACK_PLAN_ENTERPRISE: Boolean(process.env.PAYSTACK_PLAN_ENTERPRISE),
+      FLUTTERWAVE: Boolean(process.env.FLUTTERWAVE_SECRET_KEY),
     },
   });
 }
@@ -84,7 +88,40 @@ export async function POST(req: Request) {
         action: "SAAS_SUBSCRIBE_INIT",
         entity: "School",
         entityId: parsed.data.schoolId,
-        details: { plan: parsed.data.plan, mock: "mock" in result ? result.mock : false },
+        details: {
+          plan: parsed.data.plan,
+          mock: "mock" in result ? result.mock : false,
+          provider: "paystack",
+        },
+      });
+      return NextResponse.json(result);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+  }
+
+  if (body?.action === "subscribe_flutterwave") {
+    const parsed = SubscribeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid subscribe payload" }, { status: 400 });
+    }
+    try {
+      const result = await initializeFlutterwaveSubscription({
+        schoolId: parsed.data.schoolId,
+        plan: parsed.data.plan as SaaSPlan,
+        email: parsed.data.email,
+      });
+      await logAudit({
+        userId: session.userId,
+        action: "SAAS_SUBSCRIBE_INIT",
+        entity: "School",
+        entityId: parsed.data.schoolId,
+        details: {
+          plan: parsed.data.plan,
+          mock: "mock" in result ? result.mock : false,
+          provider: "flutterwave",
+        },
       });
       return NextResponse.json(result);
     } catch (e: unknown) {
@@ -211,6 +248,6 @@ export async function POST(req: Request) {
   return NextResponse.json({
     school,
     billingNote:
-      "Plan limits applied manually. Use action:subscribe for Paystack-hosted subscription payment.",
+      "Plan limits applied manually. Use action:subscribe or subscribe_flutterwave for checkout.",
   });
 }
