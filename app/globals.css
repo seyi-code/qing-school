@@ -16,8 +16,6 @@ body {
 /*
  * Do NOT use overflow-x: hidden on html/body — it breaks position:sticky
  * for the marketing header on mobile browsers (Chrome/WebKit).
- * overflow-x: clip still prevents horizontal bounce without creating a
- * scroll-containing block that kills sticky.
  */
 html,
 body {
@@ -98,58 +96,65 @@ table.ledger tbody tr:hover {
   padding: 0.5rem 0.9rem;
 }
 .btn-primary:hover { background: #1a3a6e; }
+
 .btn-ghost {
   display: inline-flex;
   align-items: center;
   border-radius: 0.5rem;
-  border: 1px solid #dedacd;
-  background: #fff;
-  color: #1c2230;
+  border: 1px solid #c5c0b4;
+  background: transparent;
+  color: #132a46;
   font-size: 0.8125rem;
   font-weight: 500;
   padding: 0.5rem 0.9rem;
 }
-.btn-ghost:hover { border-color: #132a46; }
+.btn-ghost:hover { background: #efece3; }
 
-.tab-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-bottom: 0.85rem;
+/* —— Dark mode (class on <html> from ThemeProvider) —— */
+html.dark body {
+  background-color: #0b1522;
+  color: #e8eef5;
 }
-.tab-pill {
-  border-radius: 999px;
-  border: 1px solid #dedacd;
-  background: #fff;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.35rem 0.75rem;
-  color: #4a5265;
+
+html.dark .ledger-block {
+  border-color: #243447;
+  background: #122033;
+  color: #e8eef5;
 }
-.tab-pill[data-active="true"] {
-  background: #132a46;
-  border-color: #132a46;
+
+html.dark table.ledger th {
+  color: #9aa8b8;
+  border-bottom-color: #3d5a80;
+}
+
+html.dark table.ledger td {
+  border-bottom-color: #243447;
+}
+
+html.dark table.ledger tbody tr:hover {
+  background-color: #1a2d42;
+}
+
+html.dark .btn-primary {
+  background: #2a4a6f;
   color: #f7f5ef;
 }
-
-:focus-visible {
-  outline: 2px solid #b8923f;
-  outline-offset: 2px;
+html.dark .btn-primary:hover {
+  background: #3a5f8a;
 }
 
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  body {
-    background: white !important;
-  }
-  .report-card-print {
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  .report-card-print table {
-    page-break-inside: avoid;
-  }
+html.dark .btn-ghost {
+  border-color: #3d5a80;
+  color: #c5d0dc;
+}
+html.dark .btn-ghost:hover {
+  background: #1a2d42;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #0f1c2c;
+  border-color: #2a3f55;
+  color: #e8eef5;
 }
