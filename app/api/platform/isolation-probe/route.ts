@@ -6,8 +6,7 @@ import { PLAN_STUDENT_CAPS } from "@/lib/plan-caps";
 
 /**
  * PLATFORM_ADMIN only — multi-tenant isolation health check.
- * Also repairs legacy admission numbers (FS/… → KMS/MAT/2026/0001).
- * Aligns Test STARTER cap to 500 when still on old 300.
+ * Invoice/Payment are scoped via student.schoolId (no direct schoolId column).
  */
 export async function GET() {
   const session = await getSession();
@@ -41,7 +40,9 @@ export async function GET() {
   const orphanCmsPages = await prisma.cmsPage.count({ where: { schoolId: null } });
   const orphanMedia = await prisma.mediaAsset.count({ where: { schoolId: null } });
   const orphanNotices = await prisma.notice.count({ where: { schoolId: null } });
-  const orphanInvoices = await prisma.invoice.count({ where: { schoolId: null } });
+  const orphanInvoices = await prisma.invoice.count({
+    where: { student: { schoolId: null } },
+  });
   const orphanUsers = await prisma.user.count({
     where: { schoolId: null, role: { not: "PLATFORM_ADMIN" } },
   });
@@ -50,8 +51,8 @@ export async function GET() {
     schools.map(async (s) => {
       const [invoices, payments, notices, arms, cmsPages, mediaAssets, sampleAdmissions] =
         await Promise.all([
-          prisma.invoice.count({ where: { schoolId: s.id } }),
-          prisma.payment.count({ where: { schoolId: s.id } }),
+          prisma.invoice.count({ where: { student: { schoolId: s.id } } }),
+          prisma.payment.count({ where: { student: { schoolId: s.id } } }),
           prisma.notice.count({ where: { schoolId: s.id } }),
           prisma.arm.count({ where: { schoolClass: { schoolId: s.id } } }),
           prisma.cmsPage.count({ where: { schoolId: s.id } }),
@@ -105,7 +106,7 @@ export async function GET() {
   if (orphanCmsPages > 0) warnings.push(`${orphanCmsPages} CMS page(s) with null schoolId`);
   if (orphanMedia > 0) warnings.push(`${orphanMedia} media asset(s) with null schoolId`);
   if (orphanNotices > 0) warnings.push(`${orphanNotices} notice(s) with null schoolId`);
-  if (orphanInvoices > 0) warnings.push(`${orphanInvoices} invoice(s) with null schoolId`);
+  if (orphanInvoices > 0) warnings.push(`${orphanInvoices} invoice(s) whose student has null schoolId`);
   if (orphanUsers > 0) warnings.push(`${orphanUsers} non-platform user(s) with null schoolId`);
   for (const s of perSchool) {
     if (s.prefixMismatches > 0) {
@@ -159,7 +160,7 @@ export async function GET() {
       "Fees / Payroll / Leave empty or own data only",
       "CMS pages scoped per school (probe cmsPages count)",
       "Media assets scoped per school",
-      "No null schoolId on invoices / CMS / notices",
+      "No null schoolId on students driving invoices / CMS / notices",
     ],
   });
 }
