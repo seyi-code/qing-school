@@ -32,9 +32,51 @@ const UpdateStaffSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-async function generateStaffId(): Promise<string> {
-  const count = await prisma.staff.count();
-  return `KMS-STF-${String(count + 1).padStart(4, "0")}`;
+async function generateStaffId(schoolId: string | null | undefined): Promise<string> {
+  const school = schoolId
+    ? await prisma.school.findUnique({ where: { id: schoolId }, select: { shortName: true, slug: true } })
+    : null;
+  const tag = (school?.shortName || school?.slug || "SCH")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 6) || "SCH";
+  const count = await prisma.staff.count({
+    where: schoolId ? { schoolId } : undefined,
+  });
+  for (let i = count + 1; i < count + 500; i++) {
+    const candidate = `${tag}-STF-${String(i).padStart(4, "0")}`;
+    const exists = await prisma.staff.findUnique({ where: { staffId: candidate } });
+    if (!exists) return candidate;
+  }
+  return `${tag}-STF-${Date.now().toString(36).toUpperCase()}`;
+}
+
+async function repairStaffIdsForSchool(schoolId: string) {
+  const school = await prisma.school.findUnique({ where: { id: schoolId } });
+  if (!school) return { fixed: 0, details: [] as { from: string; to: string }[] };
+  const tag = (school.shortName || school.slug)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 6);
+  const staff = await prisma.staff.findMany({
+    where: { schoolId },
+    orderBy: { createdAt: "asc" },
+  });
+  const details: { from: string; to: string }[] = [];
+  let n = 0;
+  for (const s of staff) {
+    const expectedPrefix = `${tag}-STF-`;
+    if (s.staffId.toUpperCase().startsWith(expectedPrefix)) continue;
+    n += 1;
+    let to = `${tag}-STF-${String(n).padStart(4, "0")}`;
+    while (await prisma.staff.findFirst({ where: { staffId: to, NOT: { id: s.id } } })) {
+      n += 1;
+      to = `${tag}-STF-${String(n).padStart(4, "0")}`;
+    }
+    details.push({ from: s.staffId, to });
+    await prisma.staff.update({ where: { id: s.id }, data: { staffId: to } });
+  }
+  return { fixed: details.length, details };
 }
 
 export async function GET() {
@@ -139,6 +181,26 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => null);
+
+  if (body?.action === "repairStaffIds") {
+    if (!["PLATFORM_ADMIN", "ADMIN", "IT"].includes(session.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const schoolId = await resolveSchoolId(session);
+    if (!schoolId) {
+      return NextResponse.json({ error: "No active school" }, { status: 400 });
+    }
+    const result = await repairStaffIdsForSchool(schoolId);
+    await logAudit({
+      userId: session.userId,
+      schoolId,
+      action: "REPAIR_STAFF_IDS",
+      entity: "Staff",
+      details: result,
+    });
+    return NextResponse.json({ ok: true, ...result });
+  }
+
   const parsed = CreateStaffSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid data" }, { status: 400 });
@@ -166,7 +228,7 @@ export async function POST(req: Request) {
   const staff = await prisma.staff.create({
     data: {
       schoolId: schoolIdCreate ?? undefined,
-      staffId: await generateStaffId(),
+      staffId: await generateStaffId(schoolIdCreate),
       userId: user.id,
       firstName: data.firstName,
       lastName: data.lastName,
