@@ -195,83 +195,95 @@ export function ClassManager({
   return (
     <div className="grid md:grid-cols-3 gap-6">
       <div className="md:col-span-2 space-y-4">
-        <div className="mb-2">
+        <div className="ledger-block">
+          <h3 className="font-serif text-lg mb-2">Classes catalogue</h3>
           <input
             type="search"
             placeholder="Filter classes…"
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
-            className="w-full max-w-sm border border-line px-3 py-2 text-sm bg-white rounded-lg"
+            className="w-full border border-line px-3 py-2 text-sm bg-white rounded-lg mb-3"
           />
-        </div>
-        {visibleClasses.length === 0 && classFilter.trim() && (
-          <p className="text-sm text-ink/50">No classes match “{classFilter}”.</p>
-        )}
-        {visibleClasses.map((c) => {
-          const totalStudents = c.arms.reduce((n, a) => n + a.studentCount, 0);
-          return (
-            <div key={c.id} className="ledger-block">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="font-serif text-lg">{c.name}</h3>
-                <div className="flex gap-1 shrink-0">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => rename("class", c.id, c.name)}
-                    className="text-xs text-navy border border-navy/30 px-2 py-1 hover:bg-navy/5 disabled:opacity-50"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => setConfirm({ kind: "class", id: c.id, label: c.name })}
-                    className="text-xs text-brick border border-brick/40 px-2 py-1 hover:bg-brick hover:text-paper disabled:opacity-50"
-                    title={
-                      totalStudents > 0
-                        ? "Blocked while students are assigned"
-                        : "Delete empty class"
-                    }
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              <ul className="text-sm space-y-1">
-                {c.arms.map((a) => (
-                  <li key={a.id} className="flex justify-between items-center gap-2">
-                    <span>
-                      Arm {a.name}
-                      <span className="text-ink/50 ml-2">{a.studentCount} students</span>
-                    </span>
-                    <span className="flex gap-2 shrink-0">
+          {visibleClasses.length === 0 && classFilter.trim() && (
+            <p className="text-sm text-ink/50 mb-2">No classes match “{classFilter}”.</p>
+          )}
+          {classes.length === 0 && (
+            <p className="text-sm text-ink/50">No classes yet. Add JSS 1, SSS 1, etc. on the right.</p>
+          )}
+          <div className="space-y-3">
+            {visibleClasses.map((c) => {
+              const totalStudents = c.arms.reduce((n, a) => n + a.studentCount, 0);
+              return (
+                <div key={c.id} className="rounded-lg border border-line px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h4 className="font-medium">{c.name}</h4>
+                    <div className="flex gap-1 shrink-0">
                       <button
                         type="button"
                         disabled={busy}
-                        onClick={() => rename("arm", a.id, a.name)}
-                        className="text-[11px] text-navy/80 underline hover:text-navy disabled:opacity-50"
+                        onClick={() => rename("class", c.id, c.name)}
+                        className="text-xs text-navy border border-navy/30 px-2 py-1 hover:bg-navy/5 disabled:opacity-50"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
                         disabled={busy}
-                        onClick={() =>
-                          setConfirm({ kind: "arm", id: a.id, label: `${c.name} · ${a.name}` })
+                        onClick={() => setConfirm({ kind: "class", id: c.id, label: c.name })}
+                        className="text-xs text-brick border border-brick/40 px-2 py-1 hover:bg-brick hover:text-paper disabled:opacity-50"
+                        title={
+                          totalStudents > 0
+                            ? "Blocked while students are assigned"
+                            : "Delete empty class"
                         }
-                        className="text-[11px] text-brick/80 underline hover:text-brick disabled:opacity-50"
                       >
                         Delete
                       </button>
-                    </span>
-                  </li>
-                ))}
-                {c.arms.length === 0 && <li className="text-ink/50">No arms yet.</li>}
-              </ul>
-            </div>
-          );
-        })}
-        {classes.length === 0 && <p className="text-ink/50">No classes yet.</p>}
+                    </div>
+                  </div>
+                  <ul className="text-sm space-y-1">
+                    {c.arms.map((a) => (
+                      <li key={a.id} className="flex justify-between items-center gap-2">
+                        <span>
+                          Arm {a.name}
+                          <span className="text-ink/50 ml-2">{a.studentCount} students</span>
+                        </span>
+                        <span className="flex gap-2 shrink-0">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => rename("arm", a.id, a.name)}
+                            className="text-[11px] text-navy/80 underline hover:text-navy disabled:opacity-50"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() =>
+                              setConfirm({
+                                kind: "arm",
+                                id: a.id,
+                                label: `${c.name} · ${a.name}`,
+                              })
+                            }
+                            className="text-[11px] text-brick/80 underline hover:text-brick disabled:opacity-50"
+                          >
+                            Delete
+                          </button>
+                        </span>
+                      </li>
+                    ))}
+                    {c.arms.length === 0 && <li className="text-ink/50">No arms yet.</li>}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-ink/50 mt-3">
+            Create classes, then add arms (A, B…). Assign subjects and teachers after.
+          </p>
+        </div>
 
         <div className="ledger-block">
           <h3 className="font-serif text-lg mb-2">Subjects catalogue</h3>
