@@ -3,12 +3,11 @@ import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { can, homeRouteForRole } from "@/lib/permissions";
 import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
-import { formatDate } from "@/lib/format";
 import { redirect } from "next/navigation";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { SCHOOL } from "@/lib/school-config";
 import { Kpi } from "@/components/ui/Kpi";
 import { NoticesBoard } from "./NoticesBoard";
+import { ComplaintsBoard } from "./ComplaintsBoard";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +56,8 @@ export default async function NoticesPage() {
     }),
   ]);
 
+  const openCount = complaints.filter((c) => (c.status || "OPEN") === "OPEN").length;
+
   return (
     <PortalShell
       role={session.role}
@@ -64,15 +65,15 @@ export default async function NoticesPage() {
       subtitle="Notices and public complaints"
       email={session.email}
     >
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
         <Kpi label="Notices" value={String(notices.length)} tone="navy" icon="📢" />
         <Kpi label="Complaints" value={String(complaints.length)} tone="gold" icon="!" />
+        <Kpi label="Open tickets" value={String(openCount)} tone={openCount ? "gold" : "sage"} icon="…" />
         <Kpi
           label="On web"
           value={String(notices.filter((n) => n.publishToWeb).length)}
           tone="sage"
           icon="🌐"
-          className="col-span-2 sm:col-span-1"
         />
       </div>
 
@@ -89,22 +90,18 @@ export default async function NoticesPage() {
 
       <section className="rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-white p-4 sm:p-5 shadow-sm">
         <h2 className="font-serif text-lg text-navy mb-3">Public complaints / feedback</h2>
-        {complaints.length === 0 ? (
-          <EmptyState
-            title="No complaints"
-            description="Items submitted from the public site appear here."
-          />
-        ) : (
-          <ul className="space-y-3">
-            {complaints.map((n) => (
-              <li key={n.id} className="rounded-xl border border-line/80 bg-white/80 p-3">
-                <p className="font-medium text-sm text-navy">{n.title}</p>
-                <p className="text-xs text-ink/50">{formatDate(n.createdAt)}</p>
-                <p className="text-sm text-ink/70 mt-1 whitespace-pre-wrap">{n.body}</p>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ComplaintsBoard
+          complaints={complaints.map((c) => ({
+            id: c.id,
+            title: c.title,
+            body: c.body,
+            status: c.status || "OPEN",
+            internalNote: c.internalNote ?? null,
+            contactName: c.contactName ?? null,
+            contactValue: c.contactValue ?? null,
+            createdAt: c.createdAt,
+          }))}
+        />
       </section>
     </PortalShell>
   );
