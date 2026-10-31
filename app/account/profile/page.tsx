@@ -55,6 +55,16 @@ export default async function ProfilePage() {
       email={session.email}
       schoolName={user.student?.school?.name}
       schoolShortName={user.student?.school?.shortName}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard" className="btn-ghost text-sm">
+            ← Dashboard
+          </Link>
+          <Link href="/account/password" className="btn-ghost text-sm">
+            Change password
+          </Link>
+        </div>
+      }
     >
       <div className="max-w-lg space-y-4 sm:space-y-5">
         <section className="rounded-xl border border-line/80 bg-white p-4 sm:p-5 shadow-sm space-y-3 text-sm">
