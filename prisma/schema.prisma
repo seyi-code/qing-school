@@ -598,9 +598,15 @@ model Notice {
   body         String
   audience     String   @default("ALL")
   publishToWeb Boolean  @default(false)
+  // Complaint workflow: OPEN | ACKNOWLEDGED | RESOLVED | ARCHIVED
+  status       String   @default("OPEN")
+  internalNote String?
+  contactName  String?
+  contactValue String?
   createdBy    String?
   createdAt    DateTime @default(now())
   @@index([schoolId])
+  @@index([audience, status])
 }
 
 model MessageLog {
