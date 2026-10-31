@@ -10,8 +10,11 @@ import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 
 const CreateSchema = z.object({
   name: z.string().min(1).max(120),
-  contact: z.string().min(5).max(120),
-  subject: z.string().min(3).max(150),
+  // Public form sends phone + email; older clients may send contact + subject
+  contact: z.string().min(5).max(120).optional(),
+  phone: z.string().max(40).optional(),
+  email: z.string().max(120).optional(),
+  subject: z.string().min(3).max(150).optional(),
   message: z.string().min(10).max(2000),
   schoolSlug: z.string().min(1).max(80).optional(),
 });
@@ -41,6 +44,10 @@ function looksLikePhone(v: string) {
 }
 
 function parseContactFromBody(body: string): string {
+  const email = body.match(/Email:\s*(.+)/i)?.[1]?.trim().split("\n")[0].trim();
+  if (email) return email;
+  const phone = body.match(/Phone:\s*(.+)/i)?.[1]?.trim().split("\n")[0].trim();
+  if (phone) return phone;
   const m = body.match(/Contact:\s*(.+)/i);
   return (m?.[1] || "").trim().split("\n")[0].trim();
 }
@@ -169,13 +176,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please fill all fields properly" }, { status: 400 });
   }
 
-  const { name, contact, subject, message, schoolSlug } = parsed.data;
+  const { name, message, schoolSlug } = parsed.data;
+  const phone = (parsed.data.phone || "").trim();
+  const email = (parsed.data.email || "").trim();
+  const contact =
+    (parsed.data.contact || "").trim() ||
+    phone ||
+    email;
+  if (!contact || contact.length < 5) {
+    return NextResponse.json(
+      { error: "Please provide a phone number or email" },
+      { status: 400 }
+    );
+  }
+  const subject =
+    (parsed.data.subject || "").trim() ||
+    (message.trim().slice(0, 80) || "Contact message");
+
   const schoolId = await resolveComplaintSchoolId(schoolSlug);
+
+  const contactLines = [
+    phone ? `Phone: ${phone}` : null,
+    email ? `Email: ${email}` : null,
+    !phone && !email ? `Contact: ${contact}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const notice = await prisma.notice.create({
     data: {
       title: `[Complaint] ${subject}`,
-      body: `From: ${name}\nContact: ${contact}\n\n${message}`,
+      body: `From: ${name}\n${contactLines}\n\n${message}`,
       audience: "COMPLAINT",
       publishToWeb: false,
       status: "OPEN",
