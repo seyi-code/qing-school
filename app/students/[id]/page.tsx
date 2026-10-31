@@ -98,8 +98,40 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         </div>
       }
     >
+      <nav
+        aria-label="On this page"
+        className="hidden md:flex flex-wrap gap-2 mb-4 sticky top-[4.5rem] z-20 bg-[#f5f7fa]/95 backdrop-blur-sm py-2 border-b border-line/60"
+      >
+        {canManage ? (
+          <a
+            href="#student-edit"
+            className="text-xs font-medium px-3 py-1.5 rounded-full border border-line bg-white text-navy hover:bg-navy/5"
+          >
+            Edit
+          </a>
+        ) : null}
+        <a
+          href="#student-overview"
+          className="text-xs font-medium px-3 py-1.5 rounded-full border border-line bg-white text-navy hover:bg-navy/5"
+        >
+          Overview
+        </a>
+        <a
+          href="#student-documents"
+          className="text-xs font-medium px-3 py-1.5 rounded-full border border-line bg-white text-navy hover:bg-navy/5"
+        >
+          Documents
+        </a>
+        <a
+          href="#student-results"
+          className="text-xs font-medium px-3 py-1.5 rounded-full border border-line bg-white text-navy hover:bg-navy/5"
+        >
+          Results
+        </a>
+      </nav>
+
       {canManage && (
-        <div className="mb-4 sm:mb-5 space-y-3 max-w-5xl">
+        <div id="student-edit" className="mb-4 sm:mb-5 space-y-3 max-w-5xl scroll-mt-28">
           <EnableStudentPortalButton
             studentId={student.id}
             hasPortal={Boolean(student.userId)}
@@ -137,7 +169,10 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-5 max-w-6xl">
+      <div
+        id="student-overview"
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-5 max-w-6xl scroll-mt-28"
+      >
         <Card title="Bio data">
           <dl className="text-sm space-y-2">
             <Row label="Class / Arm" value={classLabel} />
@@ -206,54 +241,58 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         </Card>
       </div>
 
-      <StudentDocuments
-        studentId={student.id}
-        canManage={canManage}
-        documents={student.documents.map((d) => ({
-          id: d.id,
-          label: d.label,
-          fileUrl: d.fileUrl,
-          uploadedAt: d.uploadedAt.toISOString(),
-        }))}
-      />
+      <div id="student-documents" className="scroll-mt-28">
+        <StudentDocuments
+          studentId={student.id}
+          canManage={canManage}
+          documents={student.documents.map((d) => ({
+            id: d.id,
+            label: d.label,
+            fileUrl: d.fileUrl,
+            uploadedAt: d.uploadedAt.toISOString(),
+          }))}
+        />
+      </div>
 
-      <Card title="Results (all terms)" flush className="mt-4 sm:mt-5 max-w-6xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-ink/50">
-                <th className="py-2.5 px-4 font-medium">Subject</th>
-                <th className="py-2.5 px-2 font-medium text-right">CA1</th>
-                <th className="py-2.5 px-2 font-medium text-right">CA2</th>
-                <th className="py-2.5 px-2 font-medium text-right">Exam</th>
-                <th className="py-2.5 px-2 font-medium text-right">Total</th>
-                <th className="py-2.5 px-2 font-medium text-right">Grade</th>
-                <th className="py-2.5 px-4 font-medium">Remark</th>
-              </tr>
-            </thead>
-            <tbody>
-              {student.scores.map((s) => (
-                <tr key={s.id} className="border-b border-line/70 last:border-0">
-                  <td className="py-2 px-4">{s.armSubject.subject.name}</td>
-                  <td className="py-2 px-2 text-right tabular-nums">{s.ca1}</td>
-                  <td className="py-2 px-2 text-right tabular-nums">{s.ca2}</td>
-                  <td className="py-2 px-2 text-right tabular-nums">{s.exam}</td>
-                  <td className="py-2 px-2 text-right font-semibold tabular-nums">{s.total}</td>
-                  <td className="py-2 px-2 text-right">{s.grade ?? "—"}</td>
-                  <td className="py-2 px-4 text-ink/70">{s.remark ?? "—"}</td>
+      <div id="student-results" className="scroll-mt-28 mt-4 sm:mt-5 max-w-6xl">
+        <Card title="Results (all terms)" flush>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-ink/50">
+                  <th className="py-2.5 px-4 font-medium">Subject</th>
+                  <th className="py-2.5 px-2 font-medium text-right">CA1</th>
+                  <th className="py-2.5 px-2 font-medium text-right">CA2</th>
+                  <th className="py-2.5 px-2 font-medium text-right">Exam</th>
+                  <th className="py-2.5 px-2 font-medium text-right">Total</th>
+                  <th className="py-2.5 px-2 font-medium text-right">Grade</th>
+                  <th className="py-2.5 px-4 font-medium">Remark</th>
                 </tr>
-              ))}
-              {student.scores.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-center text-ink/40 py-8">
-                    No scores entered yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+              </thead>
+              <tbody>
+                {student.scores.map((s) => (
+                  <tr key={s.id} className="border-b border-line/70 last:border-0">
+                    <td className="py-2 px-4">{s.armSubject.subject.name}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{s.ca1}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{s.ca2}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{s.exam}</td>
+                    <td className="py-2 px-2 text-right font-semibold tabular-nums">{s.total}</td>
+                    <td className="py-2 px-2 text-right">{s.grade ?? "—"}</td>
+                    <td className="py-2 px-4 text-ink/70">{s.remark ?? "—"}</td>
+                  </tr>
+                ))}
+                {student.scores.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="text-center text-ink/40 py-8">
+                      No scores entered yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
     </PortalShell>
   );
 }
