@@ -19,20 +19,54 @@ export default async function ReportTemplatePage() {
   const name = schoolId ? `school:${schoolId}` : "Default";
 
   const [tpl, school] = await Promise.all([
-    prisma.reportCardTemplate.findUnique({ where: { name } }),
+    prisma.reportCardTemplate.findFirst({
+      where: { name },
+      orderBy: { updatedAt: "desc" },
+    }),
     schoolId
       ? prisma.school.findUnique({
           where: { id: schoolId },
-          select: { name: true, shortName: true, logoUrl: true },
+          select: {
+            name: true,
+            motto: true,
+            logoUrl: true,
+            primaryColor: true,
+            accentColor: true,
+          },
         })
-      : Promise.resolve(null),
+      : null,
   ]);
+
+  const config = tpl
+    ? JSON.parse(tpl.configJson)
+    : {
+        schoolName: school?.name || "Your School",
+        motto: school?.motto || "",
+        footerNote: "This is a computer-generated report.",
+        showPosition: true,
+        showAttendance: true,
+        principalTitle: "Principal",
+        headerBg: school?.primaryColor || "#0f2748",
+        accentColor: school?.accentColor || "#c9a227",
+        logoUrl: school?.logoUrl || "/logo.svg",
+        domainsMode: "auto",
+        sections: [
+          "header",
+          "studentInfo",
+          "scoresTable",
+          "attendance",
+          "position",
+          "remarks",
+          "signatures",
+          "footer",
+        ],
+      };
 
   return (
     <PortalShell
       role={session.role}
-      title="Report card template"
-      subtitle="Header, logo, and grading notes for printed report cards"
+      title="Report card designer"
+      subtitle="Logo, colours, section order — for this school only"
       email={session.email}
       actions={
         <Link href="/settings" className="btn-ghost text-sm">
@@ -40,21 +74,11 @@ export default async function ReportTemplatePage() {
         </Link>
       }
     >
-      <div className="max-w-2xl">
-        <ReportTemplateForm
-          schoolName={school?.name ?? "School"}
-          schoolShortName={school?.shortName ?? ""}
-          initial={{
-            headerText: tpl?.headerText ?? "",
-            footerText: tpl?.footerText ?? "",
-            logoUrl: tpl?.logoUrl ?? school?.logoUrl ?? "",
-            showPosition: tpl?.showPosition ?? true,
-            showAverage: tpl?.showAverage ?? true,
-            showGrade: tpl?.showGrade ?? true,
-            showRemark: tpl?.showRemark ?? true,
-          }}
-        />
-      </div>
+      <ReportTemplateForm initial={config} />
+      <p className="text-xs text-ink/50 mt-4">
+        Each school has its own layout. Changes here do not affect other tenants. The printed card on a
+        student profile uses the full design (navy/gold); this preview is a simplified layout check.
+      </p>
     </PortalShell>
   );
 }
