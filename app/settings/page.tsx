@@ -96,26 +96,48 @@ export default async function SettingsPage() {
           {bands.length === 0 ? (
             <p className="text-sm text-ink/50">No grade bands configured. Use Seed above.</p>
           ) : (
-            <table className="ledger text-sm">
-              <thead>
-                <tr>
-                  <th>Range</th>
-                  <th>Grade</th>
-                  <th>Remark</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile: stacked cards */}
+              <ul className="sm:hidden space-y-2 text-sm">
                 {bands.map((b) => (
-                  <tr key={b.id}>
-                    <td className="tabular-nums">
+                  <li
+                    key={b.id}
+                    className="flex items-center justify-between gap-3 border border-line rounded-lg px-3 py-2"
+                  >
+                    <span className="tabular-nums text-ink/70 text-xs">
                       {b.minScore}–{b.maxScore}
-                    </td>
-                    <td className="font-medium">{b.grade}</td>
-                    <td className="text-ink/60">{b.remark || "—"}</td>
-                  </tr>
+                    </span>
+                    <span className="font-semibold text-navy">{b.grade}</span>
+                    <span className="text-ink/55 text-xs text-right min-w-0 truncate">
+                      {b.remark || "—"}
+                    </span>
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+              {/* Desktop / tablet: table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="ledger text-sm w-full">
+                  <thead>
+                    <tr>
+                      <th className="text-left">Range</th>
+                      <th className="text-left">Grade</th>
+                      <th className="text-left">Remark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bands.map((b) => (
+                      <tr key={b.id}>
+                        <td className="tabular-nums whitespace-nowrap">
+                          {b.minScore}–{b.maxScore}
+                        </td>
+                        <td className="font-medium">{b.grade}</td>
+                        <td className="text-ink/60">{b.remark || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
 
