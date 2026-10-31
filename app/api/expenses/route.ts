@@ -22,17 +22,34 @@ const DeleteSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getSession();
   if (!session || !can(session.role, "MANAGE_EXPENSES")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const schoolId = await resolveSchoolId(session);
+  const url = new URL(req.url);
+  const from = url.searchParams.get("from")?.trim() || "";
+  const to = url.searchParams.get("to")?.trim() || "";
+
+  const dateFilter: { gte?: Date; lte?: Date } = {};
+  if (from) dateFilter.gte = new Date(from);
+  if (to) {
+    const end = new Date(to);
+    end.setHours(23, 59, 59, 999);
+    dateFilter.lte = end;
+  }
+
+  const where = {
+    ...schoolWhere(schoolId),
+    ...(Object.keys(dateFilter).length ? { date: dateFilter } : {}),
+  };
+
   const expenses = await prisma.expenseRecord.findMany({
-    where: schoolWhere(schoolId),
+    where,
     orderBy: { date: "desc" },
-    take: 200,
+    take: 1000,
   });
 
   const incomeAgg = await prisma.payment.aggregate({
@@ -43,7 +60,7 @@ export async function GET() {
     _sum: { amount: true },
   });
   const expenseAgg = await prisma.expenseRecord.aggregate({
-    where: schoolWhere(schoolId),
+    where,
     _sum: { amount: true },
   });
 
