@@ -118,7 +118,9 @@ export function PortalShell({
           </div>
         </header>
 
-        <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 max-w-[1400px] w-full mx-auto">{children}</main>
+        <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 w-full max-w-6xl xl:max-w-[1400px] mx-auto">
+          {children}
+        </main>
       </div>
     </div>
   );
