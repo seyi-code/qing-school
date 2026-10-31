@@ -55,10 +55,10 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["TEACHER"],
   },
   {
-    href: "/notices",
+    href: "/portal/notices",
     label: "School notices",
     icon: "📢",
-    roles: ["PARENT"],
+    roles: ["PARENT", "STUDENT", "TEACHER"],
   },
   {
     href: "/result-checker",
@@ -115,151 +115,52 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "TEACHER", "PRINCIPAL", "STUDENT"],
   },
   {
-    href: "/reports",
-    label: "Reports",
-    icon: "📊",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "PRINCIPAL", "IT"],
-  },
-  {
     href: "/fees",
-    label: "Fees",
+    label: "Fees & Payments",
     icon: "₦",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY"],
-  },
-  {
-    href: "/fees/structure",
-    label: "Fee structure",
-    icon: "📋",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT"],
+    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY", "PRINCIPAL"],
   },
   {
     href: "/expenses",
     label: "Expenses",
-    icon: "💸",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT"],
+    icon: "↓",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "IT"],
   },
   {
-    href: "/payroll",
-    label: "Payroll",
-    icon: "💼",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT"],
-  },
-  {
-    href: "/modules",
-    label: "Modules hub",
-    icon: "▦",
+    href: "/notices",
+    label: "Communication",
+    icon: "📢",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
   },
   {
     href: "/library",
     label: "Library",
     icon: "📚",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "TEACHER", "PRINCIPAL"],
-  },
-  {
-    href: "/hostel",
-    label: "Hostel",
-    icon: "🏘",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
-  },
-  {
-    href: "/transport",
-    label: "Transport",
-    icon: "🚌",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL", "ACCOUNTANT"],
-  },
-  {
-    href: "/notices",
-    label: "Notices",
-    icon: "📢",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
-  },
-  {
-    href: "/cms",
-    label: "Website CMS",
-    icon: "🌐",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY"],
   },
   {
     href: "/settings",
-    label: "Admin Settings",
+    label: "Settings",
     icon: "⚙",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
-  },
-  {
-    href: "/settings/ops",
-    label: "Ops / SMS / Backup",
-    icon: "🛠",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
-  },
-  {
-    href: "/settings/audit",
-    label: "Audit trail",
-    icon: "📜",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
-  },
-  {
-    href: "/settings/report-template",
-    label: "Report designer",
-    icon: "🖨",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL"],
-  },
-  {
-    href: "/settings/go-live",
-    label: "Go-live checklist",
-    icon: "🚀",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
 ];
 
-function rolePortalLabel(role: Role): string {
-  switch (role) {
-    case "PLATFORM_ADMIN":
-      return "Platform admin portal";
-    case "ADMIN":
-      return "School admin portal";
-    case "IT":
-      return "IT portal";
-    case "PRINCIPAL":
-      return "Principal portal";
-    case "SECRETARY":
-      return "Secretary portal";
-    case "ACCOUNTANT":
-      return "Accounts portal";
-    case "TEACHER":
-      return "Teacher portal";
-    case "STUDENT":
-      return "Student portal";
-    case "PARENT":
-      return "Parent portal";
-    default:
-      return "Portal";
-  }
-}
-
 export function Sidebar({
   role,
-  onNavigate,
   schoolLabel,
   schoolName,
+  onNavigate,
 }: {
   role: Role;
-  onNavigate?: () => void;
   schoolLabel?: string;
   schoolName?: string;
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const workingAsSchool = Boolean(schoolLabel);
-  const visible = NAV_ITEMS.filter((item) => {
-    if (!item.roles.includes(role)) return false;
-    if (workingAsSchool && (item.href === "/platform" || item.href === "/onboarding")) {
-      return false;
-    }
-    return true;
-  });
-
-  const brand = schoolLabel || schoolName || "Qing School";
+  const visible = NAV_ITEMS.filter((i) => i.roles.includes(role));
+  const workingAsSchool = Boolean(schoolLabel || schoolName);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -267,33 +168,42 @@ export function Sidebar({
     router.refresh();
   }
 
+  const portalTitle =
+    role === "STUDENT"
+      ? "STUDENT PORTAL"
+      : role === "PARENT"
+        ? "PARENT PORTAL"
+        : role === "TEACHER"
+          ? "TEACHER PORTAL"
+          : role === "PLATFORM_ADMIN"
+            ? "PLATFORM"
+            : "ADMIN";
+
   return (
-    <aside className="w-60 max-w-full h-full max-h-dvh bg-[#0c2744] text-paper flex flex-col no-print">
-      <div className="px-4 py-4 border-b border-white/10 flex items-start justify-between gap-2 shrink-0">
-        <div className="flex items-center gap-2.5 min-w-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={KMS_LOGO_URL}
-            alt=""
-            className="w-10 h-10 rounded-full object-contain bg-white/10 border border-white/15 shrink-0"
-          />
-          <div className="min-w-0">
-            <p className="font-serif text-base leading-tight truncate text-white" title={schoolName || brand}>
-              {brand}
-            </p>
-            <p className="text-[10px] text-[#d2ae3b]/90 truncate font-semibold tracking-wide uppercase mt-0.5">
-              {rolePortalLabel(role)}
-            </p>
-          </div>
+    <aside className="flex h-full w-full max-w-[16.5rem] flex-col bg-[#0f2744] text-white">
+      <div className="shrink-0 flex items-center gap-2.5 px-4 py-4 border-b border-white/10">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={KMS_LOGO_URL}
+          alt=""
+          className="h-9 w-9 rounded-full object-cover bg-white/10"
+        />
+        <div className="min-w-0">
+          <p className="font-serif text-sm text-white truncate">
+            {schoolLabel || schoolName || "Qing School"}
+          </p>
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-[#d2ae3b]">
+            {portalTitle}
+          </p>
         </div>
         {onNavigate && (
           <button
             type="button"
+            className="ml-auto lg:hidden text-white/70 p-1"
+            aria-label="Close"
             onClick={onNavigate}
-            className="lg:hidden text-paper/70 hover:text-[#d2ae3b] text-2xl leading-none px-1"
-            aria-label="Close menu"
           >
-            &times;
+            ✕
           </button>
         )}
       </div>
