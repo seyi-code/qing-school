@@ -14,6 +14,14 @@ const CreateSchema = z.object({
   date: z.string().optional(),
 });
 
+const UpdateSchema = CreateSchema.extend({
+  id: z.string().min(1),
+});
+
+const DeleteSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function GET() {
   const session = await getSession();
   if (!session || !can(session.role, "MANAGE_EXPENSES")) {
@@ -85,4 +93,78 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ expense: exp }, { status: 201 });
+}
+
+export async function PATCH(req: Request) {
+  const session = await getSession();
+  if (!session || !can(session.role, "MANAGE_EXPENSES")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const parsed = UpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid expense data" }, { status: 400 });
+  }
+
+  const schoolId = await resolveSchoolId(session);
+  const existing = await prisma.expenseRecord.findFirst({
+    where: { id: parsed.data.id, ...schoolWhere(schoolId) },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+  }
+
+  const exp = await prisma.expenseRecord.update({
+    where: { id: existing.id },
+    data: {
+      category: parsed.data.category,
+      description: parsed.data.description,
+      amount: parsed.data.amount,
+      date: parsed.data.date ? new Date(parsed.data.date) : existing.date,
+    },
+  });
+
+  await logAudit({
+    userId: session.userId,
+    action: "UPDATE_EXPENSE",
+    entity: "ExpenseRecord",
+    entityId: exp.id,
+    details: { amount: toMoney(exp.amount), category: exp.category },
+  });
+
+  return NextResponse.json({ expense: exp });
+}
+
+export async function DELETE(req: Request) {
+  const session = await getSession();
+  if (!session || !can(session.role, "MANAGE_EXPENSES")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const parsed = DeleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const schoolId = await resolveSchoolId(session);
+  const existing = await prisma.expenseRecord.findFirst({
+    where: { id: parsed.data.id, ...schoolWhere(schoolId) },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+  }
+
+  await prisma.expenseRecord.delete({ where: { id: existing.id } });
+
+  await logAudit({
+    userId: session.userId,
+    action: "DELETE_EXPENSE",
+    entity: "ExpenseRecord",
+    entityId: existing.id,
+    details: { amount: toMoney(existing.amount), category: existing.category },
+  });
+
+  return NextResponse.json({ ok: true });
 }

@@ -1,43 +1,115 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const CATEGORIES = [
   "Utilities",
   "Maintenance",
   "Stationery",
-  "Salaries",
   "Transport",
+  "Salaries",
   "Feeding",
   "Security",
   "Other",
 ];
 
-export function ExpenseForm() {
+export type ExpenseEdit = {
+  id: string;
+  category: string;
+  description: string;
+  amount: number;
+  date: string;
+};
+
+export function ExpenseForm({
+  editing,
+  onCancel,
+}: {
+  editing?: ExpenseEdit | null;
+  onCancel?: () => void;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [category, setCategory] = useState(editing?.category || CATEGORIES[0]);
+  const [description, setDescription] = useState(editing?.description || "");
+  const [amount, setAmount] = useState(editing?.amount ? String(editing.amount) : "");
+  const [date, setDate] = useState(
+    editing?.date || new Date().toISOString().slice(0, 10)
+  );
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (editing) {
+      setCategory(editing.category || CATEGORIES[0]);
+      setDescription(editing.description || "");
+      setAmount(String(editing.amount ?? ""));
+      setDate(editing.date || new Date().toISOString().slice(0, 10));
+      setError(null);
+    } else {
+      setCategory(CATEGORIES[0]);
+      setDescription("");
+      setAmount("");
+      setDate(new Date().toISOString().slice(0, 10));
+      setError(null);
+    }
+  }, [editing]);
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
-    const fd = new FormData(e.currentTarget);
-    const body = Object.fromEntries(fd.entries());
+    setError(null);
+    const payload = {
+      category,
+      description: description.trim(),
+      amount: Number(amount),
+      date,
+      ...(editing ? { id: editing.id } : {}),
+    };
     try {
       const res = await fetch("/api/expenses", {
-        method: "POST",
+        method: editing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error || "Failed");
         setLoading(false);
         return;
       }
-      (e.target as HTMLFormElement).reset();
+      if (!editing) {
+        setCategory(CATEGORIES[0]);
+        setDescription("");
+        setAmount("");
+        setDate(new Date().toISOString().slice(0, 10));
+      }
+      onCancel?.();
+      router.refresh();
+    } catch {
+      setError("Network error");
+    }
+    setLoading(false);
+  }
+
+  async function onDelete() {
+    if (!editing) return;
+    if (!window.confirm("Delete this expense? This cannot be undone.")) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/expenses", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editing.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Delete failed");
+        setLoading(false);
+        return;
+      }
+      onCancel?.();
       router.refresh();
     } catch {
       setError("Network error");
@@ -47,10 +119,20 @@ export function ExpenseForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-3 text-sm">
+      {editing && (
+        <p className="text-xs text-navy/80 bg-navy/5 border border-navy/15 rounded-lg px-2.5 py-1.5">
+          Editing expense — change fields and save, or cancel.
+        </p>
+      )}
       {error && <p className="text-brick text-xs">{error}</p>}
       <div>
         <label className="block text-xs uppercase text-ink/50 mb-1">Category</label>
-        <select name="category" required className="w-full border border-line bg-white px-3 py-2">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          required
+          className="w-full border border-line bg-white px-3 py-2 rounded-lg"
+        >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -61,39 +143,63 @@ export function ExpenseForm() {
       <div>
         <label className="block text-xs uppercase text-ink/50 mb-1">Description</label>
         <input
-          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           required
-          className="w-full border border-line bg-white px-3 py-2"
+          className="w-full border border-line bg-white px-3 py-2 rounded-lg"
           placeholder="e.g. NEPA bill March"
         />
       </div>
       <div>
         <label className="block text-xs uppercase text-ink/50 mb-1">Amount (₦)</label>
         <input
-          name="amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
           type="number"
           min={1}
           step="0.01"
           required
-          className="w-full border border-line bg-white px-3 py-2"
+          className="w-full border border-line bg-white px-3 py-2 rounded-lg"
         />
       </div>
       <div>
         <label className="block text-xs uppercase text-ink/50 mb-1">Date</label>
         <input
-          name="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
           type="date"
-          className="w-full border border-line bg-white px-3 py-2"
-          defaultValue={new Date().toISOString().slice(0, 10)}
+          className="w-full border border-line bg-white px-3 py-2 rounded-lg"
         />
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-navy text-paper py-2 hover:bg-navy-light disabled:opacity-60"
-      >
-        {loading ? "Saving…" : "Save expense"}
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-navy text-paper py-2 rounded-lg hover:bg-navy-light disabled:opacity-60"
+        >
+          {loading ? "Saving…" : editing ? "Update expense" : "Save expense"}
+        </button>
+        {editing && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => onCancel?.()}
+              className="flex-1 border border-line py-2 rounded-lg text-ink/70 hover:bg-line/20 disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={onDelete}
+              className="flex-1 border border-brick/40 text-brick py-2 rounded-lg hover:bg-brick/5 disabled:opacity-60"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
     </form>
   );
 }
