@@ -12,27 +12,31 @@ import { ComplaintsBoard } from "./ComplaintsBoard";
 export const dynamic = "force-dynamic";
 
 async function scrubLegacyBranding() {
-  const stale = await prisma.notice.findMany({
-    where: {
-      OR: [
-        { title: { contains: "Qing" } },
-        { body: { contains: "Qing" } },
-        { title: { contains: "qing-school" } },
-        { body: { contains: "qing-school" } },
-      ],
-    },
-    take: 20,
-  });
-  for (const n of stale) {
-    await prisma.notice.update({
-      where: { id: n.id },
-      data: {
-        title: n.title.replace(/\bQing School\b/gi, SCHOOL.name).replace(/\bQing\b/gi, SCHOOL.shortName),
-        body: n.body
-          .replace(/\bQing School\b/gi, SCHOOL.name)
-          .replace(/\bQing\b/gi, SCHOOL.shortName),
+  try {
+    const stale = await prisma.notice.findMany({
+      where: {
+        OR: [
+          { title: { contains: "Qing" } },
+          { body: { contains: "Qing" } },
+          { title: { contains: "qing-school" } },
+          { body: { contains: "qing-school" } },
+        ],
       },
+      take: 20,
     });
+    for (const n of stale) {
+      await prisma.notice.update({
+        where: { id: n.id },
+        data: {
+          title: n.title.replace(/\bQing School\b/gi, SCHOOL.name).replace(/\bQing\b/gi, SCHOOL.shortName),
+          body: n.body
+            .replace(/\bQing School\b/gi, SCHOOL.name)
+            .replace(/\bQing\b/gi, SCHOOL.shortName),
+        },
+      });
+    }
+  } catch {
+    // never block the page if scrub fails
   }
 }
 
@@ -56,8 +60,6 @@ export default async function NoticesPage() {
     }),
   ]);
 
-  const openCount = complaints.filter((c) => (c.status || "OPEN") === "OPEN").length;
-
   return (
     <PortalShell
       role={session.role}
@@ -65,15 +67,15 @@ export default async function NoticesPage() {
       subtitle="Notices and public complaints"
       email={session.email}
     >
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
         <Kpi label="Notices" value={String(notices.length)} tone="navy" icon="📢" />
         <Kpi label="Complaints" value={String(complaints.length)} tone="gold" icon="!" />
-        <Kpi label="Open tickets" value={String(openCount)} tone={openCount ? "gold" : "sage"} icon="…" />
         <Kpi
           label="On web"
           value={String(notices.filter((n) => n.publishToWeb).length)}
           tone="sage"
           icon="🌐"
+          className="col-span-2 sm:col-span-1"
         />
       </div>
 
@@ -95,10 +97,6 @@ export default async function NoticesPage() {
             id: c.id,
             title: c.title,
             body: c.body,
-            status: c.status || "OPEN",
-            internalNote: c.internalNote ?? null,
-            contactName: c.contactName ?? null,
-            contactValue: c.contactValue ?? null,
             createdAt: c.createdAt,
           }))}
         />

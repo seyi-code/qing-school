@@ -16,12 +16,6 @@ const CreateSchema = z.object({
   schoolSlug: z.string().min(1).max(80).optional(),
 });
 
-const UpdateSchema = z.object({
-  id: z.string().min(1),
-  status: z.enum(["OPEN", "ACKNOWLEDGED", "RESOLVED", "ARCHIVED"]).optional(),
-  internalNote: z.string().max(2000).optional(),
-});
-
 const ReplySchema = z.object({
   id: z.string().min(1),
   reply: z.string().min(2).max(1500),
@@ -38,6 +32,11 @@ function looksLikeEmail(v: string) {
 function looksLikePhone(v: string) {
   const digits = v.replace(/\D/g, "");
   return digits.length >= 10 && digits.length <= 15;
+}
+
+function parseContactFromBody(body: string): string {
+  const m = body.match(/Contact:\s*(.+)/i);
+  return (m?.[1] || "").trim().split("\n")[0].trim();
 }
 
 async function resolveComplaintSchoolId(schoolSlug?: string | null) {
@@ -76,9 +75,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Complaint not found" }, { status: 404 });
     }
 
-    const contact =
-      existing.contactValue ||
-      (existing.body.match(/Contact:\s*(.+)/i)?.[1] || "").trim();
+    const contact = parseContactFromBody(existing.body);
     if (!contact) {
       return NextResponse.json({ error: "No contact on this complaint" }, { status: 400 });
     }
@@ -142,10 +139,7 @@ export async function POST(req: Request) {
     const stamp = `\n\n--- Reply (${new Date().toISOString().slice(0, 16)}) ---\n${replyText}`;
     const updated = await prisma.notice.update({
       where: { id: existing.id },
-      data: {
-        body: existing.body + stamp,
-        status: existing.status === "OPEN" ? "ACKNOWLEDGED" : existing.status,
-      },
+      data: { body: existing.body + stamp },
     });
 
     await logAudit({
@@ -173,9 +167,6 @@ export async function POST(req: Request) {
       body: `From: ${name}\nContact: ${contact}\n\n${message}`,
       audience: "COMPLAINT",
       publishToWeb: false,
-      status: "OPEN",
-      contactName: name,
-      contactValue: contact,
       schoolId: schoolId ?? undefined,
     },
   });
@@ -191,52 +182,6 @@ export async function POST(req: Request) {
     ok: true,
     message: "Thank you. The school office has received your message.",
   });
-}
-
-export async function PATCH(req: Request) {
-  const session = await getSession();
-  if (!session || !can(session.role, "MANAGE_NOTICES")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const body = await req.json().catch(() => null);
-  const parsed = UpdateSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid update" }, { status: 400 });
-  }
-
-  const schoolId = await resolveSchoolId(session);
-  const existing = await prisma.notice.findFirst({
-    where: {
-      id: parsed.data.id,
-      audience: "COMPLAINT",
-      ...schoolWhere(schoolId),
-    },
-  });
-  if (!existing) {
-    return NextResponse.json({ error: "Complaint not found" }, { status: 404 });
-  }
-
-  const data: { status?: string; internalNote?: string | null } = {};
-  if (parsed.data.status) data.status = parsed.data.status;
-  if (parsed.data.internalNote !== undefined) {
-    data.internalNote = parsed.data.internalNote.trim() || null;
-  }
-
-  const notice = await prisma.notice.update({
-    where: { id: existing.id },
-    data,
-  });
-
-  await logAudit({
-    userId: session.userId,
-    action: "UPDATE_COMPLAINT",
-    entity: "Notice",
-    entityId: notice.id,
-    details: data,
-  });
-
-  return NextResponse.json({ notice });
 }
 
 export async function DELETE(req: Request) {
