@@ -4,6 +4,8 @@ import { PortalShell } from "@/components/PortalShell";
 import { ActionTile } from "@/components/ui/ActionTile";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { schoolWhere } from "@/lib/tenant-scope";
+import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +36,15 @@ export default async function TeacherPortalPage() {
   }
 
   const studentCount = staff.classesLed.reduce((n, a) => n + a.students.length, 0);
+
+  const notices = await prisma.notice.findMany({
+    where: {
+      ...schoolWhere(staff.schoolId),
+      audience: { in: ["ALL", "STAFF"] },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 12,
+  });
 
   return (
     <PortalShell
@@ -75,6 +86,28 @@ export default async function TeacherPortalPage() {
         <ActionTile href="/notices" label="Notices" icon="📢" description="School announcements" />
         <ActionTile href="/cbt" label="CBT" icon="💻" description="Computer-based tests" />
       </div>
+
+      <section className="rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50/70 to-white p-4 sm:p-5 shadow-sm mb-6">
+        <h2 className="font-serif text-lg text-navy mb-1">School notices</h2>
+        <p className="text-xs text-ink/50 mb-3">Messages for staff and the whole school</p>
+        {notices.length === 0 ? (
+          <p className="text-sm text-ink/40 py-4 text-center">No notices right now</p>
+        ) : (
+          <ul className="space-y-3">
+            {notices.map((n) => (
+              <li key={n.id} className="rounded-lg border border-line/70 bg-white/90 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-medium text-sm text-navy">{n.title}</p>
+                  <span className="text-[10px] uppercase tracking-wide text-ink/45">
+                    {formatDate(n.createdAt)}
+                  </span>
+                </div>
+                <p className="text-sm text-ink/70 mt-1.5 whitespace-pre-wrap line-clamp-6">{n.body}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <section className="rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 sm:p-5 shadow-sm">
