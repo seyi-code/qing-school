@@ -17,6 +17,18 @@ const NoticeSchema = z.object({
   alsoSendSms: z.coerce.boolean().default(false),
 });
 
+const UpdateSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  body: z.string().min(1),
+  audience: z.enum(["ALL", "STAFF", "STUDENTS", "PARENTS"]),
+  publishToWeb: z.coerce.boolean().default(false),
+});
+
+const DeleteSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function GET() {
   const session = await getSession();
   const schoolId = session ? await resolveSchoolId(session) : null;
@@ -90,4 +102,86 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ notice, smsSent, smsSkipped }, { status: 201 });
+}
+
+export async function PATCH(req: Request) {
+  const session = await getSession();
+  if (!session || !can(session.role, "MANAGE_NOTICES")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const parsed = UpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid notice." }, { status: 400 });
+  }
+
+  const schoolId = await resolveSchoolId(session);
+  const existing = await prisma.notice.findFirst({
+    where: {
+      id: parsed.data.id,
+      NOT: { audience: "COMPLAINT" },
+      ...schoolWhere(schoolId),
+    },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Notice not found" }, { status: 404 });
+  }
+
+  const notice = await prisma.notice.update({
+    where: { id: existing.id },
+    data: {
+      title: parsed.data.title,
+      body: parsed.data.body,
+      audience: parsed.data.audience,
+      publishToWeb: parsed.data.publishToWeb,
+    },
+  });
+
+  await logAudit({
+    userId: session.userId,
+    action: "UPDATE_NOTICE",
+    entity: "Notice",
+    entityId: notice.id,
+    details: { audience: notice.audience, publishToWeb: notice.publishToWeb },
+  });
+
+  return NextResponse.json({ notice });
+}
+
+export async function DELETE(req: Request) {
+  const session = await getSession();
+  if (!session || !can(session.role, "MANAGE_NOTICES")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const parsed = DeleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const schoolId = await resolveSchoolId(session);
+  const existing = await prisma.notice.findFirst({
+    where: {
+      id: parsed.data.id,
+      NOT: { audience: "COMPLAINT" },
+      ...schoolWhere(schoolId),
+    },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Notice not found" }, { status: 404 });
+  }
+
+  await prisma.notice.delete({ where: { id: existing.id } });
+
+  await logAudit({
+    userId: session.userId,
+    action: "DELETE_NOTICE",
+    entity: "Notice",
+    entityId: existing.id,
+    details: { title: existing.title },
+  });
+
+  return NextResponse.json({ ok: true });
 }
