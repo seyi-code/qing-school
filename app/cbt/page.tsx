@@ -32,7 +32,17 @@ export default async function CbtPage() {
     const attempted = new Set(attempts.map((a) => a.examId));
 
     return (
-      <PortalShell role={session.role} title="CBT / Tests" subtitle="Open computer-based tests" email={session.email}>
+      <PortalShell
+        role={session.role}
+        title="CBT / Tests"
+        subtitle="Open computer-based tests"
+        email={session.email}
+        actions={
+          <Link href="/cbt/results" className="btn-ghost text-sm">
+            Results
+          </Link>
+        }
+      >
         <ul className="space-y-3">
           {exams.map((e) => (
             <li
@@ -91,13 +101,18 @@ export default async function CbtPage() {
   });
 
   return (
-    <PortalShell role={session.role} title="CBT" subtitle="Create MCQ tests for students" email={session.email}>
-      <div className="mb-4 flex flex-wrap gap-2">
+    <PortalShell
+      role={session.role}
+      title="CBT"
+      subtitle="Create MCQ tests for students"
+      email={session.email}
+      actions={
         <Link href="/cbt/results" className="btn-ghost text-sm">
           Results & essay grading
           {pendingGrading > 0 ? ` (${pendingGrading} pending)` : ""}
         </Link>
-      </div>
+      }
+    >
       <div className="grid grid-cols-2 gap-2.5 mb-4">
         <Kpi label="Exams" value={String(exams.length)} tone="navy" icon="📝" />
         <Kpi
