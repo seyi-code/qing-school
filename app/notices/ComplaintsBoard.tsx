@@ -9,22 +9,39 @@ export type ComplaintRow = {
   id: string;
   title: string;
   body: string;
+  status: string;
+  internalNote: string | null;
+  contactName: string | null;
+  contactValue: string | null;
   createdAt: string | Date;
 };
+
+const STATUSES = ["OPEN", "ACKNOWLEDGED", "RESOLVED", "ARCHIVED"] as const;
+
+function statusTone(s: string) {
+  switch (s) {
+    case "OPEN":
+      return "bg-gold/15 text-gold border-gold/30";
+    case "ACKNOWLEDGED":
+      return "bg-sky-100 text-sky-800 border-sky-200";
+    case "RESOLVED":
+      return "bg-sage/15 text-sage border-sage/30";
+    case "ARCHIVED":
+      return "bg-ink/5 text-ink/50 border-line";
+    default:
+      return "bg-line/40 text-ink/60 border-line";
+  }
+}
 
 function contactFromBody(body: string) {
   const m = body.match(/Contact:\s*(.+)/i);
   return (m?.[1] || "").trim().split("\n")[0].trim();
 }
 
-function nameFromBody(body: string) {
-  const m = body.match(/From:\s*(.+)/i);
-  return (m?.[1] || "").trim().split("\n")[0].trim();
-}
-
 export function ComplaintsBoard({ complaints }: { complaints: ComplaintRow[] }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [note, setNote] = useState("");
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +51,60 @@ export function ComplaintsBoard({ complaints }: { complaints: ComplaintRow[] }) 
 
   function select(c: ComplaintRow) {
     setSelectedId(c.id);
+    setNote(c.internalNote || "");
     setReply("");
     setError(null);
     setMsg(null);
+  }
+
+  async function setStatus(status: string) {
+    if (!selected) return;
+    setBusy(true);
+    setError(null);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/complaints", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selected.id, status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Failed");
+        setBusy(false);
+        return;
+      }
+      setMsg(`Marked ${status.toLowerCase()}`);
+      router.refresh();
+    } catch {
+      setError("Network error");
+    }
+    setBusy(false);
+  }
+
+  async function saveNote() {
+    if (!selected) return;
+    setBusy(true);
+    setError(null);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/complaints", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selected.id, internalNote: note }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Failed");
+        setBusy(false);
+        return;
+      }
+      setMsg("Note saved");
+      router.refresh();
+    } catch {
+      setError("Network error");
+    }
+    setBusy(false);
   }
 
   async function sendReply() {
@@ -104,7 +172,6 @@ export function ComplaintsBoard({ complaints }: { complaints: ComplaintRow[] }) 
       <ul className="space-y-2 lg:col-span-2">
         {complaints.map((c) => {
           const active = selectedId === c.id;
-          const who = nameFromBody(c.body);
           return (
             <li
               key={c.id}
@@ -123,11 +190,25 @@ export function ComplaintsBoard({ complaints }: { complaints: ComplaintRow[] }) 
                   : "border-line/80 bg-white/80 hover:border-navy/25"
               }`}
             >
-              <p className="font-medium text-sm text-navy">
-                {c.title.replace(/^\[Complaint\]\s*/i, "")}
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <p className="font-medium text-sm text-navy">
+                  {c.title.replace(/^\[Complaint\]\s*/i, "")}
+                </p>
+                <span
+                  className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border ${
+                    statusTone(c.status || "OPEN")
+                  }`}
+                >
+                  {c.status || "OPEN"}
+                </span>
+              </div>
               <p className="text-xs text-ink/50 mt-0.5">{formatDate(c.createdAt)}</p>
-              {who ? <p className="text-xs text-ink/60 mt-1">{who}</p> : null}
+              {(c.contactName || c.contactValue) && (
+                <p className="text-xs text-ink/60 mt-1">
+                  {c.contactName || "—"}
+                  {c.contactValue ? ` · ${c.contactValue}` : ""}
+                </p>
+              )}
             </li>
           );
         })}
@@ -135,7 +216,9 @@ export function ComplaintsBoard({ complaints }: { complaints: ComplaintRow[] }) 
 
       <div className="lg:col-span-3 rounded-xl border border-line bg-white p-4 sm:p-5 shadow-sm space-y-4">
         {!selected ? (
-          <p className="text-sm text-ink/50">Select a complaint to reply or delete.</p>
+          <p className="text-sm text-ink/50">
+            Select a complaint to update status, add a note, or reply.
+          </p>
         ) : (
           <>
             <div>
@@ -150,14 +233,58 @@ export function ComplaintsBoard({ complaints }: { complaints: ComplaintRow[] }) 
             {msg && <p className="text-xs text-sage">{msg}</p>}
 
             <div>
+              <p className="text-[10px] uppercase tracking-wide text-ink/50 font-medium mb-1.5">
+                Status
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {STATUSES.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={busy || (selected.status || "OPEN") === s}
+                    onClick={() => setStatus(s)}
+                    className={`text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-md border disabled:opacity-50 ${
+                      (selected.status || "OPEN") === s
+                        ? statusTone(s)
+                        : "border-line text-ink/60 hover:bg-line/30"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] uppercase tracking-wide text-ink/50 font-medium">
+                Internal note (staff only)
+              </label>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+                className="mt-1 w-full border border-line rounded-lg px-3 py-2 text-sm"
+                placeholder="Private notes for the office…"
+              />
+              <button
+                type="button"
+                disabled={busy}
+                onClick={saveNote}
+                className="mt-2 text-sm border border-line rounded-lg px-3 py-1.5 hover:bg-line/20 disabled:opacity-60"
+              >
+                Save note
+              </button>
+            </div>
+
+            <div>
               <label className="text-[10px] uppercase tracking-wide text-ink/50 font-medium">
                 Reply to sender
               </label>
               <p className="text-xs text-ink/45 mt-0.5 mb-1">
                 Uses email if contact looks like an email, otherwise SMS.
-                {contactFromBody(selected.body)
-                  ? ` → ${contactFromBody(selected.body)}`
-                  : " (no contact found in message)"}
+                {selected.contactValue || contactFromBody(selected.body)
+                  ? ` → ${selected.contactValue || contactFromBody(selected.body)}`
+                  : " (no contact found)"}
               </p>
               <textarea
                 value={reply}
