@@ -23,7 +23,7 @@ export default async function ExpensesPage() {
     prisma.expenseRecord.findMany({
       where: sw,
       orderBy: { date: "desc" },
-      take: 100,
+      take: 500,
     }),
     prisma.payment.aggregate({
       where: {
