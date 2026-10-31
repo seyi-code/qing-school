@@ -274,3 +274,113 @@ export async function DELETE(req: Request) {
   });
   return NextResponse.json({ ok: true, deleted: "subject" });
 }
+
+const RenameClassSchema = z.object({
+  action: z.literal("rename_class"),
+  id: z.string(),
+  name: z.string().min(1),
+});
+const RenameSubjectSchema = z.object({
+  action: z.literal("rename_subject"),
+  id: z.string(),
+  name: z.string().min(1),
+  code: z.string().optional().nullable(),
+});
+const RenameArmSchema = z.object({
+  action: z.literal("rename_arm"),
+  id: z.string(),
+  name: z.string().min(1),
+});
+
+export async function PATCH(req: Request) {
+  const session = await getSession();
+  if (!session || !can(session.role, "MANAGE_CLASSES")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const schoolId = await resolveSchoolId(session);
+  const body = await req.json().catch(() => null);
+  if (!body?.action) {
+    return NextResponse.json({ error: "action required" }, { status: 400 });
+  }
+
+  if (body.action === "rename_class") {
+    const parsed = RenameClassSchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    const sc = await prisma.schoolClass.findUnique({ where: { id: parsed.data.id } });
+    if (!sc) return NextResponse.json({ error: "Class not found" }, { status: 404 });
+    if (schoolId && sc.schoolId && sc.schoolId !== schoolId) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const updated = await prisma.schoolClass.update({
+      where: { id: sc.id },
+      data: { name: parsed.data.name.trim() },
+    });
+    await logAudit({
+      userId: session.userId,
+      schoolId: schoolId ?? undefined,
+      action: "RENAME_CLASS",
+      entity: "SchoolClass",
+      entityId: sc.id,
+      details: { from: sc.name, to: updated.name },
+    });
+    return NextResponse.json({ ok: true, class: updated });
+  }
+
+  if (body.action === "rename_arm") {
+    const parsed = RenameArmSchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    const arm = await prisma.arm.findUnique({
+      where: { id: parsed.data.id },
+      include: { schoolClass: true },
+    });
+    if (!arm) return NextResponse.json({ error: "Arm not found" }, { status: 404 });
+    if (schoolId && arm.schoolClass.schoolId && arm.schoolClass.schoolId !== schoolId) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const updated = await prisma.arm.update({
+      where: { id: arm.id },
+      data: { name: parsed.data.name.trim() },
+    });
+    await logAudit({
+      userId: session.userId,
+      schoolId: schoolId ?? undefined,
+      action: "RENAME_ARM",
+      entity: "Arm",
+      entityId: arm.id,
+      details: { from: arm.name, to: updated.name },
+    });
+    return NextResponse.json({ ok: true, arm: updated });
+  }
+
+  if (body.action === "rename_subject") {
+    const parsed = RenameSubjectSchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    const subject = await prisma.subject.findUnique({ where: { id: parsed.data.id } });
+    if (!subject) return NextResponse.json({ error: "Subject not found" }, { status: 404 });
+    const name = parsed.data.name.trim();
+    const clash = await prisma.subject.findFirst({
+      where: { name: { equals: name, mode: "insensitive" }, NOT: { id: subject.id } },
+    });
+    if (clash) {
+      return NextResponse.json({ error: "Another subject already has that name." }, { status: 409 });
+    }
+    const updated = await prisma.subject.update({
+      where: { id: subject.id },
+      data: {
+        name,
+        code: parsed.data.code === undefined ? undefined : parsed.data.code?.trim() || null,
+      },
+    });
+    await logAudit({
+      userId: session.userId,
+      schoolId: schoolId ?? undefined,
+      action: "RENAME_SUBJECT",
+      entity: "Subject",
+      entityId: subject.id,
+      details: { from: subject.name, to: updated.name },
+    });
+    return NextResponse.json({ ok: true, subject: updated });
+  }
+
+  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+}
