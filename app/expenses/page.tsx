@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
@@ -48,6 +49,11 @@ export default async function ExpensesPage() {
       title="Expenses"
       subtitle="School spending and simple P&L"
       email={session.email}
+      actions={
+        <Link href="/fees" className="btn-ghost text-sm">
+          ← Fees
+        </Link>
+      }
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <Kpi label="Fee income (recorded)" value={formatNaira(income)} tone="sage" icon="₦" />
