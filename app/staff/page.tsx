@@ -7,6 +7,7 @@ import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 import { toMoney } from "@/lib/money";
 import { StaffTable } from "./StaffTable";
 import { Kpi } from "@/components/ui/Kpi";
+import { RepairStaffIdsButton } from "@/components/RepairStaffIdsButton";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,10 @@ export default async function StaffPage() {
         </Link>
       }
     >
+      <div className="mb-3">
+        <RepairStaffIdsButton />
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <Kpi label="Total staff" value={String(staff.length)} tone="navy" icon="👥" />
         <Kpi label="Active" value={String(active)} tone="sage" icon="✓" />
