@@ -3,6 +3,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { can } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import { StaffForm } from "./StaffForm";
+import Link from "next/link";
 
 export default async function NewStaffPage() {
   const session = await requireSession();
@@ -14,8 +15,13 @@ export default async function NewStaffPage() {
       title="Add Staff"
       subtitle="Creates a staff profile and their portal login"
       email={session.email}
+      actions={
+        <Link href="/staff" className="btn-ghost text-sm">
+          ← Staff
+        </Link>
+      }
     >
-      <div className="max-w-xl rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 sm:p-5 shadow-sm">
+      <div className="max-w-2xl rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 sm:p-5 shadow-sm">
         <StaffForm />
       </div>
     </PortalShell>
