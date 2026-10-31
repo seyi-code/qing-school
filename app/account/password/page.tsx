@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { ChangePasswordForm } from "@/app/settings/security/ChangePasswordForm";
@@ -20,6 +21,13 @@ export default async function AccountPasswordPage() {
         forced
           ? "Your account requires a new password before you can continue."
           : "Update the password for your account"
+      }
+      actions={
+        !forced ? (
+          <Link href="/account/profile" className="btn-ghost text-sm">
+            ← Profile
+          </Link>
+        ) : undefined
       }
     >
       <div className="max-w-lg space-y-6">
