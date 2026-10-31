@@ -136,7 +136,7 @@ export default async function StudentsPage({
       {students.length === 0 && (
         <EmptyState
           title="No students in this list"
-          description="Admit a student or switch the status tab above."
+          description="Admit a student, switch status tabs above, or assign a class with Bulk assign when students are unassigned."
           action={
             canAdmit ? (
               <Link href="/students/new" className="btn-primary">
@@ -182,9 +182,18 @@ export default async function StudentsPage({
           <tbody>
             {students.map((s) => (
               <tr key={s.id}>
-                <td className="font-mono text-xs">{s.admissionNumber}</td>
+                <td className="font-mono text-xs">
+                  <Link href={`/students/${s.id}`} className="hover:underline text-ink">
+                    {s.admissionNumber}
+                  </Link>
+                </td>
                 <td>
-                  {s.lastName}, {s.firstName} {s.otherNames ?? ""}
+                  <Link
+                    href={`/students/${s.id}`}
+                    className="text-navy font-medium hover:underline"
+                  >
+                    {s.lastName}, {s.firstName} {s.otherNames ?? ""}
+                  </Link>
                 </td>
                 <td>
                   {s.arm ? (
