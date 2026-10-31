@@ -34,16 +34,20 @@ export function RepairStaffIdsButton() {
   }
 
   return (
-    <div className="text-sm">
+    <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2.5 text-sm">
+      <p className="text-xs text-amber-900/80 mb-2">
+        Legacy IDs like <strong>FS-STF-0001</strong> can be fixed to this school's prefix (e.g.{" "}
+        <strong>KMS-STF-0001</strong>).
+      </p>
       <button
         type="button"
         disabled={busy}
         onClick={run}
-        className="btn-ghost !text-xs disabled:opacity-60"
+        className="bg-navy text-paper text-xs font-medium px-3 py-2 rounded-lg disabled:opacity-60"
       >
         {busy ? "Repairing…" : "Repair staff IDs for this school"}
       </button>
-      {msg ? <p className="text-xs text-ink/60 mt-1">{msg}</p> : null}
+      {msg ? <p className="text-xs text-ink/70 mt-2">{msg}</p> : null}
     </div>
   );
 }
