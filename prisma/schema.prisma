@@ -598,15 +598,9 @@ model Notice {
   body         String
   audience     String   @default("ALL")
   publishToWeb Boolean  @default(false)
-  // OPEN | ACKNOWLEDGED | RESOLVED | ARCHIVED — mainly for audience=COMPLAINT
-  status       String   @default("OPEN")
-  internalNote String?
-  contactName  String?
-  contactValue String?
   createdBy    String?
   createdAt    DateTime @default(now())
   @@index([schoolId])
-  @@index([audience, status])
 }
 
 model MessageLog {
