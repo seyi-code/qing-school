@@ -104,12 +104,12 @@ export default async function FeesPage({
         <Kpi label="Students owing" value={String(debtors.length)} tone="gold" icon="🎓" />
       </div>
 
-      <div className="tab-bar mb-3">
+      <div className="tab-bar flex flex-wrap gap-2 mb-3">
         {tabs.map((tab) => (
           <Link
             key={tab.key}
             href={`/fees?status=${tab.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-            className="tab-pill"
+            className="tab-pill inline-flex items-center px-3 py-1.5 rounded-full border border-line text-sm font-medium whitespace-nowrap"
             data-active={statusFilter === tab.key ? "true" : "false"}
           >
             {tab.label}
@@ -152,7 +152,12 @@ export default async function FeesPage({
                   <div className="flex justify-between gap-2">
                     <div>
                       <p className="font-medium text-sm">
-                        {inv.student.lastName}, {inv.student.firstName}
+                        <Link
+                          href={`/students/${inv.student.id}`}
+                          className="text-navy hover:underline"
+                        >
+                          {inv.student.lastName}, {inv.student.firstName}
+                        </Link>
                       </p>
                       <p className="text-xs font-mono text-ink/50">
                         {inv.student.admissionNumber}
@@ -220,7 +225,12 @@ export default async function FeesPage({
                   return (
                     <tr key={inv.id}>
                       <td>
-                        {inv.student.lastName}, {inv.student.firstName}
+                        <Link
+                          href={`/students/${inv.student.id}`}
+                          className="text-navy font-medium hover:underline"
+                        >
+                          {inv.student.lastName}, {inv.student.firstName}
+                        </Link>
                         <div className="text-xs text-ink/50 font-mono">
                           {inv.student.admissionNumber}
                         </div>
