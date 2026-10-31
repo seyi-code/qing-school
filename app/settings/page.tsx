@@ -7,6 +7,7 @@ import { formatDateTime } from "@/lib/format";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Kpi } from "@/components/ui/Kpi";
+import { SettingsAdminForms } from "@/components/SettingsAdminForms";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,9 @@ export default async function SettingsPage() {
           className="col-span-2 sm:col-span-1"
         />
       </div>
+
+      <SettingsAdminForms />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <section className="ledger-block">
           <h2 className="font-serif text-lg mb-3">Academic sessions</h2>
@@ -71,7 +75,8 @@ export default async function SettingsPage() {
             {sessions.map((s) => (
               <li key={s.id} className="border-b border-line pb-2">
                 <p className="font-medium">
-                  {s.name} {s.isCurrent ? <span className="text-sage text-xs">(current)</span> : null}
+                  {s.name}{" "}
+                  {s.isCurrent ? <span className="text-sage text-xs">(current)</span> : null}
                 </p>
                 <ul className="text-xs text-ink/60 mt-1">
                   {s.terms.map((t) => (
@@ -84,15 +89,12 @@ export default async function SettingsPage() {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-ink/40 mt-3">
-            Manage sessions under Ops / seed tools if needed.
-          </p>
         </section>
 
         <section className="ledger-block">
           <h2 className="font-serif text-lg mb-3">Grade bands</h2>
           {bands.length === 0 ? (
-            <p className="text-sm text-ink/50">No grade bands configured.</p>
+            <p className="text-sm text-ink/50">No grade bands configured. Use Seed above.</p>
           ) : (
             <table className="ledger text-sm">
               <thead>
