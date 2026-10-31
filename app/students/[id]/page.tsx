@@ -81,6 +81,12 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
       actions={
         <div className="flex flex-wrap gap-2">
           <Link
+            href="/students"
+            className="inline-flex items-center rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-medium text-navy hover:bg-navy/5"
+          >
+            ← Students
+          </Link>
+          <Link
             href={`/students/${student.id}/report-card`}
             className="inline-flex items-center rounded-lg bg-navy px-3.5 py-2 text-xs font-medium text-paper hover:bg-navy-light"
           >
@@ -93,7 +99,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
       }
     >
       {canManage && (
-        <div className="mb-4 sm:mb-5 space-y-3 max-w-2xl">
+        <div className="mb-4 sm:mb-5 space-y-3 max-w-5xl">
           <EnableStudentPortalButton
             studentId={student.id}
             hasPortal={Boolean(student.userId)}
@@ -131,7 +137,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-5 max-w-6xl">
         <Card title="Bio data">
           <dl className="text-sm space-y-2">
             <Row label="Class / Arm" value={classLabel} />
@@ -211,7 +217,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         }))}
       />
 
-      <Card title="Results (all terms)" flush className="mt-4 sm:mt-5">
+      <Card title="Results (all terms)" flush className="mt-4 sm:mt-5 max-w-6xl">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
