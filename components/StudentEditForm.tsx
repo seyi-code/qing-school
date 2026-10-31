@@ -77,7 +77,7 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="ledger-block space-y-3">
+    <form onSubmit={onSubmit} className="space-y-3">
       <h2 className="font-serif text-lg">Edit student / assign class</h2>
       <p className="text-xs text-ink/55">
         Assign class, fix admission number (e.g. TEST/2026/0001), or update bio details.
@@ -110,7 +110,7 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
           <select
             value={form.gender}
             onChange={(e) => set("gender", e.target.value)}
-            className="w-full border border-line px-3 py-2 text-sm bg-white"
+            className="w-full border border-line px-3 py-2 text-sm bg-white rounded-lg"
           >
             <option value="">—</option>
             <option value="Male">Male</option>
@@ -122,7 +122,7 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
           <select
             value={form.status}
             onChange={(e) => set("status", e.target.value)}
-            className="w-full border border-line px-3 py-2 text-sm bg-white"
+            className="w-full border border-line px-3 py-2 text-sm bg-white rounded-lg"
           >
             <option value="ACTIVE">ACTIVE</option>
             <option value="APPLIED">APPLIED</option>
@@ -132,31 +132,44 @@ export function StudentEditForm({ studentId, arms, initial }: Props) {
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-medium text-ink/70 mb-1">Class / arm</label>
-        <select
-          value={form.armId}
-          onChange={(e) => set("armId", e.target.value)}
-          className="w-full border border-line px-3 py-2 text-sm bg-white"
-        >
-          <option value="">Unassigned</option>
-          {arms.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.label}
-            </option>
-          ))}
-        </select>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field
+          label="Guardian phone"
+          value={form.guardianPhone}
+          onChange={(v) => set("guardianPhone", v)}
+        />
+        <div>
+          <label className="block text-xs font-medium text-ink/70 mb-1">Class / arm</label>
+          <select
+            value={form.armId}
+            onChange={(e) => set("armId", e.target.value)}
+            className="w-full border border-line px-3 py-2 text-sm bg-white rounded-lg"
+          >
+            <option value="">Unassigned</option>
+            {arms.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <Field label="Guardian phone" value={form.guardianPhone} onChange={(v) => set("guardianPhone", v)} />
-      <Field label="Address" value={form.address} onChange={(v) => set("address", v)} />
-      <Field label="Previous school" value={form.previousSchool} onChange={(v) => set("previousSchool", v)} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Address" value={form.address} onChange={(v) => set("address", v)} />
+        <Field
+          label="Previous school"
+          value={form.previousSchool}
+          onChange={(v) => set("previousSchool", v)}
+        />
+      </div>
+
       <Field label="Medical notes" value={form.medicalNotes} onChange={(v) => set("medicalNotes", v)} />
 
       <button
         type="submit"
         disabled={saving}
-        className="bg-navy text-paper text-sm px-5 py-2.5 hover:bg-navy-light disabled:opacity-60"
+        className="bg-navy text-paper text-sm px-5 py-2.5 rounded-lg hover:bg-navy-light disabled:opacity-60"
       >
         {saving ? "Saving…" : "Save changes"}
       </button>
@@ -182,7 +195,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="w-full border border-line px-3 py-2 text-sm bg-white"
+        className="w-full border border-line px-3 py-2 text-sm bg-white rounded-lg"
       />
     </div>
   );
