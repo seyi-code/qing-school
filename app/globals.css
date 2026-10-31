@@ -85,6 +85,50 @@ table.ledger tbody tr:hover {
   opacity: 0.95;
 }
 
+/* Status filter tabs (Students, etc.) */
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.tab-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid #d4dce6;
+  background: #fff;
+  color: #3d4f63;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.tab-pill:hover {
+  background: #f0f4f8;
+  border-color: #b8c5d4;
+}
+.tab-pill[data-active="true"] {
+  background: #1a3a6e;
+  border-color: #1a3a6e;
+  color: #f7f5ef;
+}
+html.dark .tab-pill {
+  background: #0f1c2c;
+  border-color: #2a3f55;
+  color: #c5d0dc;
+}
+html.dark .tab-pill:hover {
+  background: #1a2d42;
+}
+html.dark .tab-pill[data-active="true"] {
+  background: #2a4a6f;
+  border-color: #2a4a6f;
+  color: #f7f5ef;
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
