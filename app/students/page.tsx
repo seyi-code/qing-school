@@ -91,12 +91,12 @@ export default async function StudentsPage({
         <Kpi label="In this list" value={String(students.length)} tone="sage" icon="#" />
       </div>
 
-      <div className="tab-bar">
+      <div className="tab-bar flex flex-wrap gap-2 mb-4">
         {tabs.map((tab) => (
           <Link
             key={tab.key}
             href={`/students?status=${tab.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-            className="tab-pill"
+            className="tab-pill inline-flex items-center px-3 py-1.5 rounded-full border border-line text-sm font-medium whitespace-nowrap"
             data-active={statusFilter === tab.key ? "true" : "false"}
           >
             {tab.label}
