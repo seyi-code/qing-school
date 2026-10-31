@@ -598,7 +598,7 @@ model Notice {
   body         String
   audience     String   @default("ALL")
   publishToWeb Boolean  @default(false)
-  /** OPEN | ACKNOWLEDGED | RESOLVED | ARCHIVED — mainly for audience=COMPLAINT */
+  // OPEN | ACKNOWLEDGED | RESOLVED | ARCHIVED — mainly for audience=COMPLAINT
   status       String   @default("OPEN")
   internalNote String?
   contactName  String?
