@@ -115,10 +115,22 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "TEACHER", "PRINCIPAL", "STUDENT"],
   },
   {
+    href: "/reports",
+    label: "Reports",
+    icon: "📑",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "PRINCIPAL", "ACCOUNTANT"],
+  },
+  {
     href: "/fees",
     label: "Fees & Payments",
     icon: "₦",
     roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "SECRETARY", "PRINCIPAL"],
+  },
+  {
+    href: "/fees/structure",
+    label: "Fee structure",
+    icon: "☰",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "IT"],
   },
   {
     href: "/expenses",
@@ -127,10 +139,16 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "IT"],
   },
   {
-    href: "/notices",
-    label: "Communication",
-    icon: "📢",
-    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
+    href: "/payroll",
+    label: "Payroll",
+    icon: "💼",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "ACCOUNTANT", "IT"],
+  },
+  {
+    href: "/modules",
+    label: "Modules",
+    icon: "▦",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
   {
     href: "/library",
@@ -139,9 +157,57 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY"],
   },
   {
+    href: "/hostel",
+    label: "Hostel",
+    icon: "🛏",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY"],
+  },
+  {
+    href: "/transport",
+    label: "Transport",
+    icon: "🚌",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY"],
+  },
+  {
+    href: "/notices",
+    label: "Communication",
+    icon: "✉",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT", "SECRETARY", "PRINCIPAL"],
+  },
+  {
+    href: "/cms",
+    label: "Website CMS",
+    icon: "🖥",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
+  },
+  {
     href: "/settings",
     label: "Settings",
     icon: "⚙",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
+  },
+  {
+    href: "/settings/ops",
+    label: "Ops / health",
+    icon: "♥",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
+  },
+  {
+    href: "/settings/audit",
+    label: "Audit log",
+    icon: "📋",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
+  },
+  {
+    href: "/settings/report-template",
+    label: "Report template",
+    icon: "🖨",
+    roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
+  },
+  {
+    href: "/settings/go-live",
+    label: "Go-live checklist",
+    icon: "🚀",
     roles: ["PLATFORM_ADMIN", "ADMIN", "IT"],
   },
 ];
