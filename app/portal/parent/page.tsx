@@ -2,14 +2,14 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/require-session";
 import { PortalShell } from "@/components/PortalShell";
 import { PayOnlineButton } from "@/components/PayOnlineButton";
-import { formatNaira } from "@/lib/format";
+import { formatNaira, formatDate } from "@/lib/format";
 import { toMoney } from "@/lib/money";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ActionTile } from "@/components/ui/ActionTile";
 import { getBrandingForSchoolId } from "@/lib/branding";
-import { resolveSchoolId } from "@/lib/tenant-scope";
+import { resolveSchoolId, schoolWhere } from "@/lib/tenant-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,15 @@ export default async function ParentPortalPage() {
         },
       },
     },
+  });
+
+  const notices = await prisma.notice.findMany({
+    where: {
+      ...schoolWhere(schoolId),
+      audience: { in: ["ALL", "PARENTS"] },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 12,
   });
 
   return (
@@ -64,6 +73,28 @@ export default async function ParentPortalPage() {
         />
         <ActionTile href="/account/profile" label="My profile" icon="👤" description="Account settings" />
       </div>
+
+      <section className="rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50/70 to-white p-4 sm:p-5 shadow-sm mb-5">
+        <h2 className="font-serif text-lg text-navy mb-1">School notices</h2>
+        <p className="text-xs text-ink/50 mb-3">Messages for parents and the whole school</p>
+        {notices.length === 0 ? (
+          <EmptyState title="No notices" description="Announcements from the school will appear here." />
+        ) : (
+          <ul className="space-y-3">
+            {notices.map((n) => (
+              <li key={n.id} className="rounded-lg border border-line/70 bg-white/90 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-medium text-sm text-navy">{n.title}</p>
+                  <span className="text-[10px] uppercase tracking-wide text-ink/45">
+                    {formatDate(n.createdAt)}
+                  </span>
+                </div>
+                <p className="text-sm text-ink/70 mt-1.5 whitespace-pre-wrap line-clamp-6">{n.body}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {links.length === 0 ? (
         <EmptyState
@@ -199,8 +230,8 @@ export default async function ParentPortalPage() {
                     >
                       Report card
                     </Link>
-                    <Link href="/notices" className="text-xs text-navy underline">
-                      School notices
+                    <Link href="/portal/parent" className="text-xs text-navy underline">
+                      Dashboard
                     </Link>
                   </div>
                 </section>
